@@ -2,6 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from .db import init_db
 from .routers import bottles
+from .routers import purchases, notes
+# ADD:
+from .routers import retailers
 
 app = FastAPI(title="Whiskey DB API")
 
@@ -22,3 +25,7 @@ def health():
     return {"status": "ok"}
 
 app.include_router(bottles.router)
+app.include_router(purchases.router)
+app.include_router(notes.router)
+app.include_router(retailers.router)
+

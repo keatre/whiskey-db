@@ -1,3 +1,7 @@
+import './global.css';
+import Link from 'next/link';
+import ThemeToggle from '../components/ThemeToggle';
+
 export const metadata = {
   title: 'Whiskey DB',
   description: 'Self-hosted whiskey collection'
@@ -6,13 +10,14 @@ export const metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body style={{padding: 24, fontFamily: 'system-ui, sans-serif'}}>
-        <nav style={{marginBottom: 16}}>
-          <a href="/" style={{marginRight: 16}}>Home</a>
-          <a href="/bottles" style={{marginRight: 16}}>Bottles</a>
-          <a href="/bottles/new">+ New Bottle</a>
+      <body>
+        <nav className="nav">
+          <Link href="/">Home</Link>
+          <Link href="/bottles">Bottles</Link>
+          <Link href="/retailers">Retailers</Link>
+          <ThemeToggle />
         </nav>
-        {children}
+        <div className="container">{children}</div>
       </body>
     </html>
   );

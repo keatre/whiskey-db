@@ -75,3 +75,16 @@ class TastingNote(SQLModel, table=True):
     notes_markdown: Optional[str] = None
     created_utc: datetime = Field(default_factory=datetime.utcnow)
     updated_utc: datetime = Field(default_factory=datetime.utcnow)
+
+class PurchaseUpdate(SQLModel):
+    bottle_id: Optional[int] = None
+    purchase_date: Optional[str] = None   # accept ISO string; we’ll coerce
+    retailer_id: Optional[int] = None
+    price_paid: Optional[float] = None
+    tax_paid: Optional[float] = None
+    location: Optional[str] = None
+    quantity: Optional[int] = None
+    storage_location: Optional[str] = None
+    opened_dt: Optional[str] = None       # accept ISO string; we’ll coerce
+    killed_dt: Optional[str] = None
+    status: Optional[str] = None
