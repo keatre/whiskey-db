@@ -1,0 +1,15 @@
+node_modules
+.next
+.cache
+dist
+__pycache__/
+*.py[cod]
+.venv
+.env
+.env.*
+.DS_Store
+Thumbs.db
+data/
+volumes/
+*.log
+logs/
