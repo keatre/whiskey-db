@@ -7,11 +7,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body style={{padding: 24, fontFamily: 'system-ui, sans-serif'}}>
-        <nav style={{marginBottom: 16}}>
-          <a href="/" style={{marginRight: 16}}>Home</a>
-          <a href="/bottles" style={{marginRight: 16}}>Bottles</a>
-          <a href="/bottles/new">+ New Bottle</a>
-        </nav>
         {children}
       </body>
     </html>

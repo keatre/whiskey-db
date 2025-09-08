@@ -34,11 +34,10 @@ export default function BottlesPage() {
           style={{padding:8, width: 320}}
         />
         <button onClick={load} style={{marginLeft:8, padding:'8px 12px'}}>Search</button>
-        <a href="/bottles/new" style={{marginLeft:16}}>+ New Bottle</a>
       </div>
       <ul>
         {rows.map(b => (
-          <li key={b.bottle_id} style={{margin: '6px 0'}}>
+          <li key={b.bottle_id}>
             <strong>{b.brand}</strong>{b.expression ? ` — ${b.expression}` : ''}
             {b.distillery ? ` (${b.distillery})` : ''}
           </li>

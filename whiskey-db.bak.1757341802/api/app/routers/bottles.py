@@ -1,5 +1,4 @@
-from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlmodel import Session, select
 from typing import List, Optional
 from ..db import get_session
@@ -22,12 +21,8 @@ def list_bottles(
         )
     return session.exec(stmt.order_by(Bottle.brand, Bottle.expression)).all()
 
-@router.post("", response_model=Bottle, status_code=status.HTTP_201_CREATED)
+@router.post("", response_model=Bottle)
 def create_bottle(bottle: Bottle, session: Session = Depends(get_session)):
-    if not bottle.brand or not bottle.brand.strip():
-        raise HTTPException(422, "brand is required")
-    bottle.created_utc = datetime.utcnow()
-    bottle.updated_utc = datetime.utcnow()
     session.add(bottle)
     session.commit()
     session.refresh(bottle)
