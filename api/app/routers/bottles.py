@@ -1,11 +1,43 @@
+import json
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlmodel import Session, select
 from typing import List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlmodel import Session, select, SQLModel
+
 from ..db import get_session
-from ..models import Bottle
+from ..models import Bottle, BottleAudit
 
 router = APIRouter(prefix="/bottles", tags=["bottles"])
+
+# ---- Optional: enforce allowed styles (uncomment to enable)
+# ALLOWED_STYLES = {
+#     "Scotch - Single Malt","Scotch - Blended","Scotch - Blended Malt","Scotch - Single Grain",
+#     "Bourbon - Straight Bourbon","Bourbon - Barrel Proof",
+#     "Rye - Straight Rye",
+#     "Irish - Single Pot Still","Irish - Single Malt","Irish - Blended",
+#     "Japanese - Single Malt","Japanese - Blended",
+#     "Canadian - Whisky",
+#     "Other - Single Malt","Other - Blended","Other - Grain","Other - —"
+# }
+
+# ---- NEW: a minimal PATCH schema so all fields are optional
+class BottlePatch(SQLModel):
+    brand: Optional[str] = None
+    expression: Optional[str] = None
+    distillery: Optional[str] = None
+    style: Optional[str] = None
+    region: Optional[str] = None
+    age: Optional[int] = None
+    abv: Optional[float] = None
+    proof: Optional[float] = None
+    size_ml: Optional[int] = None
+    release_year: Optional[int] = None
+    barcode_upc: Optional[str] = None
+    mashbill_markdown: Optional[str] = None
+    notes_markdown: Optional[str] = None
+    image_url: Optional[str] = None
+
 
 @router.get("", response_model=List[Bottle])
 def list_bottles(
@@ -22,6 +54,7 @@ def list_bottles(
         )
     return session.exec(stmt.order_by(Bottle.brand, Bottle.expression)).all()
 
+
 @router.post("", response_model=Bottle, status_code=status.HTTP_201_CREATED)
 def create_bottle(bottle: Bottle, session: Session = Depends(get_session)):
     if not bottle.brand or not bottle.brand.strip():
@@ -33,9 +66,71 @@ def create_bottle(bottle: Bottle, session: Session = Depends(get_session)):
     session.refresh(bottle)
     return bottle
 
+
+@router.patch("/{bottle_id}", response_model=Bottle)
+def update_bottle(
+    bottle_id: int,
+    patch: BottlePatch,
+    session: Session = Depends(get_session),
+    changed_by: str | None = None
+):
+    b = session.get(Bottle, bottle_id)
+    if not b:
+        raise HTTPException(404, "Bottle not found")
+
+    before = b.model_dump()
+    data = patch.model_dump(exclude_unset=True)
+
+    # keep safe
+    data.pop("bottle_id", None)
+    data.pop("created_utc", None)
+    data.pop("updated_utc", None)
+
+    # Optional: enforce style against an allowed list
+    # if "style" in data and data["style"] is not None and data["style"] not in ALLOWED_STYLES:
+    #     raise HTTPException(status_code=422, detail="Unknown style")
+
+    # If client sent only proof, compute abv
+    if "proof" in data and "abv" not in data and data["proof"] is not None:
+        try:
+            data["abv"] = round(float(data["proof"]) / 2.0, 1)
+        except Exception:
+            pass
+
+    for k, v in data.items():
+        setattr(b, k, v)
+
+    b.updated_utc = datetime.utcnow()
+    session.add(b)
+    session.commit()
+    session.refresh(b)
+
+    after = b.model_dump()
+    changes = {}
+    for k in data.keys():
+        if before.get(k) != after.get(k):
+            changes[k] = {"from": before.get(k), "to": after.get(k)}
+
+    if changes:
+        audit = BottleAudit(
+            bottle_id=b.bottle_id,
+            changed_by=changed_by,
+            changes_json=json.dumps(changes, ensure_ascii=False),
+        )
+        session.add(audit)
+        session.commit()
+
+    return b
+    
 @router.get("/{bottle_id}", response_model=Bottle)
 def get_bottle(bottle_id: int, session: Session = Depends(get_session)):
-    bottle = session.get(Bottle, bottle_id)
-    if not bottle:
+    b = session.get(Bottle, bottle_id)
+    if not b:
         raise HTTPException(404, "Bottle not found")
-    return bottle
+    return b
+
+@router.get("/{bottle_id}/audits", response_model=List[BottleAudit])
+def list_bottle_audits(bottle_id: int, session: Session = Depends(get_session)):
+    return session.exec(
+        select(BottleAudit).where(BottleAudit.bottle_id == bottle_id).order_by(BottleAudit.changed_at.desc())
+    ).all()

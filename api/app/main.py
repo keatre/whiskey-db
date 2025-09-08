@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from .db import init_db
-from .routers import bottles
-from .routers import purchases, notes
-# ADD:
-from .routers import retailers
+from .routers import bottles, purchases, notes, retailers, valuation
+from .routers.uploads import router as uploads_router  # NEW
 
 app = FastAPI(title="Whiskey DB API")
 
@@ -24,8 +23,13 @@ def on_startup():
 def health():
     return {"status": "ok"}
 
+# serve /static/* from ./static
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
+# routers
 app.include_router(bottles.router)
 app.include_router(purchases.router)
 app.include_router(notes.router)
 app.include_router(retailers.router)
-
+app.include_router(uploads_router)
+app.include_router(valuation.router)

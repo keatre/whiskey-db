@@ -18,6 +18,8 @@ services:
     volumes:
       - ./api:/app
       - ./data:/data
+      - ./api/static:/app/static
+      - ./api/data:/app/data
     env_file: .env
     environment:
       - DATABASE_URL=${DATABASE_URL:-sqlite:////data/whiskey.db}

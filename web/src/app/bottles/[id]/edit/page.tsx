@@ -1,0 +1,236 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+
+const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
+// Match the New Bottle form's style options
+const STYLE_GROUPS: Record<string, string[]> = {
+  'Scotch': ['Single Malt', 'Blended', 'Blended Malt', 'Single Grain'],
+  'Bourbon': ['Straight', 'Small Batch', 'Single Barrel', 'Cask Strength', 'Barrel Proof', 'Charred'],
+  'Rye': ['Straight Rye'],
+  'Irish': ['Single Pot Still', 'Single Malt', 'Blended'],
+  'Japanese': ['Single Malt', 'Blended'],
+  'Tennessee': ['Straight'],
+  'Canadian': ['Whisky'],
+};
+
+const STYLE_OPTIONS = Object.entries(STYLE_GROUPS)
+  .flatMap(([fam, vars]) => vars.map(v => `${fam} - ${v}`))
+  .concat('Custom…');
+
+export default function EditBottlePage() {
+  const params = useParams();
+  const id = Number(params?.id);
+  const r = useRouter();
+
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Controlled form state
+  const [form, setForm] = useState({
+    brand: '',
+    expression: '',
+    distillery: '',
+    stylePicker: '',
+    styleCustom: '',
+    region: '',
+    age: '',
+    abv: '',
+    proof: '',
+    size_ml: '',
+    release_year: '',
+    barcode_upc: '',
+    mashbill_markdown: '',
+    notes_markdown: '',
+    image_url: ''
+  });
+
+  useEffect(() => {
+    async function load() {
+      const b = await fetch(`${API}/bottles/${id}`).then(r=>r.json());
+
+      const styleKnown = b.style && STYLE_OPTIONS.includes(b.style);
+      setForm({
+        brand: b.brand ?? '',
+        expression: b.expression ?? '',
+        distillery: b.distillery ?? '',
+        stylePicker: styleKnown ? b.style : (b.style ? 'Custom…' : ''),
+        styleCustom: styleKnown ? '' : (b.style ?? ''),
+        region: b.region ?? '',
+        age: b.age ?? '',
+        abv: b.abv ?? '',
+        proof: b.proof ?? '',
+        size_ml: b.size_ml ?? '',
+        release_year: b.release_year ?? '',
+        barcode_upc: b.barcode_upc ?? '',
+        mashbill_markdown: b.mashbill_markdown ?? '',
+        notes_markdown: b.notes_markdown ?? '',
+        image_url: b.image_url ?? ''
+      });
+      if (b.image_url) setPreviewUrl(`${b.image_url.startsWith('http') ? '' : API}${b.image_url}`);
+      setLoading(false);
+    }
+    load();
+  }, [id]);
+
+  function set<K extends keyof typeof form>(k: K, v: string) {
+    setForm(prev => ({ ...prev, [k]: v }));
+  }
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append('file', f);
+      const res = await fetch(`${API}/uploads/image`, { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      set('image_url', data.url);
+      setPreviewUrl(`${API}${data.url.startsWith('/') ? '' : '/'}${data.url}`);
+    } catch (err: any) {
+      setUploadError(err.message ?? 'Upload failed');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+
+    // Build style from picker/custom
+    let style: string | null = null;
+    if (form.stylePicker === 'Custom…') style = form.styleCustom.trim() || null;
+    else if (form.stylePicker) style = form.stylePicker;
+
+    const raw: any = {
+      brand: form.brand || null,
+      expression: form.expression || null,
+      distillery: form.distillery || null,
+      style,
+      region: form.region || null,
+      barcode_upc: form.barcode_upc || null,
+      mashbill_markdown: form.mashbill_markdown || null,
+      notes_markdown: form.notes_markdown || null,
+      image_url: form.image_url || null
+    };
+
+    // Numeric coercion
+    ([
+      ['age','int'],
+      ['abv','float'],
+      ['proof','float'],
+      ['size_ml','int'],
+      ['release_year','int'],
+    ] as const).forEach(([k, t]) => {
+      const v = (form as any)[k];
+      if (v === '') return;
+      const num = t === 'int' ? parseInt(v, 10) : parseFloat(v);
+      if (!Number.isNaN(num)) raw[k] = num;
+    });
+
+    // Auto-fill ABV if only Proof provided
+    if (raw.proof != null && raw.abv == null) {
+      raw.abv = Math.round((raw.proof / 2) * 10) / 10;
+    }
+
+    // Remove nulls/empties so PATCH is minimal
+    const payload: any = {};
+    Object.entries(raw).forEach(([k, v]) => {
+      if (v === null || v === '') return;
+      payload[k] = v;
+    });
+
+    const res = await fetch(`${API}/bottles/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    setSaving(false);
+    if (res.ok) r.push(`/bottles/${id}`);
+    else alert('Update failed: ' + (await res.text()));
+  }
+
+  if (loading) return <main><p>Loading…</p></main>;
+
+  return (
+    <main>
+      <h1>Edit Bottle</h1>
+      <form onSubmit={submit} style={{display:'grid', gridTemplateColumns:'220px 480px', gap:10, alignItems:'center', maxWidth:'980px'}}>
+        <label>Brand</label>
+        <input value={form.brand} onChange={e=>set('brand', e.target.value)} />
+
+        <label>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
+        <input value={form.expression} onChange={e=>set('expression', e.target.value)} />
+
+        <label>Distillery (optional)</label>
+        <input value={form.distillery} onChange={e=>set('distillery', e.target.value)} />
+
+        <label>Style</label>
+        <div style={{display:'flex', gap:8}}>
+          <select value={form.stylePicker} onChange={e=>set('stylePicker', e.target.value)} style={{flex:1}}>
+            <option value="">— Select style —</option>
+            {STYLE_OPTIONS.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+          {form.stylePicker === 'Custom…' && (
+            <input
+              placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
+              value={form.styleCustom}
+              onChange={e=>set('styleCustom', e.target.value)}
+              style={{flex:1}}
+            />
+          )}
+        </div>
+
+        <label>Region (optional)</label>
+        <input value={form.region} onChange={e=>set('region', e.target.value)} />
+
+        <label>Age (years)</label>
+        <input type="number" inputMode="numeric" min="0" step="1" value={form.age} onChange={e=>set('age', e.target.value)} />
+
+        <label>Proof</label>
+        <input type="number" inputMode="decimal" min="0" step="any" value={form.proof} onChange={e=>set('proof', e.target.value)} />
+
+        <label>ABV (%)</label>
+        <input type="number" inputMode="decimal" min="0" step="0.1" value={form.abv} onChange={e=>set('abv', e.target.value)} />
+
+        <label>Size (ml)</label>
+        <input type="number" inputMode="numeric" min="0" step="50" value={form.size_ml} onChange={e=>set('size_ml', e.target.value)} />
+
+        <label>Release year</label>
+        <input type="number" inputMode="numeric" min="1900" max="2100" step="1" value={form.release_year} onChange={e=>set('release_year', e.target.value)} />
+
+        <label>Barcode / UPC (optional)</label>
+        <input value={form.barcode_upc} onChange={e=>set('barcode_upc', e.target.value)} />
+
+        <label>Bottle Image (replace)</label>
+        <div>
+          <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" onChange={handleFile} />
+          <div style={{marginTop:8}}>
+            {uploading && <div>Uploading…</div>}
+            {uploadError && <div style={{color:'red'}}>{uploadError}</div>}
+            {previewUrl && <img src={previewUrl} alt="preview" style={{maxWidth:360, borderRadius:8}} />}
+          </div>
+        </div>
+
+        <label>Mash Bill (Markdown)</label>
+        <textarea rows={8} value={form.mashbill_markdown} onChange={e=>set('mashbill_markdown', e.target.value)} />
+
+        <label>Notes (Markdown)</label>
+        <textarea rows={8} value={form.notes_markdown} onChange={e=>set('notes_markdown', e.target.value)} />
+
+        <div></div>
+        <button type="submit" disabled={saving || uploading}>{saving ? 'Saving…' : 'Save Changes'}</button>
+      </form>
+    </main>
+  );
+}

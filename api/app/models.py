@@ -20,7 +20,6 @@ class Retailer(SQLModel, table=True):
 class Tag(SQLModel, table=True):
     tag_id: Optional[int] = Field(default=None, primary_key=True)
     name: str
-    # <-- declare the reverse side here
     bottles: List["Bottle"] = Relationship(back_populates="tags", link_model=BottleTag)
 
 class BottleBase(SQLModel):
@@ -30,12 +29,22 @@ class BottleBase(SQLModel):
     style: Optional[str] = None
     region: Optional[str] = None
     age: Optional[int] = None
-    abv: Optional[float] = None           # %
+    proof: Optional[float] = None
+    abv: Optional[float] = None
     size_ml: Optional[int] = None
     release_year: Optional[int] = None
     barcode_upc: Optional[str] = None
+    mashbill_markdown: Optional[str] = None
     notes_markdown: Optional[str] = None
     image_url: Optional[str] = None
+
+class BottleAudit(SQLModel, table=True):
+    audit_id: Optional[int] = Field(default=None, primary_key=True)
+    bottle_id: int
+    changed_by: Optional[str] = None        # future: user id/subject
+    changed_at: datetime = Field(default_factory=datetime.utcnow)
+    # store as JSON string (SQLite TEXT)
+    changes_json: str
 
 class Bottle(BottleBase, table=True):
     bottle_id: Optional[int] = Field(default=None, primary_key=True)
@@ -43,7 +52,6 @@ class Bottle(BottleBase, table=True):
     updated_utc: datetime = Field(default_factory=datetime.utcnow)
 
     purchases: List["Purchase"] = Relationship(back_populates="bottle")
-    # forward side of M2M
     tags: List[Tag] = Relationship(back_populates="bottles", link_model=BottleTag)
 
 class Purchase(SQLModel, table=True):
