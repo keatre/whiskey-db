@@ -1,6 +1,8 @@
 # Whiskey-DB 🍷🥃
 Self-hosted database for cataloging and valuing your whiskey collection.
 
+![CI](https://github.com/keatre/whiskey-db/actions/workflows/ci.yml/badge.svg)
+
 ## ✨ Features
 - Add, edit, and delete bottles with brand, expression, style, region, distillery, ABV, age, size, release year
 - Upload bottle images

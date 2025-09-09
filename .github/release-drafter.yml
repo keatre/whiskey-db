@@ -1,0 +1,22 @@
+name-template: 'Whiskey-DB v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+categories:
+  - title: '🚀 Features'
+    labels: [feature, feat, enhancement]
+  - title: '🐛 Fixes'
+    labels: [fix, bug]
+  - title: '🧹 Chore'
+    labels: [chore, docs, refactor, build, ci]
+  - title: '🔒 Security'
+    labels: [security]
+exclude-labels:
+  - skip-changelog
+template: |
+  ## What’s Changed
+
+  $CHANGES
+
+  ---
+  🏷️ Version: $NEXT_PATCH_VERSION
+  📅 Date: $DATE

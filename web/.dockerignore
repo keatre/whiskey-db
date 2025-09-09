@@ -1,0 +1,5 @@
+node_modules
+npm-debug.log
+.next/cache
+.vscode
+.DS_Store
