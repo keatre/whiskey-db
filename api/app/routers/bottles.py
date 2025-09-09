@@ -2,11 +2,11 @@ import json
 from datetime import datetime
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlmodel import Session, select, SQLModel
 
 from ..db import get_session
-from ..models import Bottle, BottleAudit
+from ..models import Bottle, BottleAudit, Purchase, TastingNote, BottleTag
 
 router = APIRouter(prefix="/bottles", tags=["bottles"])
 
@@ -134,3 +134,49 @@ def list_bottle_audits(bottle_id: int, session: Session = Depends(get_session)):
     return session.exec(
         select(BottleAudit).where(BottleAudit.bottle_id == bottle_id).order_by(BottleAudit.changed_at.desc())
     ).all()
+
+@router.delete("/{bottle_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
+    b = session.get(Bottle, bottle_id)
+    if not b:
+        raise HTTPException(404, "Bottle not found")
+
+    # 1) Tasting notes for this bottle's purchases
+    purchase_ids = [
+        p.purchase_id
+        for p in session.exec(select(Purchase).where(Purchase.bottle_id == bottle_id)).all()
+        if p.purchase_id is not None
+    ]
+    if purchase_ids:
+        notes = session.exec(
+            select(TastingNote).where(TastingNote.purchase_id.in_(purchase_ids))
+        ).all()
+        for n in notes:
+            session.delete(n)
+
+    # 2) Purchases for this bottle
+    purchases = session.exec(
+        select(Purchase).where(Purchase.bottle_id == bottle_id)
+    ).all()
+    for p in purchases:
+        session.delete(p)
+
+    # 3) Tag links
+    links = session.exec(
+        select(BottleTag).where(BottleTag.bottle_id == bottle_id)
+    ).all()
+    for link in links:
+        session.delete(link)
+
+    # 4) Audit rows
+    audits = session.exec(
+        select(BottleAudit).where(BottleAudit.bottle_id == bottle_id)
+    ).all()
+    for a in audits:
+        session.delete(a)
+
+    # 5) The bottle
+    session.delete(b)
+    session.commit()
+
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

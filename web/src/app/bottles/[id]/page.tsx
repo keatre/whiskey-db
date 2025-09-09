@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { currency } from '../../../lib/format';
-import ReactMarkdown from 'react-markdown';
+import MarkdownViewer from '../../../components/MarkdownViewer';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
@@ -195,13 +195,11 @@ export default function BottleDetailPage() {
         </div>
       </section>
 
-      {/* Mash Bill */}
+      {/* Mash Bill or Barrell */}
       {bottle.mashbill_markdown && (
         <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-          <h2 style={{marginTop:0}}>Mash Bill</h2>
-          <div style={{whiteSpace:'pre-wrap'}}>
-            <ReactMarkdown>{bottle.mashbill_markdown}</ReactMarkdown>
-          </div>
+          <h2 style={{marginTop:0}}>Mash Bill / Barrell Info</h2>
+          <MarkdownViewer>{bottle.mashbill_markdown}</MarkdownViewer>
         </section>
       )}
 
@@ -209,24 +207,37 @@ export default function BottleDetailPage() {
       {bottle.notes_markdown && (
         <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
           <h2 style={{marginTop:0}}>Notes</h2>
-          <div style={{whiteSpace:'pre-wrap'}}>
-            <ReactMarkdown>{bottle.notes_markdown}</ReactMarkdown>
-          </div>
+          <MarkdownViewer>{bottle.notes_markdown}</MarkdownViewer>
         </section>
       )}
 
       {/* Purchases */}
-      <h2 style={{marginTop:16}}>Purchases</h2>
-      <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>
-      <ul style={{marginTop:8}}>
-        {purchases.map(p => (
-          <li key={p.purchase_id}>
-            {p.purchase_date ?? '—'} · qty {p.quantity} · {currency(p.price_paid)} · {p.status ?? '—'}
-            {' '}<Link href={`/purchases/${p.purchase_id}`}>Open</Link>
+      <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
+      <h2 style={{marginTop:0}}>Purchases</h2>
+      <ul style={{ marginTop: 8, listStyle: 'none', paddingLeft: 0 }}>
+        {purchases.map((p) => (
+          <li
+            key={p.purchase_id}
+            style={{
+              marginBottom: 12,
+              padding: '8px 0',
+              borderBottom: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <div>
+              <strong>{p.purchase_date ?? '—'}</strong> · qty {p.quantity} ·{' '}
+              {currency(p.price_paid)} · {p.status ?? '—'}
+            </div>
+            <div style={{ marginTop: 4 }}>
+              <Link href={`/purchases/${p.purchase_id}`}>View</Link>
+            </div>
           </li>
         ))}
         {purchases.length === 0 && <li>No purchases yet.</li>}
       </ul>
-    </main>
+      <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>
+    </section>
+  </main>
+
   );
 }
