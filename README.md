@@ -1,6 +1,7 @@
-# Whiskey-DB 🍷🥃
+# Whiskey-DB 🥃
 Self-hosted database for cataloging and valuing your whiskey collection.
 
+[![GitHub release](https://img.shields.io/github/v/release/username/whiskey-db)](https://github.com/username/whiskey-db/releases)
 ![CI](https://github.com/keatre/whiskey-db/actions/workflows/ci.yml/badge.svg)
 
 ## ✨ Features
