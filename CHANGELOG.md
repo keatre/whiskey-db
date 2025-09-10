@@ -1,4 +1,10 @@
 
+## [1.0.1] - 2025-09-10
+### Changed
+- Minor updates to accommodate GitHub logic and CI/lint/pytest wiring
+- Dockerfile fixes for web image build
+- Initial pytest health test and CI integration
+
 ## [1.0.0] - 2025-09-09
 ### Added
 - Bottle CRUD (create, edit, delete)
