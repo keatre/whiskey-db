@@ -84,7 +84,7 @@ jobs:
       - name: Run tests
         if: ${{ hashFiles('api/tests/**/*.py') != '' }}
         env:
-          PYTHONPATH: ./api
+          PYTHONPATH: .
         run: pytest -q --maxfail=1
 
       
