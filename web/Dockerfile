@@ -2,14 +2,12 @@
 FROM node:20-alpine AS builder
 WORKDIR /app
 
-# Faster, cached installs
 COPY package*.json ./
 RUN npm ci
 
-# Copy source and build
+# Copy source and ensure public exists (even if repo has none)
 COPY . .
-# Recommend: next.config.js should include `output: 'standalone'`
-RUN npm run build
+RUN mkdir -p public && npm run build
 
 # ---- Runtime stage ----
 FROM node:20-alpine AS runner
@@ -24,10 +22,8 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 
-# Run as non-root
-RUN addgroup -g 1001 -S nodegrp && adduser -S node -u 1001 -G nodegrp
-USER 1001
+# Use the pre-existing non-root user provided by the node image
+USER node
 
 EXPOSE 3000
-# .next/standalone contains a server.js at project root we copied above
 CMD ["node", "server.js"]

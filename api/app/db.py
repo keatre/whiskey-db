@@ -1,6 +1,5 @@
 import os
 from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy import text
 
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./whiskey.db")
 
