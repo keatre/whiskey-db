@@ -77,6 +77,15 @@ jobs:
       - name: Ruff (lint)
         run: ruff check .
 
+      - name: Install test deps
+        run: |
+          pip install pytest pytest-cov
+
+      - name: Run tests
+        if: ${{ hashFiles('api/tests/**/*.py') != '' }}
+        run: pytest -q --maxfail=1
+
+      
       # If you add tests later:
       # - name: Run tests
       #   run: pytest -q
