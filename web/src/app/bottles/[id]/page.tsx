@@ -5,8 +5,9 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { currency } from '../../../lib/format';
 import MarkdownViewer from '../../../components/MarkdownViewer';
+import AdminOnly from '../../../components/AdminOnly';
 
-const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
 type Bottle = {
   bottle_id: number;
@@ -46,8 +47,16 @@ type Valuation = {
 function Row({ label, value }: { label: string; value?: string | number | null }) {
   if (value === undefined || value === null || value === '') return null;
   return (
-    <div style={{display:'grid', gridTemplateColumns:'160px 1fr', gap:12, padding:'6px 0', borderTop:'1px solid rgba(255,255,255,0.06)'}}>
-      <div style={{opacity:0.7}}>{label}</div>
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: '160px 1fr',
+        gap: 12,
+        padding: '6px 0',
+        borderTop: '1px solid rgba(255,255,255,0.06)',
+      }}
+    >
+      <div style={{ opacity: 0.7 }}>{label}</div>
       <div>{value}</div>
     </div>
   );
@@ -63,102 +72,127 @@ export default function BottleDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+
     async function load() {
       try {
         const [resB, resP] = await Promise.all([
-          fetch(`${API}/bottles/${id}`),
-          fetch(`${API}/purchases?bottle_id=${id}`)
+          fetch(`${API}/bottles/${id}`, { credentials: 'include' }),
+          fetch(`${API}/purchases?bottle_id=${id}`, { credentials: 'include' }),
         ]);
 
         if (resB.ok) {
           const b = await resB.json();
+          if (!mounted) return;
           setBottle(b);
 
           // Load market price by UPC, if present
           if (b?.barcode_upc) {
             try {
-              const resV = await fetch(`${API}/valuation?upc=${encodeURIComponent(b.barcode_upc)}`);
-              if (resV.ok) setValuation(await resV.json());
-            } catch { /* ignore */ }
+              const resV = await fetch(
+                `${API}/valuation?upc=${encodeURIComponent(b.barcode_upc)}`,
+                { credentials: 'include' }
+              );
+              if (mounted && resV.ok) setValuation(await resV.json());
+            } catch {
+              /* ignore */
+            }
           } else {
             setValuation(null);
           }
         } else {
+          if (!mounted) return;
           setBottle(null);
           setValuation(null);
         }
 
         const p = resP.ok ? await resP.json() : [];
+        if (!mounted) return;
         setPurchases(Array.isArray(p) ? p : []);
       } catch {
+        if (!mounted) return;
         setBottle(null);
         setPurchases([]);
         setValuation(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
+
     load();
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   // Compute "your price" from purchases: prefer most recent purchase_date, else average
   const yourPrice = useMemo<number | null>(() => {
     if (!purchases.length) return null;
     const withDates = purchases
-      .filter(p => p.price_paid != null)
+      .filter((p) => p.price_paid != null)
       .sort((a, b) => (a.purchase_date || '').localeCompare(b.purchase_date || ''));
     if (withDates.length && withDates[withDates.length - 1].price_paid != null) {
       return withDates[withDates.length - 1].price_paid!;
     }
     // fallback: average of non-null prices
-    const priced = purchases.map(p => p.price_paid).filter((x): x is number => x != null);
+    const priced = purchases.map((p) => p.price_paid).filter((x): x is number => x != null);
     if (!priced.length) return null;
     return Math.round((priced.reduce((s, n) => s + n, 0) / priced.length) * 100) / 100;
   }, [purchases]);
 
-  // Market price from valuation
   const marketPrice = valuation?.price ?? null;
 
   // Delta
-  const delta = (yourPrice != null && marketPrice != null) ? (marketPrice - yourPrice) : null;
-  const deltaStr = delta == null ? undefined :
-    `${delta >= 0 ? '+' : ''}${currency(delta)}`;
+  const delta = yourPrice != null && marketPrice != null ? marketPrice - yourPrice : null;
+  const deltaStr =
+    delta == null ? undefined : `${delta >= 0 ? '+' : ''}${currency(delta)}`;
 
   if (loading) return <main><p>Loading…</p></main>;
   if (!bottle) return <main><p>Not found</p></main>;
 
-  const abvStr   = bottle.abv != null ? `${bottle.abv}%` : undefined;
+  const abvStr = bottle.abv != null ? `${bottle.abv}%` : undefined;
   const proofStr = bottle.proof != null ? `${bottle.proof}` : undefined;
-  const ageStr   = bottle.age != null ? `${bottle.age} yrs` : undefined;
-  const sizeStr  = bottle.size_ml != null ? `${bottle.size_ml} ml` : undefined;
+  const ageStr = bottle.age != null ? `${bottle.age} yrs` : undefined;
+  const sizeStr = bottle.size_ml != null ? `${bottle.size_ml} ml` : undefined;
 
   return (
     <main>
-      {/* Title + Edit */}
-      <div style={{display:'flex', alignItems:'center', gap:12}}>
-        <h1 style={{margin:0}}>
-          {bottle.brand}{bottle.expression ? ` — ${bottle.expression}` : ''}
+      {/* Title + (admin-only) Edit */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+        <h1 style={{ margin: 0 }}>
+          {bottle.brand}
+          {bottle.expression ? ` — ${bottle.expression}` : ''}
         </h1>
-        <div style={{marginLeft:'auto'}}>
-          <Link href={`/bottles/${id}/edit`}>✏️ Edit Bottle</Link>
+        <div style={{ marginLeft: 'auto' }}>
+          <AdminOnly>
+            <Link href={`/bottles/${id}/edit`}>✏️ Edit Bottle</Link>
+          </AdminOnly>
         </div>
       </div>
 
       {/* Image */}
       {bottle.image_url && (
-        <div style={{margin: '12px 0'}}>
+        <div style={{ margin: '12px 0' }}>
           <img
             src={`${bottle.image_url.startsWith('http') ? '' : API}${bottle.image_url}`}
             alt={`${bottle.brand} ${bottle.expression ?? ''}`}
-            style={{maxWidth: 420, borderRadius: 8}}
+            style={{ maxWidth: 420, borderRadius: 8 }}
           />
         </div>
       )}
 
       {/* Details */}
-      <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-        <h2 style={{marginTop:0}}>Details</h2>
-        <div style={{marginTop:6}}>
+      <section
+        className="card"
+        style={{
+          marginTop: 16,
+          padding: '12px 16px',
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.03)',
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Details</h2>
+        <div style={{ marginTop: 6 }}>
           <Row label="Style" value={bottle.style} />
           <Row label="Region" value={bottle.region} />
           <Row label="Distillery" value={bottle.distillery} />
@@ -172,72 +206,125 @@ export default function BottleDetailPage() {
       </section>
 
       {/* Pricing */}
-      <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-        <h2 style={{marginTop:0}}>Pricing</h2>
-        <div style={{display:'grid', gridTemplateColumns:'160px 1fr', gap:12, marginTop:6}}>
-          <div style={{opacity:0.7}}>Your Price</div>
+      <section
+        className="card"
+        style={{
+          marginTop: 16,
+          padding: '12px 16px',
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.03)',
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Pricing</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '160px 1fr', gap: 12, marginTop: 6 }}>
+          <div style={{ opacity: 0.7 }}>Your Price</div>
           <div>{yourPrice != null ? currency(yourPrice) : '—'}</div>
 
-          <div style={{opacity:0.7}}>Market Price</div>
+          <div style={{ opacity: 0.7 }}>Market Price</div>
           <div>
             {marketPrice != null ? (
               <>
                 {currency(marketPrice)}
-                {valuation?.source && <> <span style={{opacity:0.7}}>({valuation.source}</span>{valuation.as_of ? <span style={{opacity:0.7}}>, {valuation.as_of}</span> : null}<span style={{opacity:0.7}}>)</span></>}
+                {valuation?.source && (
+                  <>
+                    {' '}
+                    <span style={{ opacity: 0.7 }}>( {valuation.source}
+                    {valuation.as_of ? <span style={{ opacity: 0.7 }}>, {valuation.as_of}</span> : null}
+                    )</span>
+                  </>
+                )}
               </>
-            ) : '—'}
+            ) : (
+              '—'
+            )}
           </div>
 
-          <div style={{opacity:0.7}}>Delta</div>
-          <div style={{color: delta == null ? 'inherit' : (delta >= 0 ? 'var(--green, #4ade80)' : 'var(--red, #f87171)')}}>
+          <div style={{ opacity: 0.7 }}>Delta</div>
+          <div
+            style={{
+              color:
+                delta == null
+                  ? 'inherit'
+                  : delta >= 0
+                  ? 'var(--green, #4ade80)'
+                  : 'var(--red, #f87171)',
+            }}
+          >
             {deltaStr ?? '—'}
           </div>
         </div>
       </section>
 
-      {/* Mash Bill or Barrell */}
+      {/* Mash Bill or Barrel */}
       {bottle.mashbill_markdown && (
-        <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-          <h2 style={{marginTop:0}}>Mash Bill / Barrell Info</h2>
+        <section
+          className="card"
+          style={{
+            marginTop: 16,
+            padding: '12px 16px',
+            borderRadius: 8,
+            background: 'rgba(255,255,255,0.03)',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>Mash Bill / Barrel Info</h2>
           <MarkdownViewer>{bottle.mashbill_markdown}</MarkdownViewer>
         </section>
       )}
 
       {/* Notes */}
       {bottle.notes_markdown && (
-        <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-          <h2 style={{marginTop:0}}>Notes</h2>
+        <section
+          className="card"
+          style={{
+            marginTop: 16,
+            padding: '12px 16px',
+            borderRadius: 8,
+            background: 'rgba(255,255,255,0.03)',
+          }}
+        >
+          <h2 style={{ marginTop: 0 }}>Notes</h2>
           <MarkdownViewer>{bottle.notes_markdown}</MarkdownViewer>
         </section>
       )}
 
       {/* Purchases */}
-      <section className="card" style={{marginTop:16, padding:'12px 16px', borderRadius:8, background:'rgba(255,255,255,0.03)'}}>
-      <h2 style={{marginTop:0}}>Purchases</h2>
-      <ul style={{ marginTop: 8, listStyle: 'none', paddingLeft: 0 }}>
-        {purchases.map((p) => (
-          <li
-            key={p.purchase_id}
-            style={{
-              marginBottom: 12,
-              padding: '8px 0',
-              borderBottom: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <div>
-              <strong>{p.purchase_date ?? '—'}</strong> · qty {p.quantity} ·{' '}
-              {currency(p.price_paid)} · {p.status ?? '—'}
-            </div>
-            <div style={{ marginTop: 4 }}>
-              <Link href={`/purchases/${p.purchase_id}`}>View</Link>
-            </div>
-          </li>
-        ))}
-        {purchases.length === 0 && <li>No purchases yet.</li>}
-      </ul>
-      <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>
-    </section>
-  </main>
+      <section
+        className="card"
+        style={{
+          marginTop: 16,
+          padding: '12px 16px',
+          borderRadius: 8,
+          background: 'rgba(255,255,255,0.03)',
+        }}
+      >
+        <h2 style={{ marginTop: 0 }}>Purchases</h2>
+        <ul style={{ marginTop: 8, listStyle: 'none', paddingLeft: 0 }}>
+          {purchases.map((p) => (
+            <li
+              key={p.purchase_id}
+              style={{
+                marginBottom: 12,
+                padding: '8px 0',
+                borderBottom: '1px solid rgba(255,255,255,0.08)',
+              }}
+            >
+              <div>
+                <strong>{p.purchase_date ?? '—'}</strong> · qty {p.quantity} ·{' '}
+                {currency(p.price_paid)} · {p.status ?? '—'}
+              </div>
+              <div style={{ marginTop: 4 }}>
+                <Link href={`/purchases/${p.purchase_id}`}>View</Link>
+              </div>
+            </li>
+          ))}
+          {purchases.length === 0 && <li>No purchases yet.</li>}
+        </ul>
 
+        {/* Admin-only: Add Purchase */}
+        <AdminOnly>
+          <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>
+        </AdminOnly>
+      </section>
+    </main>
   );
 }

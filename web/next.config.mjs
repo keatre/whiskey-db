@@ -2,5 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
-}
-export default nextConfig
+  // no rewrites here — proxy is handled by the app routes above
+};
+export default nextConfig;

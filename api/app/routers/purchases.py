@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 from ..db import get_session
 from ..models import Purchase, Bottle, PurchaseUpdate
+from ..deps import get_current_user_role, require_admin
 
 router = APIRouter(prefix="/purchases", tags=["purchases"])
 

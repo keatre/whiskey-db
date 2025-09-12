@@ -2,8 +2,9 @@
 
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import AdminOnly from '../../../../../components/AdminOnly';
 
-const API = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
 type Retailer = {
   retailer_id: number;
@@ -11,13 +12,23 @@ type Retailer = {
 };
 
 export default function NewPurchasePage() {
-  const r = useRouter();
+  const router = useRouter();
   const params = useParams();
   const bottleId = Number(params?.id);
 
   const [retailers, setRetailers] = useState<Retailer[]>([]);
   useEffect(() => {
-    fetch(`${API}/retailers`).then(r=>r.json()).then(setRetailers).catch(()=>setRetailers([]));
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch(`${API}/retailers`, { credentials: 'include' });
+        const data = res.ok ? await res.json() : [];
+        if (mounted) setRetailers(Array.isArray(data) ? data : []);
+      } catch {
+        if (mounted) setRetailers([]);
+      }
+    })();
+    return () => { mounted = false; };
   }, []);
 
   const [form, setForm] = useState({
@@ -49,63 +60,80 @@ export default function NewPurchasePage() {
       storage_location: form.storage_location || null,
       location: form.location || null,
       retailer_id: form.retailer_id === '' ? null : Number(form.retailer_id),
-      // allow setting opened/killed on creation (optional)
       opened_dt: null,
       killed_dt: null
     };
     const res = await fetch(`${API}/purchases`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
     setSaving(false);
-    if (res.ok) r.push(`/bottles/${bottleId}`);
+    if (res.ok) router.push(`/bottles/${bottleId}`);
     else alert('Save failed: ' + (await res.text()));
   }
 
   return (
-    <main>
-      <h1>New Purchase</h1>
-      <form onSubmit={submit} style={{display:'grid', gridTemplateColumns:'220px 320px', gap:8, alignItems:'center', maxWidth:'760px'}}>
-        <label>purchase_date</label>
-        <input type="date" value={form.purchase_date} onChange={e=>set('purchase_date', e.target.value)} style={{padding:8}} />
+    <AdminOnly>
+      <main>
+        <h1>New Purchase</h1>
+        <form
+          onSubmit={submit}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '220px 320px',
+            gap: 8,
+            alignItems: 'center',
+            maxWidth: '760px'
+          }}
+        >
+          <label>purchase_date</label>
+          <input type="date" value={form.purchase_date} onChange={e => set('purchase_date', e.target.value)} style={{ padding: 8 }} />
 
-        <label>price_paid</label>
-        <input value={form.price_paid} onChange={e=>set('price_paid', e.target.value)} style={{padding:8}} />
+          <label>price_paid</label>
+          <input value={form.price_paid} onChange={e => set('price_paid', e.target.value)} style={{ padding: 8 }} />
 
-        <label>tax_paid</label>
-        <input value={form.tax_paid} onChange={e=>set('tax_paid', e.target.value)} style={{padding:8}} />
+          <label>tax_paid</label>
+          <input value={form.tax_paid} onChange={e => set('tax_paid', e.target.value)} style={{ padding: 8 }} />
 
-        <label>quantity</label>
-        <input value={form.quantity} onChange={e=>set('quantity', e.target.value)} style={{padding:8}} />
+          <label>quantity</label>
+          <input value={form.quantity} onChange={e => set('quantity', e.target.value)} style={{ padding: 8 }} />
 
-        <label>status</label>
-        <select value={form.status} onChange={e=>set('status', e.target.value)}>
-          <option value="sealed">sealed</option>
-          <option value="open">open</option>
-          <option value="finished">finished</option>
-        </select>
+          <label>status</label>
+          <select value={form.status} onChange={e => set('status', e.target.value)}>
+            <option value="sealed">sealed</option>
+            <option value="open">open</option>
+            <option value="finished">finished</option>
+          </select>
 
-        <label>storage_location</label>
-        <input value={form.storage_location} onChange={e=>set('storage_location', e.target.value)} style={{padding:8}} />
+          <label>storage_location</label>
+          <input value={form.storage_location} onChange={e => set('storage_location', e.target.value)} style={{ padding: 8 }} />
 
-        <label>location</label>
-        <input value={form.location} onChange={e=>set('location', e.target.value)} style={{padding:8}} />
+          <label>location</label>
+          <input value={form.location} onChange={e => set('location', e.target.value)} style={{ padding: 8 }} />
 
-        <label>retailer</label>
-        <select value={form.retailer_id} onChange={e=>set('retailer_id', e.target.value)} style={{padding:8}}>
-          <option value="">— none —</option>
-          {retailers.map(r => <option key={r.retailer_id} value={r.retailer_id}>{r.name}</option>)}
-        </select>
+          <label>retailer</label>
+          <select value={form.retailer_id} onChange={e => set('retailer_id', e.target.value)} style={{ padding: 8 }}>
+            <option value="">— none —</option>
+            {retailers.map(ret => (
+              <option key={ret.retailer_id} value={ret.retailer_id}>
+                {ret.name}
+              </option>
+            ))}
+          </select>
 
-        <div></div>
-        <div style={{fontSize:12}}>
-          Need a new retailer? <a href="/retailers/new">Create one</a>, then come back.
-        </div>
+          <div></div>
+          <div style={{ fontSize: 12 }}>
+            Need a new retailer? <a href="/retailers/new">Create one</a>, then come back.
+          </div>
 
-        <div></div>
-        <button type="submit" disabled={saving} style={{padding:'8px 12px'}}>{saving ? 'Saving…' : 'Save'}</button>
-      </form>
-    </main>
+          <div></div>
+          <button type="submit" disabled={saving} style={{ padding: '8px 12px' }}>
+            {saving ? 'Saving…' : 'Save'}
+          </button>
+        </form>
+      </main>
+    </AdminOnly>
   );
 }
