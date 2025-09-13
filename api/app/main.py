@@ -1,4 +1,5 @@
 # api/app/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -10,22 +11,18 @@ from .settings import settings
 
 app = FastAPI(title="Whiskey DB API")
 
-# --- CORS (env-driven; required for cookie auth from the web app) ---
-# settings.ALLOWED_ORIGINS is a comma-separated list, e.g.:
-# "http://461weston.ddns.net:8080,http://192.168.4.55:8080,http://localhost:8080"
+# --- CORS (env-driven; cookie auth needs explicit allowed origins) ---
 origins = [o.strip() for o in (settings.ALLOWED_ORIGINS or "").split(",") if o.strip()]
-
-# Fallbacks for dev if the env var is empty
 if not origins:
     origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,      # must be explicit when allow_credentials=True
-    allow_credentials=True,     # required so API can set JWT cookies
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    max_age=3600,               # nicer preflight caching
+    max_age=3600,
 )
 
 @app.on_event("startup")
@@ -36,10 +33,16 @@ def on_startup():
 def health():
     return {"status": "ok"}
 
-# Serve uploaded images, etc.
+# --- Static mounts ---
+# Keep generic static if you use it elsewhere
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Routers
+# Serve uploads directly from /uploads (backed by /data/uploads)
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/data/uploads")
+os.makedirs(UPLOAD_DIR, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
+
+# --- Routers ---
 app.include_router(auth.router)
 app.include_router(bottles.router)
 app.include_router(purchases.router)

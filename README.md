@@ -48,6 +48,20 @@ Access:
 - Track purchases with quantity & price
 - UPC lookup auto-fetches current market values
 
+## 🛡️ Disaster Recovery to NAS (v1.1.2)
+
+Backups run from the `backup` service and push encrypted snapshots to your NAS over SMB/CIFS.
+
+### Setup
+1. Copy `.env.example` → `.env` and fill:
+   - `NAS_SMB_HOST`, `NAS_SMB_SHARE`
+   - `NAS_SMB_USER`, `NAS_SMB_PASS`
+   - `RESTIC_PASSWORD` (keep safe)
+   - Optionally tune `BACKUP_CRON` and retention.
+2. Bring the stack up:
+   ```bash
+   docker compose up -d
+
 ### 🔐Security Notes
 - Default DB is SQLite (local file under /data/)
 - For production, configure Postgres + TLS reverse proxy

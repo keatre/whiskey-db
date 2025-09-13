@@ -9,14 +9,26 @@ import { NextResponse } from 'next/server';
 export function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // (Optional) keep your LAN guest logic etc. here — it runs only for pages.
-  // Example: allow /signin always
+  // 1) Explicit bypass for static and public assets
+  if (
+    pathname.startsWith('/_next') ||
+    pathname.startsWith('/static') ||
+    pathname === '/favicon.ico' ||
+    pathname === '/robots.txt' ||
+    pathname === '/sitemap.xml' ||
+    /\.(?:png|jpg|jpeg|gif|webp|ico|svg|json|txt)$/.test(pathname)
+  ) {
+    return NextResponse.next();
+  }
+
+  // 2) Always allow /signin
   if (pathname === '/signin') {
     return NextResponse.next();
   }
 
-  // Example LAN + cookie presence checks could go here
+  // 3) Example: LAN + cookie presence checks could go here
   // ...
+
   return NextResponse.next();
 }
 

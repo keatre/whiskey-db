@@ -6,6 +6,10 @@ import NavLinks from '../components/NavLinks';
 export const metadata = {
   title: 'Whiskey DB',
   description: 'Self-hosted whiskey collection',
+    icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon-16x16.png",
+    apple: "/apple-touch-icon.png",}
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

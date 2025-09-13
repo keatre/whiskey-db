@@ -19,6 +19,10 @@ LOG_DIR=/var/log
 LOG_FILE="$LOG_DIR/backup.log"
 mkdir -p "$LOG_DIR"
 
+# Ensure scripts are executable even if git perms/line endings were lost
+# (avoids /app/backup.sh: Permission denied)
+chmod +x /app/*.sh 2>/dev/null || true
+
 if [ "$BACKUP_ENABLED" != "true" ]; then
   echo "[backup] BACKUP_ENABLED=false → container idle." | tee -a "$LOG_FILE"
   tail -f /dev/null
@@ -35,13 +39,13 @@ if ! restic snapshots >/dev/null 2>&1; then
   restic init
 fi
 
-# Write crontab
-echo "${BACKUP_CRON} /app/backup.sh >> ${LOG_FILE} 2>&1" > /etc/crontabs/root
+# Write crontab (invoke via /bin/sh so exec bit isn't required at runtime)
+echo "${BACKUP_CRON} /bin/sh /app/backup.sh >> ${LOG_FILE} 2>&1" > /etc/crontabs/root
 echo "[backup] Cron installed: ${BACKUP_CRON} /app/backup.sh"
 
-# First-run backup (useful smoke test)
+# First-run backup (useful smoke test; call via /bin/sh to avoid exec-bit issues)
 echo "[backup] Running first backup now..."
-/app/backup.sh >> "${LOG_FILE}" 2>&1 || true
+/bin/sh /app/backup.sh >> "${LOG_FILE}" 2>&1 || true
 
 # Start cron and tail logs
 crond -f -l 8 &

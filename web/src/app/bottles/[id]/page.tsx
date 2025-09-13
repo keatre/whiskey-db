@@ -3,11 +3,26 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import { apiPath } from "../../../lib/apiPath";
 import { currency } from '../../../lib/format';
 import MarkdownViewer from '../../../components/MarkdownViewer';
 import AdminOnly from '../../../components/AdminOnly';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+
+// Inline fallback placeholder (no 404 loop)
+const PLACEHOLDER_SVG =
+  'data:image/svg+xml;utf8,' +
+  encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="640" viewBox="0 0 256 256">
+  <rect width="256" height="256" rx="16" fill="#222"/>
+  <g fill="none" stroke="#888" stroke-width="8" stroke-linecap="round">
+    <rect x="96" y="36" width="64" height="28" rx="6"/>
+    <path d="M104 64h48v16c0 6-3 12-8 16l-8 6v96c0 8-6 14-14 14s-14-6-14-14v-96l-8-6c-5-4-8-10-8-16V64z"/>
+    <line x1="112" y1="140" x2="144" y2="140"/>
+    <line x1="112" y1="164" x2="144" y2="164"/>
+  </g>
+</svg>`);
 
 type Bottle = {
   bottle_id: number;
@@ -174,9 +189,14 @@ export default function BottleDetailPage() {
       {bottle.image_url && (
         <div style={{ margin: '12px 0' }}>
           <img
-            src={`${bottle.image_url.startsWith('http') ? '' : API}${bottle.image_url}`}
+            src={apiPath(bottle.image_url)}
             alt={`${bottle.brand} ${bottle.expression ?? ''}`}
             style={{ maxWidth: 420, borderRadius: 8 }}
+            onError={(e) => {
+              const img = e.currentTarget as HTMLImageElement;
+              img.onerror = null;           // prevent infinite loop
+              img.src = PLACEHOLDER_SVG;    // inline fallback
+            }}
           />
         </div>
       )}

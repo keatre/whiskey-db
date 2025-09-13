@@ -1,4 +1,54 @@
 
+## [1.1.2] - 2025-09-13
+⚠️ **STATUS:** This is a **development branch**. Authentication/login is **not working reliably** and requires further debugging.  
+Do **not** deploy this branch to production.
+
+### Added
+- **Automated backups** via a lightweight backup container using Restic:
+  - Supports SMB/CIFS mount to a local NAS.
+  - Nightly cron by default (configurable).
+  - Retention policy (daily/weekly/monthly) configurable via `.env`.
+- **Image storage & serving overhaul**:
+  - All uploads are now stored under `/data/uploads` (bind mounted).
+  - API serves images directly at `/uploads/<file>` and public URLs use `/api/uploads/<file>`.
+  - New `apiPath()` helper ensures legacy paths still render.
+  - Bottle detail page now has a resilient inline SVG fallback (no 404 flood).
+
+### Changed
+- `api/app/main.py` now mounts:
+  - `/uploads` → serves `UPLOAD_DIR` (defaults to `/data/uploads`).
+  - Kept `/static` for any non-upload assets.
+- `api/app/routers/uploads.py` now returns URLs in the form `/<API_BASE>/uploads/<filename>`.
+- `web/src/app/bottles/[id]/page.tsx`:
+  - Uses `apiPath(bottle.image_url)` for safe URL normalization.
+  - Inline fallback placeholder (no network) and prevents onError loops.
+- `web/src/middleware.ts`:
+  - Explicitly bypasses static/public assets (incl. `/favicon.ico`) to avoid unwanted interception.
+- Added favicon + platform icons support (`web/public/*`) and metadata in `layout.tsx`.
+
+### Added (maintenance)
+- `api/scripts/normalize_image_urls.py` + `scripts/db-normalize-image-urls.sh`
+  - One-shot DB migration to normalize existing `bottle.image_url` rows to `/api/uploads/<file>`.
+  - Idempotent; supports dry-run and commit (`RUN=1`).
+
+### Fixed
+- First-run backup “permission denied”: ensure `/app/backup.sh` is executable and called via `sh`.
+- Image 404 loops caused by missing placeholder—now replaced with an inline SVG.
+
+### Notes / Migration
+1. Place your favicon bundle in `web/public/` (e.g. from favicon.io).
+2. Run the DB normalization **once**:
+```bash
+./scripts/db-normalize-image-urls.sh # dry-run
+RUN=1 ./scripts/db-normalize-image-urls.sh # commit changes
+```
+3. Ensure `.env` contains the SMB settings and backup variables (see `.env.example` section below).
+4. Bounce services:
+```bash
+docker compose up -d --build
+```
+
+---
 
 ## [v1.1.1-dev] - Development Branch (Unstable)
 

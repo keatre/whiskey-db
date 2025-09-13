@@ -99,24 +99,33 @@ def _throttle_record(ip: str, success: bool) -> None:
 # -------------------------
 # Cookie helpers (scheme-aware)
 # -------------------------
+def _to_bool(v) -> bool:
+    """Robust truthy parser for env values like 'true'/'false'/'1'/'0'."""
+    if isinstance(v, bool):
+        return v
+    if v is None:
+        return False
+    s = str(v).strip().lower()
+    return s in {"1", "true", "yes", "y", "on"}
+
 def _cookie_flags(request: Request) -> dict:
     """
     Decide cookie security flags based on env + request scheme.
-    - If settings.COOKIE_SECURE is True/False, honor it.
+    - If settings.COOKIE_SECURE is explicitly set, parse it robustly.
     - If None or "auto", detect HTTPS via X-Forwarded-Proto or request.url.scheme.
     - Default samesite to 'lax' unless overridden.
     - If settings.COOKIE_DOMAIN is set, include it; otherwise omit (binds to current host).
     """
     raw_secure = getattr(settings, "COOKIE_SECURE", None)
-    if isinstance(raw_secure, str):
-        raw_secure = raw_secure.lower()
-    if raw_secure in (None, "auto"):
+
+    # auto-detect when missing or "auto"
+    if raw_secure is None or (isinstance(raw_secure, str) and raw_secure.strip().lower() == "auto"):
         scheme = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").lower()
         secure = (scheme == "https")
     else:
-        secure = bool(raw_secure)
+        secure = _to_bool(raw_secure)
 
-    samesite = getattr(settings, "COOKIE_SAMESITE", None) or "lax"
+    samesite = (getattr(settings, "COOKIE_SAMESITE", None) or "lax").lower()
     domain = getattr(settings, "COOKIE_DOMAIN", None) or None
 
     base = {
@@ -171,7 +180,7 @@ def login(
         username=user.username,
         email=user.email or None,
         role=user.role,
-        authenticated=True,
+        authenticated=True,            # logged in -> authenticated
         lan_guest=False,
     )
 
@@ -186,11 +195,13 @@ def logout(request: Request, response: Response):
 
 @router.get("/me", response_model=MeResponse)
 def me(user=Depends(get_current_user_role)):
+    # authenticated if and only if we are "admin" or "user"
+    is_auth = user["role"] in ("admin", "user")
     return MeResponse(
         username=user.get("username"),
         email=user.get("email") or None,
         role=user["role"],
-        authenticated=(user["role"] != "guest"),
+        authenticated=is_auth,
         lan_guest=user["lan_guest"],
     )
 
@@ -223,6 +234,6 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
         username=username,
         email=user.email or None,
         role=role,
-        authenticated=True,
+        authenticated=True,            # still authenticated
         lan_guest=False,
     )

@@ -2,36 +2,57 @@ services:
   web:
     image: node:20
     working_dir: /app
-    command: sh -c "npm install && npm run dev"
+    command: sh -c "npm install && npm run build && npm start"
     volumes:
       - ./web:/app
     env_file: .env
     ports:
       - "8080:3000"
-    networks:
-      appnet:
-        aliases: [web]
+    depends_on:
+      - api
 
   api:
     image: python:3.12
     working_dir: /app
-    command: >
-      sh -c "pip install -r requirements.txt &&
-             uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
+    command: sh -c "pip install -r requirements.txt && uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
     volumes:
       - ./api:/app
       - ./data:/data
       - ./api/static:/app/static
-      - ./api/data:/app/data
     env_file: .env
     environment:
       - DATABASE_URL=${DATABASE_URL:-sqlite:////data/whiskey.db}
     ports:
       - "8000:8000"
-    networks:
-      appnet:
-        aliases: [api]
 
-networks:
-  appnet:
-    driver: bridge
+  backup:
+    image: alpine:3.20
+    container_name: whiskey-backup
+    working_dir: /app
+    entrypoint: ["/bin/sh", "/app/entrypoint.sh"]
+    env_file: .env
+    environment:
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
+      BACKUP_CRON: ${BACKUP_CRON:-0 3 * * *}
+      BACKUP_SOURCE: ${BACKUP_SOURCE:-/data}
+      BACKUP_TAG: ${BACKUP_TAG:-whiskey-db}
+      RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:-7}
+      RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
+      RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
+      # For NAS we point restic to the CIFS mount inside the container:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/remote/restic-whiskey-db}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD}
+    volumes:
+      - ./ops/backup:/app
+      - ./data:/data:ro
+      - nas_restic_repo:/remote
+    restart: unless-stopped
+
+volumes:
+  nas_restic_repo:
+    driver: local
+    driver_opts:
+      type: cifs
+      device: "//${NAS_SMB_HOST}/${NAS_SMB_SHARE}"
+      o: "username=${NAS_SMB_USER},password=${NAS_SMB_PASS},vers=${NAS_SMB_VERS:-3.0},uid=${NAS_SMB_UID:-0},gid=${NAS_SMB_GID:-0},file_mode=0644,dir_mode=0755${NAS_SMB_EXTRA_OPTS}"
+
