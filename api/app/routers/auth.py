@@ -96,6 +96,40 @@ def _throttle_record(ip: str, success: bool) -> None:
         _ATTEMPTS[ip].append(time.monotonic())
 
 
+# -------------------------
+# Cookie helpers (scheme-aware)
+# -------------------------
+def _cookie_flags(request: Request) -> dict:
+    """
+    Decide cookie security flags based on env + request scheme.
+    - If settings.COOKIE_SECURE is True/False, honor it.
+    - If None or "auto", detect HTTPS via X-Forwarded-Proto or request.url.scheme.
+    - Default samesite to 'lax' unless overridden.
+    - If settings.COOKIE_DOMAIN is set, include it; otherwise omit (binds to current host).
+    """
+    raw_secure = getattr(settings, "COOKIE_SECURE", None)
+    if isinstance(raw_secure, str):
+        raw_secure = raw_secure.lower()
+    if raw_secure in (None, "auto"):
+        scheme = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").lower()
+        secure = (scheme == "https")
+    else:
+        secure = bool(raw_secure)
+
+    samesite = getattr(settings, "COOKIE_SAMESITE", None) or "lax"
+    domain = getattr(settings, "COOKIE_DOMAIN", None) or None
+
+    base = {
+        "httponly": True,
+        "samesite": samesite,
+        "secure": secure,
+        "path": "/",
+    }
+    if domain:
+        base["domain"] = domain
+    return base
+
+
 @router.post("/login", response_model=MeResponse)
 def login(
     data: LoginRequest,
@@ -115,13 +149,8 @@ def login(
     access = create_token(user.username, user.role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     refresh = create_token(user.username, user.role, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
 
-    # Set cookies
-    cookie_opts = {
-        "httponly": True,
-        "samesite": settings.COOKIE_SAMESITE,
-        "secure": settings.COOKIE_SECURE,
-        "path": "/",
-    }
+    # Set cookies (scheme-aware)
+    cookie_opts = _cookie_flags(request)
     response.set_cookie(
         settings.JWT_COOKIE_NAME,
         access,
@@ -148,13 +177,8 @@ def login(
 
 
 @router.post("/logout")
-def logout(response: Response):
-    cookie_opts = {
-        "httponly": True,
-        "samesite": settings.COOKIE_SAMESITE,
-        "secure": settings.COOKIE_SECURE,
-        "path": "/",
-    }
+def logout(request: Request, response: Response):
+    cookie_opts = _cookie_flags(request)
     response.delete_cookie(settings.JWT_COOKIE_NAME, **cookie_opts)
     response.delete_cookie(settings.JWT_REFRESH_COOKIE_NAME, **cookie_opts)
     return {"ok": True}
@@ -187,14 +211,12 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
 
     # Rotate access token
     access = create_token(username, role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    cookie_opts = _cookie_flags(request)
     response.set_cookie(
         settings.JWT_COOKIE_NAME,
         access,
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
-        httponly=True,
-        samesite=settings.COOKIE_SAMESITE,
-        secure=settings.COOKIE_SECURE,
-        path="/",
+        **cookie_opts,
     )
 
     return MeResponse(

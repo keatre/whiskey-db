@@ -6,13 +6,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite:////data/whiskey.db"
 
     # --- Security / JWT ---
-    SECRET_KEY: str = "change_me_to_a_long_random_string"
+    SECRET_KEY: str = "xYe4faTPwms8EKFE8y7AwHFbIyIkM+wmguu3SKtawmY="
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 20
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     JWT_COOKIE_NAME: str = "access_token"
     JWT_REFRESH_COOKIE_NAME: str = "refresh_token"
     COOKIE_SAMESITE: str = "lax"   # "lax" or "strict"
-    COOKIE_SECURE: bool = False    # True when served via HTTPS (e.g., Cloudflare tunnel)
+    COOKIE_SECURE: str | bool | None = None  # None or "auto" = detect via scheme; True/False to force
+    COOKIE_DOMAIN: str | None = None  # leave None for dev/DDNS; set like ".416flint.com" in prod if desired
 
     # --- LAN guest access ---
     ALLOW_LAN_GUEST: bool = True

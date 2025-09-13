@@ -1,4 +1,46 @@
 
+
+## [v1.1.1-dev] - Development Branch (Unstable)
+
+⚠️ **STATUS:** This is a **development branch**. Authentication/login is **not working reliably** and requires further debugging.  
+Do **not** deploy this branch to production.
+
+### Added
+- Introduced `/signin` page to replace the old `/login` route.
+- Implemented new `_LoginClient.tsx` with explicit `AuthApi.login` calls (no implicit form navigation).
+- Added debug logging to LoginClient lifecycle and API calls.
+- Added `DebugPanel` on sign-in page with direct buttons for:
+  - `/api/ping`
+  - `/api/health`
+  - `/api/auth/login` (probe)
+- Extended proxy route (`[...all]/route.ts`) with improved error logging.
+- Introduced local `/api/echo` route for isolating page → Next.js fetch path.
+- Updated `docker-compose.yml`:
+  - Cleaned `depends_on` → now both `api` and `web` run independently on `appnet`.
+  - Explicit aliases set for inter-container resolution.
+
+### Changed
+- Renamed `web/src/app/login/` → `web/src/app/signin/`.
+- Updated imports and routing logic to point to `/signin`.
+- Adjusted middleware to explicitly allow `/signin` route and avoid touching `/api/*`.
+
+### Fixed
+- None confirmed. Partial fixes attempted for proxy reliability.
+
+### Known Issues
+- **Login flow still inconsistent**:
+  - `AuthApi.login` requests sometimes hang as `pending` in DevTools.
+  - Inconsistent behavior between `/api/echo`, `/api/health`, and `/api/auth/login`.
+  - Requests occasionally succeed once and then fail on retry.
+- Possible culprits:
+  - Middleware interfering with API routes.
+  - Dev-mode HMR websockets exhausting socket pools.
+  - Browser-side issues (service workers, extensions, or caching).
+  - Proxy route sometimes not firing (`[Proxy] ENTER` missing).
+- This must be revisited in the next development cycle (planned v1.1.2).
+
+---
+
 ## [1.1.0] - 2025-09-12
 ### Added
 - Username-based authentication (email optional as metadata).
@@ -38,11 +80,15 @@ docker compose build web && docker compose up -d web
 - API: `GET /health` → `{"status":"ok"}`
 - Proxied: `GET /api/health` via the web container should also return `{"status":"ok"}`
 
+---
+
 ## [1.0.1] - 2025-09-10
 ### Changed
 - Minor updates to accommodate GitHub logic and CI/lint/pytest wiring
 - Dockerfile fixes for web image build
 - Initial pytest health test and CI integration
+
+---
 
 ## [1.0.0] - 2025-09-09
 ### Added
