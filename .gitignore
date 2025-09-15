@@ -26,4 +26,4 @@ cookies.txt
 /web/node_modules/
 /web/.next/
 /web/.turbo/
-/web/.env.local
+/web/.env.local__pycache__/
