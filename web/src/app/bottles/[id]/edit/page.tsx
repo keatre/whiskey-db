@@ -4,7 +4,31 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
 
-const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+/**
+ * We keep using NEXT_PUBLIC_API_BASE (expected to be "/api")
+ * but everything routes *through* Next's rewrite.
+ * The helpers below normalize paths to avoid /api/api/... issues.
+ */
+const API = (process.env.NEXT_PUBLIC_API_BASE || '/api').replace(/\/+$/, ''); // e.g., "/api"
+
+function joinApi(path: string) {
+  // Join API base + path, trimming duplicate slashes.
+  const p = path.replace(/^\/+/, '');
+  return `${API}/${p}`;
+}
+
+function toPreviewUrl(u?: string | null) {
+  if (!u) return null;
+  // Absolute URL? use as-is
+  if (/^https?:\/\//i.test(u)) return u;
+
+  // If it already starts with "/api" (or the configured API base), use as-is
+  if (u.startsWith('/api/')) return u;
+  if (API && u.startsWith(API + '/')) return u;
+
+  // Otherwise, join relative path to API base
+  return joinApi(u);
+}
 
 // Match the New Bottle form's style options
 const STYLE_GROUPS: Record<string, string[]> = {
@@ -57,7 +81,7 @@ export default function EditBottlePage() {
 
     async function load() {
       try {
-        const res = await fetch(`${API}/bottles/${id}`, { credentials: 'include' });
+        const res = await fetch(joinApi(`/bottles/${id}`), { credentials: 'include' });
         const b = res.ok ? await res.json() : null;
 
         const styleKnown = b?.style && STYLE_OPTIONS.includes(b.style);
@@ -80,8 +104,9 @@ export default function EditBottlePage() {
           notes_markdown: b?.notes_markdown ?? '',
           image_url: b?.image_url ?? '',
         });
+
         if (b?.image_url) {
-          setPreviewUrl(`${b.image_url.startsWith('http') ? '' : API}${b.image_url}`);
+          setPreviewUrl(toPreviewUrl(b.image_url));
         }
       } finally {
         if (mounted) setLoading(false);
@@ -89,7 +114,9 @@ export default function EditBottlePage() {
     }
 
     if (!Number.isNaN(id)) load();
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, [id]);
 
   function set<K extends keyof typeof form>(k: K, v: string) {
@@ -104,15 +131,18 @@ export default function EditBottlePage() {
     try {
       const fd = new FormData();
       fd.append('file', f);
-      const res = await fetch(`${API}/uploads/image`, {
+
+      // Upload to FastAPI via Next rewrite
+      const res = await fetch(joinApi('/uploads/image'), {
         method: 'POST',
         credentials: 'include',
         body: fd,
       });
       if (!res.ok) throw new Error(await res.text());
-      const data = await res.json();
+      const data = await res.json(); // expected: { url: "/api/uploads/<filename>" } or { url: "/uploads/<filename>" }
+
       set('image_url', data.url);
-      setPreviewUrl(`${API}${data.url.startsWith('/') ? '' : '/'}${data.url}`);
+      setPreviewUrl(toPreviewUrl(data.url));
     } catch (err: any) {
       setUploadError(err?.message ?? 'Upload failed');
     } finally {
@@ -167,7 +197,7 @@ export default function EditBottlePage() {
       payload[k] = v;
     });
 
-    const res = await fetch(`${API}/bottles/${id}`, {
+    const res = await fetch(joinApi(`/bottles/${id}`), {
       method: 'PATCH',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
@@ -188,7 +218,7 @@ export default function EditBottlePage() {
 
     try {
       setDeleting(true);
-      const res = await fetch(`${API}/bottles/${id}`, {
+      const res = await fetch(joinApi(`/bottles/${id}`), {
         method: 'DELETE',
         credentials: 'include',
       });
@@ -206,7 +236,11 @@ export default function EditBottlePage() {
     }
   }
 
-  if (loading) return <main><p>Loading…</p></main>;
+  if (loading) return (
+    <main>
+      <p>Loading…</p>
+    </main>
+  );
 
   return (
     <AdminOnly>

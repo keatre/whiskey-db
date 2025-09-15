@@ -1,4 +1,31 @@
 
+## [1.1.3] - 2025-09-13
+⚠️ **STATUS:** This is a **development branch**. Authentication/login is **not working reliably** and requires further debugging.  
+Do **not** deploy this branch to production.
+### Added
+- RAW **DNG** upload support: server converts DNG → JPEG with camera WB, auto-brightness, highlight recovery, and gentle post-adjustment for dark scenes.
+
+### Fixed
+- **405** on `POST /uploads/image` by including uploads router **before** static `/uploads` mount.
+- Frontend/backend path mismatch: Next.js rewrite maps browser **`/api/*` → backend `/*`** (backend lives at root).
+- Image preview URL normalization to avoid `/api/api/...` and missing slashes.
+
+### Changed
+- `web/next.config.mjs`: Case-A rewrite (`/api/:path* → ${NEXT_BACKEND_ORIGIN}/:path*`).
+- `api/app/routers/uploads.py`: robust type handling + DNG conversion pipeline.
+- `api/app/main.py`: router/static order clarified and enforced.
+
+### Dev
+- `requirements.txt`: add `rawpy`, `Pillow`, `numpy`.
+- Sign-in flow preserved (frontend still calls `/api/*`).
+
+> Env sanity:  
+> `NEXT_PUBLIC_API_BASE=/api`  
+> `NEXT_BACKEND_ORIGIN=http://api:8000` (or your LAN URL)  
+> `UPLOAD_DIR=/data/uploads`, `UPLOAD_MAX_MB=10`
+
+---
+
 ## [1.1.2] - 2025-09-13
 ⚠️ **STATUS:** This is a **development branch**. Authentication/login is **not working reliably** and requires further debugging.  
 Do **not** deploy this branch to production.

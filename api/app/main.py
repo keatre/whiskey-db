@@ -33,20 +33,21 @@ def on_startup():
 def health():
     return {"status": "ok"}
 
-# --- Static mounts ---
-# Keep generic static if you use it elsewhere
+# --- Routers (include BEFORE mounting /uploads static) ---
+# Backend lives at ROOT (Case A) – paths like /auth/login, /bottles, /uploads/image, etc.
+app.include_router(auth.router)
+app.include_router(bottles.router)
+app.include_router(purchases.router)
+app.include_router(notes.router)
+app.include_router(retailers.router)
+app.include_router(uploads_router)   # <-- must come before the /uploads static mount
+app.include_router(valuation.router)
+
+# --- Static mounts (mount AFTER the routers so POST /uploads/image is not shadowed) ---
+# Generic static (if used elsewhere)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Serve uploads directly from /uploads (backed by /data/uploads)
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/data/uploads")
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
-
-# --- Routers ---
-app.include_router(auth.router)
-app.include_router(bottles.router)
-app.include_router(purchases.router)
-app.include_router(notes.router)
-app.include_router(retailers.router)
-app.include_router(uploads_router)
-app.include_router(valuation.router)
