@@ -14,10 +14,12 @@ cookies.txt
 *.sqlite
 *.sqlite3
 
+# Python cache
+__pycache__/
+*.py[cod]
+
 # API build/cache
-/api/__pycache__/
 /api/.pytest_cache/
-/api/*.pyc
 /api/.venv
 /api/whiskey.db
 /api/static/uploads/

@@ -6,11 +6,11 @@ import Link from 'next/link';
 import { apiPath } from "../../../lib/apiPath";
 import { currency } from '../../../lib/format';
 import MarkdownViewer from '../../../components/MarkdownViewer';
-import AdminOnly from '../../../components/AdminOnly';
+// import AdminOnly from '../../../components/AdminOnly'; // ⬅️ remove
+import { useMe } from '../../../lib/useMe'; // ⬅️ add
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
-// Inline fallback placeholder (no 404 loop)
 const PLACEHOLDER_SVG =
   'data:image/svg+xml;utf8,' +
   encodeURIComponent(`
@@ -45,7 +45,7 @@ type Bottle = {
 type Purchase = {
   purchase_id: number;
   bottle_id: number;
-  purchase_date?: string;   // ISO (YYYY-MM-DD)
+  purchase_date?: string;
   price_paid?: number;
   quantity: number;
   status?: string;
@@ -86,6 +86,9 @@ export default function BottleDetailPage() {
   const [valuation, setValuation] = useState<Valuation | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // ⬇️ read live auth/role from shared SWR cache
+  const { isAdmin } = useMe();
+
   useEffect(() => {
     let mounted = true;
 
@@ -101,7 +104,6 @@ export default function BottleDetailPage() {
           if (!mounted) return;
           setBottle(b);
 
-          // Load market price by UPC, if present
           if (b?.barcode_upc) {
             try {
               const resV = await fetch(
@@ -109,9 +111,7 @@ export default function BottleDetailPage() {
                 { credentials: 'include' }
               );
               if (mounted && resV.ok) setValuation(await resV.json());
-            } catch {
-              /* ignore */
-            }
+            } catch { /* ignore */ }
           } else {
             setValuation(null);
           }
@@ -135,12 +135,9 @@ export default function BottleDetailPage() {
     }
 
     load();
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [id]);
 
-  // Compute "your price" from purchases: prefer most recent purchase_date, else average
   const yourPrice = useMemo<number | null>(() => {
     if (!purchases.length) return null;
     const withDates = purchases
@@ -149,18 +146,14 @@ export default function BottleDetailPage() {
     if (withDates.length && withDates[withDates.length - 1].price_paid != null) {
       return withDates[withDates.length - 1].price_paid!;
     }
-    // fallback: average of non-null prices
     const priced = purchases.map((p) => p.price_paid).filter((x): x is number => x != null);
     if (!priced.length) return null;
     return Math.round((priced.reduce((s, n) => s + n, 0) / priced.length) * 100) / 100;
   }, [purchases]);
 
   const marketPrice = valuation?.price ?? null;
-
-  // Delta
   const delta = yourPrice != null && marketPrice != null ? marketPrice - yourPrice : null;
-  const deltaStr =
-    delta == null ? undefined : `${delta >= 0 ? '+' : ''}${currency(delta)}`;
+  const deltaStr = delta == null ? undefined : `${delta >= 0 ? '+' : ''}${currency(delta)}`;
 
   if (loading) return <main><p>Loading…</p></main>;
   if (!bottle) return <main><p>Not found</p></main>;
@@ -179,9 +172,7 @@ export default function BottleDetailPage() {
           {bottle.expression ? ` — ${bottle.expression}` : ''}
         </h1>
         <div style={{ marginLeft: 'auto' }}>
-          <AdminOnly>
-            <Link href={`/bottles/${id}/edit`}>✏️ Edit Bottle</Link>
-          </AdminOnly>
+          {isAdmin && <Link href={`/bottles/${id}/edit`}>✏️ Edit Bottle</Link>}
         </div>
       </div>
 
@@ -194,8 +185,8 @@ export default function BottleDetailPage() {
             style={{ maxWidth: 420, borderRadius: 8 }}
             onError={(e) => {
               const img = e.currentTarget as HTMLImageElement;
-              img.onerror = null;           // prevent infinite loop
-              img.src = PLACEHOLDER_SVG;    // inline fallback
+              img.onerror = null;
+              img.src = PLACEHOLDER_SVG;
             }}
           />
         </div>
@@ -341,9 +332,7 @@ export default function BottleDetailPage() {
         </ul>
 
         {/* Admin-only: Add Purchase */}
-        <AdminOnly>
-          <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>
-        </AdminOnly>
+        {isAdmin && <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>}
       </section>
     </main>
   );

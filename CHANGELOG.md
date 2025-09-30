@@ -182,3 +182,22 @@ docker compose build web && docker compose up -d web
 - `.env` example provided
 - Default SQLite, but Postgres supported
 - Notes on running behind TLS reverse proxy
+
+## [1.1.4] - 2025-09-30
+⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
+
+### Added
+- Backup service now supports **plaintext tar archives** when `BACKUP_ENCRYPTED=false`, with retention handled via `PLAINTEXT_RETENTION_DAYS`.
+- `.env.example` updated to mirror current config layout (anonymised defaults, clearer sections).
+- API upload endpoint reports the actual file size vs configured limit when rejecting oversized uploads (helps tune `UPLOAD_MAX_MB`).
+
+### Changed
+- Backup entrypoint installs only the dependencies required for the selected mode and logs whether Restic or plaintext mode is active.
+- Default local `.env` switches backups to plaintext storage while keeping the encrypted option available.
+- Minor README clarifications around backup configuration and toggling encryption.
+
+### Fixed
+- First backup log now records completion when run via cron by ensuring the container tail follows the correct log file.
+- Clarified 413 error responses so the frontend surfaces why a large upload failed instead of a generic “too large” message.
+
+---

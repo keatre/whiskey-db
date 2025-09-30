@@ -1,0 +1,13 @@
+{
+    "makefile.configureOnOpen": false,
+    
+    // Point Pylance & the Python extension at your API venv
+    "python.defaultInterpreterPath": "${workspaceFolder}/api/.venv/bin/python",
+
+    // Optional quality-of-life:
+    "python.analysis.extraPaths": [
+        "${workspaceFolder}/api"
+    ],
+    "python.analysis.typeCheckingMode": "basic",
+    "python.terminal.activateEnvironment": true
+}

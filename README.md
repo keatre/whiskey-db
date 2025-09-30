@@ -50,14 +50,15 @@ Access:
 
 ## 🛡️ Disaster Recovery to NAS (v1.1.2)
 
-Backups run from the `backup` service and push encrypted snapshots to your NAS over SMB/CIFS.
+Backups run from the `backup` service and push snapshots to your NAS over SMB/CIFS. By default they are encrypted with Restic, but you can opt into plaintext `.tar.gz` archives by flipping `BACKUP_ENCRYPTED=false` in your `.env`.
 
 ### Setup
 1. Copy `.env.example` → `.env` and fill:
    - `NAS_SMB_HOST`, `NAS_SMB_SHARE`
    - `NAS_SMB_USER`, `NAS_SMB_PASS`
-   - `RESTIC_PASSWORD` (keep safe)
-   - Optionally tune `BACKUP_CRON` and retention.
+   - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
+   - Set `BACKUP_ENCRYPTED=false` for plaintext archives and optionally point `BACKUP_ARCHIVE_DIR` elsewhere.
+   - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
 2. Bring the stack up:
    ```bash
    docker compose up -d

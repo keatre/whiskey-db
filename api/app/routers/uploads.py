@@ -60,7 +60,12 @@ async def upload_image(file: UploadFile = File(...)):
                     break
                 bytes_written += len(chunk)
                 if bytes_written > MAX_SIZE_BYTES:
-                    raise HTTPException(status_code=413, detail="File too large")
+                    limit_mb = float(settings.UPLOAD_MAX_MB)
+                    wrote_mb = bytes_written / 1024 / 1024
+                    raise HTTPException(
+                        status_code=413,
+                        detail=f"File too large ({wrote_mb:.2f} MB > {limit_mb} MB limit)",
+                    )
                 out.write(chunk)
 
         # ---- DNG path: convert to JPEG with better defaults for phone RAW ----
