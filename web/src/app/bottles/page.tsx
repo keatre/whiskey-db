@@ -12,6 +12,7 @@ type Bottle = {
   expression?: string | null;
   distillery?: string | null;
   style?: string | null;
+  is_rare: boolean;
 };
 
 // --- helpers for family/substyle ---
@@ -41,14 +42,19 @@ export default function BottlesPage() {
   const [bottles, setBottles] = useState<Bottle[]>([]);
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
+  const [rareOnly, setRareOnly] = useState(false);
   const { isAdmin } = useMe(); // ⬅️ single source of truth for auth/role
 
   // load bottles
   useEffect(() => {
     let mounted = true;
+    setLoading(true);
     (async () => {
       try {
-        const res = await fetch(`${API}/bottles`, { credentials: 'include' });
+        const params = new URLSearchParams();
+        if (rareOnly) params.set('rare', 'true');
+        const url = `${API}/bottles${params.toString() ? `?${params.toString()}` : ''}`;
+        const res = await fetch(url, { credentials: 'include' });
         const data = res.ok ? await res.json() : [];
         if (mounted) setBottles(Array.isArray(data) ? data : []);
       } finally {
@@ -56,7 +62,7 @@ export default function BottlesPage() {
       }
     })();
     return () => { mounted = false; };
-  }, []);
+  }, [rareOnly]);
 
   // search filter (keeps distillery searchable even though we don't display it)
   const filtered = useMemo(() => {
@@ -93,7 +99,7 @@ export default function BottlesPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
         <input
           value={q}
           onChange={(e) => setQ(e.target.value)}
@@ -108,6 +114,15 @@ export default function BottlesPage() {
           }}
         />
         <button style={{ padding: '8px 12px', borderRadius: 8 }}>Search</button>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+          <input
+            type="checkbox"
+            checked={rareOnly}
+            onChange={(e) => setRareOnly(e.target.checked)}
+            style={{ width: 16, height: 16 }}
+          />
+          Rare only
+        </label>
       </div>
 
       {groups.length === 0 ? (
@@ -129,6 +144,18 @@ export default function BottlesPage() {
                       <Link href={`/bottles/${b.bottle_id}`} style={{ fontWeight: 600 }}>
                         {b.brand}
                       </Link>
+                      {b.is_rare ? (
+                        <sup
+                          style={{
+                            color: '#c9a227',
+                            fontWeight: 700,
+                            marginLeft: 4,
+                            letterSpacing: '0.02em',
+                          }}
+                        >
+                          R
+                        </sup>
+                      ) : null}
                       {b.expression ? ` — ${b.expression}` : ''}
                       {leaf ? (
                         <>

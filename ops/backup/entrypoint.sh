@@ -12,6 +12,16 @@ case "$BACKUP_ENCRYPTED" in
     ;;
 esac
 
+: "${BACKUP_LOCAL_FILES:=false}"
+BACKUP_LOCAL_FILES=$(printf %s "$BACKUP_LOCAL_FILES" | tr '[:upper:]' '[:lower:]')
+case "$BACKUP_LOCAL_FILES" in
+  true|false) ;;
+  *)
+    echo "[backup] ERROR: BACKUP_LOCAL_FILES must be 'true' or 'false' (got '$BACKUP_LOCAL_FILES')."
+    exit 1
+    ;;
+esac
+
 # Install runtime dependencies (idempotent; apk skips already-present packages)
 if [ "$BACKUP_ENCRYPTED" = "true" ]; then
   apk add --no-cache restic tzdata ca-certificates
@@ -80,7 +90,7 @@ fi
 # Export for cron (busybox crond has minimal env)
 export BACKUP_SOURCE BACKUP_TAG BACKUP_ENCRYPTED RESTIC_REPOSITORY BACKUP_ARCHIVE_DIR \
        RESTIC_PASSWORD RESTIC_KEEP_DAILY RESTIC_KEEP_WEEKLY RESTIC_KEEP_MONTHLY \
-       PLAINTEXT_RETENTION_DAYS
+       PLAINTEXT_RETENTION_DAYS BACKUP_LOCAL_FILES
 
 # Initialize repo if needed
 if [ "$BACKUP_ENCRYPTED" = "true" ]; then
@@ -91,6 +101,10 @@ if [ "$BACKUP_ENCRYPTED" = "true" ]; then
   fi
 else
   echo "[backup] BACKUP_ENCRYPTED=false → using plaintext tar archives in ${BACKUP_ARCHIVE_DIR}."
+fi
+
+if [ "$BACKUP_LOCAL_FILES" = "true" ]; then
+  echo "[backup] BACKUP_LOCAL_FILES=true → will include /config/docker-compose.yml and /config/.env when present."
 fi
 
 # Install crontab: run backup.sh via /bin/sh; log to file with timestamps
@@ -132,7 +146,7 @@ if [ "${BACKUP_ON_START}" = "true" ]; then
   BACKUP_PID=$!
   wait "${BACKUP_PID}" 2>/dev/null || true
   BACKUP_PID=""
-  echo "[backup] First backup finished at $(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+  echo "[backup] First backup finished at $(date +"%Y-%m-%dT%H:%M:%S%z")"
 else
   echo "[backup] BACKUP_ON_START=false → skipping initial backup."
 fi

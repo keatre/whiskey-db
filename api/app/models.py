@@ -37,6 +37,7 @@ class BottleBase(SQLModel):
     mashbill_markdown: Optional[str] = None
     notes_markdown: Optional[str] = None
     image_url: Optional[str] = None
+    is_rare: bool = Field(default=False)
 
 class BottleAudit(SQLModel, table=True):
     audit_id: Optional[int] = Field(default=None, primary_key=True)

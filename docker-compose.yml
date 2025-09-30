@@ -61,5 +61,7 @@ services:
     volumes:
       - ./ops/backup:/app
       - ./data:/data:ro
+      - ./docker-compose.yml:/config/docker-compose.yml:ro
+      - ./.env:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote
     restart: unless-stopped

@@ -1,4 +1,20 @@
 
+## [1.1.5] - 2025-09-30
+### Added
+- Rare bottle flag from database to UI: `/bottles?rare=` filter, list toggle, badge styling, and admin form fields.
+- Backup toggle (`BACKUP_LOCAL_FILES`) to include `.env` and `docker-compose.yml`; plaintext mode now stages/validates archives and respects the configured timezone (`TZ`).
+
+### Changed
+- Purchase status auto-updates to `open`/`finished` when opened/killed dates are set, and those dates are now captured as date-only values.
+- Bottle purchase list now shows just purchase date, price, and status for a cleaner summary.
+- Docs/sample env refreshed with the new backup controls and timezone tip.
+
+### Fixed
+- Plaintext backups are copied from a verified temp archive, eliminating corrupted `.tar.gz` files.
+- Backup path parsing now tolerates inline comments/whitespace so values like `/data # note` work.
+
+---
+
 ## [1.1.3] - 2025-09-13
 ⚠️ **STATUS:** This is a **development branch**. Authentication/login is **not working reliably** and requires further debugging.  
 Do **not** deploy this branch to production.

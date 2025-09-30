@@ -44,13 +44,14 @@ export default function NewBottlePage() {
     mashbill_markdown: '',
     notes_markdown: '',
     image_url: '',
+    is_rare: false,
   });
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
-  function set<K extends keyof typeof form>(k: K, v: string) {
+  function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [k]: v }));
   }
 
@@ -102,6 +103,7 @@ export default function NewBottlePage() {
       mashbill_markdown: form.mashbill_markdown || null,
       notes_markdown: form.notes_markdown || null,
       image_url: form.image_url || null,
+      is_rare: form.is_rare,
     };
 
     ([
@@ -261,6 +263,17 @@ export default function NewBottlePage() {
             value={form.barcode_upc}
             onChange={(e) => set('barcode_upc', e.target.value)}
           />
+
+          <label>Mark as Rare</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={form.is_rare}
+              onChange={(e) => set('is_rare', e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
+          </div>
 
           <label>Bottle Image (upload)</label>
           <div>

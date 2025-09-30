@@ -40,6 +40,7 @@ type Bottle = {
   image_url?: string;
   mashbill_markdown?: string;
   notes_markdown?: string;
+  is_rare: boolean;
 };
 
 type Purchase = {
@@ -169,6 +170,18 @@ export default function BottleDetailPage() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <h1 style={{ margin: 0 }}>
           {bottle.brand}
+          {bottle.is_rare ? (
+            <sup
+              style={{
+                color: '#c9a227',
+                fontWeight: 700,
+                marginLeft: 6,
+                letterSpacing: '0.02em',
+              }}
+            >
+              R
+            </sup>
+          ) : null}
           {bottle.expression ? ` — ${bottle.expression}` : ''}
         </h1>
         <div style={{ marginLeft: 'auto' }}>
@@ -320,8 +333,7 @@ export default function BottleDetailPage() {
               }}
             >
               <div>
-                <strong>{p.purchase_date ?? '—'}</strong> · qty {p.quantity} ·{' '}
-                {currency(p.price_paid)} · {p.status ?? '—'}
+                <strong>{p.purchase_date ?? '—'}</strong> · {currency(p.price_paid)} · {p.status ?? '—'}
               </div>
               <div style={{ marginTop: 4 }}>
                 <Link href={`/purchases/${p.purchase_id}`}>View</Link>

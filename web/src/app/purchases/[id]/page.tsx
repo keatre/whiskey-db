@@ -88,7 +88,10 @@ export default function PurchaseDetailPage() {
       </p>
       <p>Storage: {purchase.storage_location ?? '—'} · Location: {purchase.location ?? '—'}</p>
       <p>Retailer: {retailer ? retailer.name : (purchase.retailer_id ?? '—')}</p>
-      <p>Opened: {purchase.opened_dt ?? '—'} · Killed: {purchase.killed_dt ?? '—'}</p>
+      <p>
+        Opened: {purchase.opened_dt ? purchase.opened_dt.split('T')[0] : '—'} · Killed:{' '}
+        {purchase.killed_dt ? purchase.killed_dt.split('T')[0] : '—'}
+      </p>
 
       {/* Admin-only: edit purchase */}
       <div style={{ margin: '12px 0' }}>

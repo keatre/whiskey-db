@@ -7,8 +7,8 @@ RUN apk add --no-cache \
       ca-certificates
 
 WORKDIR /app
+RUN mkdir -p /config
 COPY entrypoint.sh backup.sh /app/
 RUN chmod +x /app/*.sh
 
 ENTRYPOINT ["/bin/sh", "/app/entrypoint.sh"]
-

@@ -38,12 +38,14 @@ class BottlePatch(SQLModel):
     mashbill_markdown: Optional[str] = None
     notes_markdown: Optional[str] = None
     image_url: Optional[str] = None
+    is_rare: Optional[bool] = None
 
 
 # ---------- READ (guest or authenticated) ----------
 @router.get("", response_model=List[Bottle], dependencies=[Depends(require_view_access)])
 def list_bottles(
     q: Optional[str] = Query(default=None, description="search by brand/expression/distillery"),
+    rare: Optional[bool] = Query(default=None, description="filter by rarity flag"),
     session: Session = Depends(get_session),
 ):
     stmt = select(Bottle)
@@ -54,6 +56,10 @@ def list_bottles(
             (Bottle.expression.ilike(like)) |
             (Bottle.distillery.ilike(like))
         )
+    if rare is True:
+        stmt = stmt.where(Bottle.is_rare.is_(True))
+    elif rare is False:
+        stmt = stmt.where(Bottle.is_rare.is_(False))
     return session.exec(stmt.order_by(Bottle.brand, Bottle.expression)).all()
 
 

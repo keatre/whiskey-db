@@ -36,6 +36,8 @@ def init_db():
                 conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN mashbill_markdown TEXT")
             if "proof" not in cols:
                 conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN proof REAL")
+            if "is_rare" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN is_rare INTEGER DEFAULT 0 NOT NULL")
 
 def get_session():
     with Session(engine) as session:

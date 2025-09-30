@@ -33,7 +33,7 @@ export default function EditPurchasePage() {
 
         if (!mounted) return;
 
-        setForm({
+       setForm({
           purchase_date: p?.purchase_date ?? '',
           price_paid: p?.price_paid ?? '',
           tax_paid: p?.tax_paid ?? '',
@@ -42,8 +42,8 @@ export default function EditPurchasePage() {
           storage_location: p?.storage_location ?? '',
           location: p?.location ?? '',
           retailer_id: p?.retailer_id ?? '',
-          opened_dt: p?.opened_dt ?? '',
-          killed_dt: p?.killed_dt ?? '',
+          opened_dt: normalizeDate(p?.opened_dt),
+          killed_dt: normalizeDate(p?.killed_dt),
           bottle_id: p?.bottle_id,
         });
 
@@ -61,6 +61,12 @@ export default function EditPurchasePage() {
 
   function set<K extends keyof typeof form>(k: K, v: any) {
     setForm((prev: any) => ({ ...prev, [k]: v }));
+  }
+
+  function normalizeDate(value?: string | null) {
+    if (!value) return '';
+    const part = value.split('T')[0];
+    return part ?? '';
   }
 
   async function submit(e: React.FormEvent) {
@@ -149,10 +155,10 @@ export default function EditPurchasePage() {
           </select>
 
           <label>opened_dt</label>
-          <input type="datetime-local" value={form.opened_dt} onChange={(e) => set('opened_dt', e.target.value)} />
+          <input type="date" value={form.opened_dt} onChange={(e) => set('opened_dt', e.target.value)} />
 
           <label>killed_dt</label>
-          <input type="datetime-local" value={form.killed_dt} onChange={(e) => set('killed_dt', e.target.value)} />
+          <input type="date" value={form.killed_dt} onChange={(e) => set('killed_dt', e.target.value)} />
 
           <div></div>
           <button type="submit" disabled={saving}>
