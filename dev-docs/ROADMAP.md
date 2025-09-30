@@ -12,8 +12,8 @@ It is a living document — priorities may shift as development progresses.
 - [x] Add option to bottle to denote "rare", and allow searching against "rare" and displaying an "*" next to the name in bottles
 - [x] Feature A — Refresh the page on a successful login with admin  
 - [X] Improvement C — Change the filter/criteria of the page, and make it user "selectable"
-- [ ] Add option in the backup process to backup the docker-compose.yml and .env files, as well
-- [ ] Allow option to overwrite, but when a opened date is saved, automatically change the bottle status to open, when a kill date is put in, automatically flip to finished
+- [x] Add option in the backup process to backup the docker-compose.yml and .env files, as well
+- [x] Allow option to overwrite, but when a opened date is saved, automatically change the bottle status to open, when a kill date is put in, automatically flip to finished
 ---
 
 ## 🔮 Planned Enhancements (Future)
