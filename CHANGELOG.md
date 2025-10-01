@@ -1,3 +1,6 @@
+## [1.2.0] - 2025-10-01
+- Staging for baseline update to main.
+
 ## [1.1.7] - 2025-10-01
 
 ### Changed
