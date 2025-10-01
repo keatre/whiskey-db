@@ -57,6 +57,7 @@ services:
       RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:-7}
       RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
       RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
+      BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-/extra/dev-docs}
       # For NAS we point restic to the CIFS mount inside the container:
       RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/remote/restic-whiskey-db}
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
@@ -66,6 +67,7 @@ services:
     volumes:
       - ./ops/backup:/app
       - ./data:/data:ro
+      - ./dev-docs:/extra/dev-docs:ro
       - ./docker-compose.yml:/config/docker-compose.yml:ro
       - ./.env:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote

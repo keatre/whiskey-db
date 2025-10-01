@@ -6,6 +6,7 @@ set -eu
 #   BACKUP_TAG                (e.g. whiskey-db)
 #   BACKUP_ENCRYPTED          (true|false)
 #   BACKUP_LOCAL_FILES        (true|false) include docker-compose.yml/.env when available
+#   BACKUP_EXTRA_PATHS        (space-separated container paths to include, eg "/extra/dev-docs /extra/notes")
 #   RESTIC_REPOSITORY         (encrypted mode)
 #   RESTIC_PASSWORD           (encrypted mode)
 #   RESTIC_KEEP_DAILY/WEEKLY/MONTHLY (encrypted mode retention)
@@ -84,6 +85,23 @@ if [ "$BACKUP_LOCAL_FILES" = "true" ]; then
       fi
     else
       log "WARN: BACKUP_LOCAL_FILES enabled but missing ${path}; skipping."
+    fi
+  done
+fi
+
+if [ -n "${BACKUP_EXTRA_PATHS:-}" ]; then
+  for raw in $BACKUP_EXTRA_PATHS; do
+    path=$(clean_path "$raw")
+    if [ -e "$path" ]; then
+      EXTRA_SOURCES="$EXTRA_SOURCES $path"
+      base=$(basename "$path")
+      if [ -n "$EXTRA_LABEL" ]; then
+        EXTRA_LABEL="$EXTRA_LABEL, $base"
+      else
+        EXTRA_LABEL="$base"
+      fi
+    else
+      log "WARN: BACKUP_EXTRA_PATHS entry '${raw}' resolved to '${path}' but is missing; skipping."
     fi
   done
 fi
