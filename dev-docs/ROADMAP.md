@@ -19,7 +19,7 @@ It is a living document — priorities may shift as development progresses.
 ## 🔮 Planned Enhancements (Future)
 - [ ] Enhancement 1 — bake dependencies into images so containers start instantly (no pip install/npm install at runtime) 
 - [ ] Enhancement 2 - api/app/routers/uploads.py; Update streaming case (no or wrong Content-Length)
-- [ ] Bugfix — Correct security login 
+- [x] Bugfix — Correct security login 
 
 
 ---
