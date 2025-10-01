@@ -65,3 +65,11 @@ services:
       - ./.env:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote
     restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    profiles: ["cloudflare"]
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
