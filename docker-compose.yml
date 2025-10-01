@@ -2,10 +2,13 @@ services:
   web:
     image: node:20
     working_dir: /app
-    command: sh -lc "npm install && npm run build && exec npm start"
+    command: sh -lc "npm ci --prefer-offline && npm run build && exec npm start"
     volumes:
       - ./web:/app
+      - web_npm_cache:/npm-cache
     env_file: .env
+    environment:
+      - NPM_CONFIG_CACHE=/npm-cache
     ports:
       - "8080:3000"
     depends_on:
@@ -17,13 +20,15 @@ services:
   api:
     image: python:3.12
     working_dir: /app
-    command: sh -lc "pip install -r requirements.txt && exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
+    command: sh -lc "pip install --cache-dir /pip-cache -r requirements.txt && exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
     volumes:
       - ./api:/app
       - ./data:/data
       - ./api/static:/app/static
+      - api_pip_cache:/pip-cache
     env_file: .env
     environment:
+      - PIP_CACHE_DIR=/pip-cache
       - DATABASE_URL=${DATABASE_URL:-sqlite:////data/whiskey.db}
     ports:
       - "8000:8000"
@@ -73,3 +78,7 @@ services:
     profiles: ["cloudflare"]
     environment:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
+
+volumes:
+  web_npm_cache:
+  api_pip_cache:

@@ -1,5 +1,14 @@
+# Ignore files not needed in build context
 node_modules
-npm-debug.log
-.next/cache
-.vscode
-.DS_Store
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store
+.next
+coverage
+.env
+.env.*
+.git
+.gitignore
+Dockerfile.local
+README.md
