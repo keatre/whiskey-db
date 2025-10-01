@@ -37,6 +37,7 @@ class BottleBase(SQLModel):
     mashbill_markdown: Optional[str] = None
     notes_markdown: Optional[str] = None
     image_url: Optional[str] = None
+    is_rare: bool = Field(default=False)
 
 class BottleAudit(SQLModel, table=True):
     audit_id: Optional[int] = Field(default=None, primary_key=True)
@@ -96,3 +97,13 @@ class PurchaseUpdate(SQLModel):
     opened_dt: Optional[str] = None       # accept ISO string; we’ll coerce
     killed_dt: Optional[str] = None
     status: Optional[str] = None
+
+class User(SQLModel, table=True):
+    __tablename__ = "users"
+    id: Optional[int] = Field(default=None, primary_key=True)
+    username: Optional[str] = Field(default=None, index=True)
+    email: Optional[str] = Field(default=None, index=True)
+    password_hash: str
+    role: str  # 'admin' or 'guest'
+    is_active: bool = True
+    created_at: Optional[datetime] = None

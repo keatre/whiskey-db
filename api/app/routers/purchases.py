@@ -41,6 +41,12 @@ def create_purchase(p: Purchase, session: Session = Depends(get_session)):
     if p.quantity is None:
         p.quantity = 1
 
+    # Auto-status when dates supplied
+    if p.killed_dt:
+        p.status = "finished"
+    elif p.opened_dt:
+        p.status = "open"
+
     p.created_utc = datetime.utcnow()
     p.updated_utc = datetime.utcnow()
     session.add(p)
@@ -71,6 +77,13 @@ def update_purchase(purchase_id: int, patch: PurchaseUpdate, session: Session = 
 
     for k, v in data.items():
         setattr(p, k, v)
+
+    if "killed_dt" in data:
+        if getattr(p, "killed_dt", None):
+            p.status = "finished"
+    elif "opened_dt" in data:
+        if getattr(p, "opened_dt", None):
+            p.status = "open"
 
     p.updated_utc = datetime.utcnow()
     session.add(p)

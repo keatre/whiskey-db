@@ -7,8 +7,9 @@ from sqlmodel import Session, select, SQLModel
 
 from ..db import get_session
 from ..models import Bottle, BottleAudit, Purchase, TastingNote, BottleTag
+from ..deps import get_current_user_role, require_admin, require_view_access  # <-- NEW
 
-router = APIRouter(prefix="/bottles", tags=["bottles"])
+router = APIRouter(prefix="/bottles", tags=["bottles"], dependencies=[Depends(get_current_user_role)])
 
 # ---- Optional: enforce allowed styles (uncomment to enable)
 # ALLOWED_STYLES = {
@@ -37,11 +38,14 @@ class BottlePatch(SQLModel):
     mashbill_markdown: Optional[str] = None
     notes_markdown: Optional[str] = None
     image_url: Optional[str] = None
+    is_rare: Optional[bool] = None
 
 
-@router.get("", response_model=List[Bottle])
+# ---------- READ (guest or authenticated) ----------
+@router.get("", response_model=List[Bottle], dependencies=[Depends(require_view_access)])
 def list_bottles(
     q: Optional[str] = Query(default=None, description="search by brand/expression/distillery"),
+    rare: Optional[bool] = Query(default=None, description="filter by rarity flag"),
     session: Session = Depends(get_session),
 ):
     stmt = select(Bottle)
@@ -52,10 +56,30 @@ def list_bottles(
             (Bottle.expression.ilike(like)) |
             (Bottle.distillery.ilike(like))
         )
+    if rare is True:
+        stmt = stmt.where(Bottle.is_rare.is_(True))
+    elif rare is False:
+        stmt = stmt.where(Bottle.is_rare.is_(False))
     return session.exec(stmt.order_by(Bottle.brand, Bottle.expression)).all()
 
 
-@router.post("", response_model=Bottle, status_code=status.HTTP_201_CREATED)
+@router.get("/{bottle_id}", response_model=Bottle, dependencies=[Depends(require_view_access)])
+def get_bottle(bottle_id: int, session: Session = Depends(get_session)):
+    b = session.get(Bottle, bottle_id)
+    if not b:
+        raise HTTPException(404, "Bottle not found")
+    return b
+
+
+@router.get("/{bottle_id}/audits", response_model=List[BottleAudit], dependencies=[Depends(require_view_access)])
+def list_bottle_audits(bottle_id: int, session: Session = Depends(get_session)):
+    return session.exec(
+        select(BottleAudit).where(BottleAudit.bottle_id == bottle_id).order_by(BottleAudit.changed_at.desc())
+    ).all()
+
+
+# ---------- WRITE (admin only) ----------
+@router.post("", response_model=Bottle, status_code=status.HTTP_201_CREATED, dependencies=[Depends(require_admin)])
 def create_bottle(bottle: Bottle, session: Session = Depends(get_session)):
     if not bottle.brand or not bottle.brand.strip():
         raise HTTPException(422, "brand is required")
@@ -67,7 +91,7 @@ def create_bottle(bottle: Bottle, session: Session = Depends(get_session)):
     return bottle
 
 
-@router.patch("/{bottle_id}", response_model=Bottle)
+@router.patch("/{bottle_id}", response_model=Bottle, dependencies=[Depends(require_admin)])
 def update_bottle(
     bottle_id: int,
     patch: BottlePatch,
@@ -121,21 +145,9 @@ def update_bottle(
         session.commit()
 
     return b
-    
-@router.get("/{bottle_id}", response_model=Bottle)
-def get_bottle(bottle_id: int, session: Session = Depends(get_session)):
-    b = session.get(Bottle, bottle_id)
-    if not b:
-        raise HTTPException(404, "Bottle not found")
-    return b
 
-@router.get("/{bottle_id}/audits", response_model=List[BottleAudit])
-def list_bottle_audits(bottle_id: int, session: Session = Depends(get_session)):
-    return session.exec(
-        select(BottleAudit).where(BottleAudit.bottle_id == bottle_id).order_by(BottleAudit.changed_at.desc())
-    ).all()
 
-@router.delete("/{bottle_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{bottle_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(require_admin)])
 def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
     b = session.get(Bottle, bottle_id)
     if not b:

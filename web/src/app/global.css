@@ -37,6 +37,10 @@ a:hover { text-decoration: underline; }
   position: sticky; top: 0; background: var(--bg); z-index: 1;
 }
 
+.nav-right { 
+  display: flex; align-items: center; gap: 8px; 
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);

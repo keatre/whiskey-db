@@ -1,19 +1,23 @@
 import os
 from sqlmodel import SQLModel, create_engine, Session
 
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./whiskey.db")
+# Align default with docker-compose's volume path; still overridden by .env if set
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////data/whiskey.db")
 
 engine = create_engine(
     DATABASE_URL,
     connect_args={"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {},
     echo=False,
+    pool_pre_ping=True,
 )
 
 def init_db():
-    from .models import Bottle, Purchase, TastingNote, Retailer, Tag, BottleTag, BottleAudit  # noqa
+    # Import models module so SQLModel metadata includes every table
+    from . import models  # noqa: F401
+
     SQLModel.metadata.create_all(engine)
 
-    # --- NEW: lightweight auto-migration for sqlite to add missing columns ---
+    # --- lightweight auto-migration for sqlite to add missing columns ---
     if DATABASE_URL.startswith("sqlite"):
         with engine.begin() as conn:
             # Add 'mashbill_markdown' to 'bottle' if missing
@@ -22,6 +26,8 @@ def init_db():
                 conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN mashbill_markdown TEXT")
             if "proof" not in cols:
                 conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN proof REAL")
+            if "is_rare" not in cols:
+                conn.exec_driver_sql("ALTER TABLE bottle ADD COLUMN is_rare INTEGER DEFAULT 0 NOT NULL")
 
 def get_session():
     with Session(engine) as session:
