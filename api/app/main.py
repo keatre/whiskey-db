@@ -1,5 +1,6 @@
 # api/app/main.py
 import os
+import tempfile
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -47,7 +48,14 @@ app.include_router(valuation.router)
 # Generic static (if used elsewhere)
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# Serve uploads directly from /uploads (backed by /data/uploads)
+# Serve uploads directly from /uploads (backed by /data/uploads).
+# CI runners may not allow creating /data, so fall back to a temp dir when needed.
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/data/uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+try:
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+except PermissionError:
+    fallback = os.path.join(tempfile.gettempdir(), "whiskey_uploads")
+    os.makedirs(fallback, exist_ok=True)
+    UPLOAD_DIR = fallback
+
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
