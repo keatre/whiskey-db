@@ -1,6 +1,5 @@
 import os
 from sqlmodel import SQLModel, create_engine, Session
-from sqlalchemy.orm import sessionmaker, declarative_base
 
 # Align default with docker-compose's volume path; still overridden by .env if set
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////data/whiskey.db")
@@ -13,17 +12,8 @@ engine = create_engine(
 )
 
 def init_db():
-    # Include all models so create_all() picks them up (adds User for auth)
-    from .models import (
-        Bottle,
-        Purchase,
-        TastingNote,
-        Retailer,
-        Tag,
-        BottleTag,
-        BottleAudit,
-        User,  # <-- NEW: ensure users table is created
-    )  # noqa
+    # Import models module so SQLModel metadata includes every table
+    from . import models  # noqa: F401
 
     SQLModel.metadata.create_all(engine)
 

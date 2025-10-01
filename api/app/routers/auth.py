@@ -11,7 +11,7 @@ from datetime import timedelta
 from ..db import get_session
 from ..models import User
 from ..settings import settings
-from ..security import hash_password, verify_password, create_token, decode_token
+from ..security import verify_password, create_token, decode_token
 from ..auth_schemas import LoginRequest, MeResponse
 from ..deps import get_current_user_role
 
@@ -149,7 +149,11 @@ def login(
     ip = _ip_from_request(request)
     _throttle_check(ip)
 
-    user = db.query(User).filter(User.username == data.username, User.is_active == True).first()
+    user = (
+        db.query(User)
+        .filter(User.username == data.username, User.is_active.is_(True))
+        .first()
+    )
     if not user or not verify_password(data.password, user.password_hash):
         _throttle_record(ip, success=False)
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
@@ -216,7 +220,11 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
     username = payload.get("sub")
     role = payload.get("role")
 
-    user = db.query(User).filter(User.username == username, User.is_active == True).first()
+    user = (
+        db.query(User)
+        .filter(User.username == username, User.is_active.is_(True))
+        .first()
+    )
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 
