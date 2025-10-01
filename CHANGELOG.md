@@ -1,6 +1,5 @@
 
 ## [1.1.6] - 2025-09-30
-⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
 
 ### Changed
 - Frontend auth helpers stop treating failed `/auth/me` calls as LAN guests, keeping remote visitors properly unauthenticated (`web/src/api/auth.ts`, `web/src/auth/AuthContext.jsx`, `web/src/components/*`).
