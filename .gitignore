@@ -32,6 +32,5 @@ __pycache__/
 
 # Internal documentation
 dev-docs/
-dev-docs
 # Git worktrees
 .worktrees/
