@@ -1,3 +1,8 @@
+## [1.1.7] - 2025-10-01
+
+### Changed
+- Very minor updates to documentation only in preperation for release.
+- Update GitHub release drafter.
 
 ## [1.1.6] - 2025-09-30
 
