@@ -29,3 +29,8 @@ __pycache__/
 /web/.next/
 /web/.turbo/
 /web/.env.local__pycache__/
+
+# Internal documentation
+dev-docs/
+# Git worktrees
+.worktrees/
