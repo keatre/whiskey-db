@@ -1,3 +1,9 @@
+## [1.2.2] - 2025-10-01
+
+### Added
+- Allow docker backups to include extra local folders via `BACKUP_EXTRA_PATHS`, defaulting to the `dev-docs` symlink.
+- Documented dev-docs relocation so internal notes stay out of the repo while remaining editable.
+
 ## [1.2.1] - 2025-10-01
 
 ### Changed
