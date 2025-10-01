@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   async rewrites() {
     // Backend origin reachable from the web container or browser:
     // e.g. NEXT_BACKEND_ORIGIN=http://api:8000  (Docker)
