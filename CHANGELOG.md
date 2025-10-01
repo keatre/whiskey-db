@@ -1,3 +1,9 @@
+## [1.2.1] - 2025-10-01
+
+### Changed
+- Add Docker build ignores for API/Web to keep image contexts leaner.
+- Persist npm/pip caches in docker-compose for faster container restarts.
+
 ## [1.2.0] - 2025-10-01
 - Staging for baseline update to main.
 

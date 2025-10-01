@@ -1,8 +1,19 @@
+# Trim Python build context
 __pycache__/
-*.pyc
+*.py[cod]
 *.pyo
 *.pyd
-*.log
-.vscode
-.DS_Store
-.venv
+*.so
+.env
+.env.*
+.git
+.gitignore
+.mypy_cache/
+.pytest_cache/
+venv/
+.build/
+.coverage
+htmlcov/
+.tests/
+tests/
+.tmp/
