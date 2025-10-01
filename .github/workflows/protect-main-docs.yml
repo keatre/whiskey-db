@@ -18,9 +18,10 @@ jobs:
       - name: Ensure dev docs are not in PR diff
         run: |
           git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-          CHANGED=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD)
-          echo "Changed files:\n$CHANGED"
-          if echo "$CHANGED" | grep -E '^(dev-docs/|ROADMAP\.md)'; then
-            echo '::error::This pull request modifies dev-only documentation (dev-docs/** or ROADMAP.md). Remove those changes before merging into main.'
+          CHANGED=$(git diff --name-status origin/${{ github.event.pull_request.base.ref }}...HEAD)
+          echo "Changed files (with status):\n$CHANGED"
+          if echo "$CHANGED" | grep -E '^[^D]\s+(dev-docs/|ROADMAP\\.md)'; then
+            echo "::error::This pull request modifies dev-only documentation (dev-docs/** or ROADMAP.md). Remove those additions or edits before merging into main."
             exit 1
           fi
+
