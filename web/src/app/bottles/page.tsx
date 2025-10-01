@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useMe } from '../../lib/useMe'; // ⬅️ use the shared SWR hook
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
@@ -43,20 +44,40 @@ export default function BottlesPage() {
   const [loading, setLoading] = useState(true);
   const [q, setQ] = useState('');
   const [rareOnly, setRareOnly] = useState(false);
+  const [needsAuth, setNeedsAuth] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { isAdmin } = useMe(); // ⬅️ single source of truth for auth/role
+  const pathname = usePathname();
 
   // load bottles
   useEffect(() => {
     let mounted = true;
     setLoading(true);
+    setNeedsAuth(false);
+    setError(null);
     (async () => {
       try {
         const params = new URLSearchParams();
         if (rareOnly) params.set('rare', 'true');
         const url = `${API}/bottles${params.toString() ? `?${params.toString()}` : ''}`;
         const res = await fetch(url, { credentials: 'include' });
-        const data = res.ok ? await res.json() : [];
-        if (mounted) setBottles(Array.isArray(data) ? data : []);
+        if (!mounted) return;
+
+        if (res.status === 401) {
+          setNeedsAuth(true);
+          setBottles([]);
+          return;
+        }
+
+        if (!res.ok) {
+          const msg = (await res.text().catch(() => '')).trim();
+          setError(msg || `Failed to load bottles (${res.status})`);
+          setBottles([]);
+          return;
+        }
+
+        const data = await res.json().catch(() => []);
+        setBottles(Array.isArray(data) ? data : []);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -89,6 +110,30 @@ export default function BottlesPage() {
   }, [filtered]);
 
   if (loading) return <main><p>Loading…</p></main>;
+
+  if (needsAuth) {
+    const next = encodeURIComponent(pathname || '/bottles');
+    return (
+      <main>
+        <h1 style={{ marginBottom: 12 }}>Sign in required</h1>
+        <p style={{ marginBottom: 12 }}>
+          You need to sign in to view the collection when accessing Whiskey DB from outside your LAN.
+        </p>
+        <Link href={`/signin?next=${next}`} style={{ fontWeight: 600 }}>
+          Go to sign in →
+        </Link>
+      </main>
+    );
+  }
+
+  if (error) {
+    return (
+      <main>
+        <h1 style={{ marginBottom: 12 }}>Bottles</h1>
+        <p style={{ color: 'salmon' }}>{error}</p>
+      </main>
+    );
+  }
 
   return (
     <main>

@@ -22,7 +22,7 @@ export async function me(): Promise<MeResponse> {
       email: null,
       role: "guest",
       authenticated: false,
-      lan_guest: true,
+      lan_guest: false,
     };
   }
   return res.json() as Promise<MeResponse>;

@@ -13,7 +13,7 @@ export function AuthProvider({ children }) {
       const data = await AuthApi.me();
       setUser(data);
     } catch {
-      setUser({ username: null, email: null, role: "guest", authenticated: false, lan_guest: true });
+      setUser({ username: null, email: null, role: "guest", authenticated: false, lan_guest: false });
     } finally {
       setLoading(false);
     }

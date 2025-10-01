@@ -42,7 +42,7 @@ export default function AuthWatcher() {
     } catch {
       // ignore, we'll treat as guest
     }
-    const guest: Me = { username: null, email: null, role: 'guest', authenticated: false, lan_guest: true };
+    const guest: Me = { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false };
     setMe(guest);
     return false;
   };

@@ -14,72 +14,18 @@ export default function LoginClient() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // helpful log
-  console.log('[LoginClient] mounted, next =', next);
-
   async function doLogin() {
     setSubmitting(true);
     setError(null);
     try {
-      console.log('[LoginClient] calling AuthApi.login…', {
-        base: process.env.NEXT_PUBLIC_API_BASE ?? '/api',
-        username_len: username.length,
-        password_len: password.length,
-      });
       const me = await AuthApi.login(username, password);
-      console.log('[LoginClient] login ok:', me);
       router.replace(next);
     } catch (err: any) {
-      console.error('[LoginClient] login error:', err);
       setError(err?.message || 'Login failed');
     } finally {
       setSubmitting(false);
     }
   }
-
-  // --- Debug panel (dev only) ----------------------------------------------
-  function DebugPanel() {
-    async function run(label: string, url: string, init?: RequestInit) {
-      console.log(`[DBG] ${label}: start`);
-      try {
-        // If Safari complains about AbortSignal.timeout, remove `signal`
-        const r = await fetch(url, {
-          cache: 'no-store',
-          // @ts-ignore - AbortSignal.timeout may not exist in older Safari
-          signal: (AbortSignal as any)?.timeout?.(7000),
-          ...init,
-        });
-        const text = await r.text();
-        console.log(`[DBG] ${label}: status=${r.status} len=${text.length}`, text.slice(0, 200));
-      } catch (e: any) {
-        console.error(`[DBG] ${label}: ERROR`, e?.name || e, e?.message || '');
-      }
-    }
-    return (
-      <div className="mt-6 space-x-2">
-        <button className="px-2 py-1 rounded bg-zinc-700" onClick={() => run('ping', '/api/ping')}>
-          Ping
-        </button>
-        <button className="px-2 py-1 rounded bg-zinc-700" onClick={() => run('health', '/api/health')}>
-          Health
-        </button>
-        <button
-          className="px-2 py-1 rounded bg-zinc-700"
-          onClick={() =>
-            run('login', '/api/auth/login', {
-              method: 'POST',
-              credentials: 'include',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: 'admin', password: 'PLEASE-CHANGE-ME' }),
-            })
-          }
-        >
-          Login (probe)
-        </button>
-      </div>
-    );
-  }
-  // -------------------------------------------------------------------------
 
   return (
     <div className="mx-auto max-w-md py-16">
@@ -125,9 +71,6 @@ export default function LoginClient() {
         <p className="mt-3 text-sm opacity-70">
           Access to data outside your LAN requires authentication.
         </p>
-
-        {/* Render the debug panel while we diagnose */}
-        <DebugPanel />
       </div>
     </div>
   );

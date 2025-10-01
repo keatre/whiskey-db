@@ -13,7 +13,7 @@ const GUEST: Me = {
   email: null,
   role: 'guest',
   authenticated: false,
-  lan_guest: true,
+  lan_guest: false,
 };
 
 export default function HeaderAuthControl() {

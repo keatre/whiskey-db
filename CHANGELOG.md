@@ -1,5 +1,20 @@
 
+## [1.1.6] - 2025-09-30
+⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
+
+### Changed
+- Frontend auth helpers stop treating failed `/auth/me` calls as LAN guests, keeping remote visitors properly unauthenticated (`web/src/api/auth.ts`, `web/src/auth/AuthContext.jsx`, `web/src/components/*`).
+- Bottles page now detects 401s and points outside-LAN visitors to `/signin` instead of silently showing an empty catalogue (`web/src/app/bottles/page.tsx`).
+- Removed the temporary debug panel and console noise from the sign-in page now that the login flow is stable again (`web/src/app/signin/_LoginClient.tsx`).
+
+### Fixed
+- Remote users accessing the site via Cloudflare no longer see blank bottle lists; they are prompted to authenticate and can browse normally after sign-in.
+
+---
+
 ## [1.1.5] - 2025-09-30
+⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
+
 ### Added
 - Rare bottle flag from database to UI: `/bottles?rare=` filter, list toggle, badge styling, and admin form fields.
 - Backup toggle (`BACKUP_LOCAL_FILES`) to include `.env` and `docker-compose.yml`; plaintext mode now stages/validates archives and respects the configured timezone (`TZ`).
@@ -12,6 +27,25 @@
 ### Fixed
 - Plaintext backups are copied from a verified temp archive, eliminating corrupted `.tar.gz` files.
 - Backup path parsing now tolerates inline comments/whitespace so values like `/data # note` work.
+
+---
+
+## [1.1.4] - 2025-09-30
+⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
+
+### Added
+- Backup service now supports **plaintext tar archives** when `BACKUP_ENCRYPTED=false`, with retention handled via `PLAINTEXT_RETENTION_DAYS`.
+- `.env.example` updated to mirror current config layout (anonymised defaults, clearer sections).
+- API upload endpoint reports the actual file size vs configured limit when rejecting oversized uploads (helps tune `UPLOAD_MAX_MB`).
+
+### Changed
+- Backup entrypoint installs only the dependencies required for the selected mode and logs whether Restic or plaintext mode is active.
+- Default local `.env` switches backups to plaintext storage while keeping the encrypted option available.
+- Minor README clarifications around backup configuration and toggling encryption.
+
+### Fixed
+- First backup log now records completion when run via cron by ensuring the container tail follows the correct log file.
+- Clarified 413 error responses so the frontend surfaces why a large upload failed instead of a generic “too large” message.
 
 ---
 
@@ -198,22 +232,3 @@ docker compose build web && docker compose up -d web
 - `.env` example provided
 - Default SQLite, but Postgres supported
 - Notes on running behind TLS reverse proxy
-
-## [1.1.4] - 2025-09-30
-⚠️ **STATUS:** This is still a **development branch**. Continue treating it as non-production while we finish validation.
-
-### Added
-- Backup service now supports **plaintext tar archives** when `BACKUP_ENCRYPTED=false`, with retention handled via `PLAINTEXT_RETENTION_DAYS`.
-- `.env.example` updated to mirror current config layout (anonymised defaults, clearer sections).
-- API upload endpoint reports the actual file size vs configured limit when rejecting oversized uploads (helps tune `UPLOAD_MAX_MB`).
-
-### Changed
-- Backup entrypoint installs only the dependencies required for the selected mode and logs whether Restic or plaintext mode is active.
-- Default local `.env` switches backups to plaintext storage while keeping the encrypted option available.
-- Minor README clarifications around backup configuration and toggling encryption.
-
-### Fixed
-- First backup log now records completion when run via cron by ensuring the container tail follows the correct log file.
-- Clarified 413 error responses so the frontend surfaces why a large upload failed instead of a generic “too large” message.
-
----
