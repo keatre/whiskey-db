@@ -1,3 +1,9 @@
+## [1.2.5] - 2025-10-01
+
+### Added
+- Support backing up additional local folders via `BACKUP_EXTRA_PATHS` so personal docs (like `dev-docs`) get included in nightly archives.
+- Symlink-friendly setup to keep dev-only docs outside the repo while editing them inside the project.
+
 ## [1.2.2] - 2025-10-01
 
 ### Added
