@@ -7,8 +7,9 @@ import {
   useState,
   type CSSProperties,
 } from 'react';
+import { useRouter } from 'next/navigation';
 import { refresh as refreshSession } from '../lib/auth';
-import { ME_KEY, useMe } from '../lib/useMe';
+import { GUEST, ME_KEY, useMe } from '../lib/useMe';
 import { useSWRConfig } from 'swr';
 
 const parseEnvNumber = (value: string | undefined, fallback: number): number => {
@@ -85,6 +86,8 @@ export default function SessionKeepAlive() {
   const { me } = useMe();
   const { mutate } = useSWRConfig();
   const [warningSeconds, setWarningSeconds] = useState<number | null>(null);
+  const [expired, setExpired] = useState(false);
+  const router = useRouter();
 
   const lastActivityRef = useRef<number>(Date.now());
   const lastRefreshRef = useRef<number>(Date.now());
@@ -102,6 +105,7 @@ export default function SessionKeepAlive() {
           setWarningSeconds(null);
           await mutate(ME_KEY);
         } else {
+          await mutate(ME_KEY, GUEST, { revalidate: false });
           await mutate(ME_KEY);
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new Event('auth:changed'));
@@ -129,6 +133,7 @@ export default function SessionKeepAlive() {
     if (typeof window === 'undefined') return undefined;
     if (!me.authenticated) {
       setWarningSeconds(null);
+      setExpired(false);
       return undefined;
     }
 
@@ -139,6 +144,7 @@ export default function SessionKeepAlive() {
       const now = Date.now();
       lastActivityRef.current = now;
       setWarningSeconds(null);
+      setExpired(false);
 
       const sinceRefresh = now - lastRefreshRef.current;
       if (!document.hidden && sinceRefresh >= REFRESH_INTERVAL_MS) {
@@ -201,15 +207,49 @@ export default function SessionKeepAlive() {
   useEffect(() => {
     if (!me.authenticated) {
       setWarningSeconds(null);
+      setExpired(false);
     }
   }, [me.authenticated]);
+
+  const handleSessionExpired = useCallback(() => {
+    if (expired) return;
+
+    setExpired(true);
+    setWarningSeconds(0);
+    lastActivityRef.current = Date.now();
+    lastRefreshRef.current = Date.now();
+
+    void mutate(ME_KEY, GUEST, { revalidate: false });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth:changed'));
+      try {
+        localStorage.setItem('auth:changed', String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Navigate back to landing page so user can sign in again easily.
+    try {
+      router.replace('/');
+    } catch {
+      /* ignore navigation failures */
+    }
+  }, [expired, mutate, router]);
 
   const handleStaySignedIn = useCallback(() => {
     if (typeof window === 'undefined') return;
     lastActivityRef.current = Date.now();
     setWarningSeconds(null);
+    setExpired(false);
     void runRefresh();
   }, [runRefresh]);
+
+  useEffect(() => {
+    if (warningSeconds === 0) {
+      handleSessionExpired();
+    }
+  }, [handleSessionExpired, warningSeconds]);
 
   if (warningSeconds === null) return null;
 
@@ -218,7 +258,7 @@ export default function SessionKeepAlive() {
       ? `You will be logged out in ${warningSeconds} second${
           warningSeconds === 1 ? '' : 's'
         } due to inactivity.`
-      : 'Your admin session has expired due to inactivity.';
+      : 'Your admin session has expired due to inactivity. Redirecting…';
 
   return (
     <div style={bannerStyle} role="status" aria-live="assertive">

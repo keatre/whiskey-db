@@ -4,7 +4,9 @@ FROM alpine:3.20
 RUN apk add --no-cache \
       restic \
       tzdata \
-      ca-certificates
+      ca-certificates \
+      bash \
+      coreutils
 
 WORKDIR /app
 RUN mkdir -p /config

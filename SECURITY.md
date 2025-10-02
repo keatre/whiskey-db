@@ -43,6 +43,8 @@ This project is designed for **self-hosting**. To reduce your attack surface:
   For production or shared deployments, configure **Postgres**.
 - Regularly **back up** your `/data` volume.
 - Uploaded images are stored on disk. Consider serving them through the backend with authentication if hosting outside your LAN.
+- Centralised application logs are written to the path defined by `LOG_FILE_PATH` (default `./logs/whiskey_db.log`). Keep that directory on trusted storage and rotate/ship it according to your retention requirements.
+- Run the containers as a non-root user (`PUID`/`PGID`) so generated artifacts match your host permissions and accidental privilege escalation risks stay low.
 
 ---
 
@@ -61,4 +63,3 @@ This project is designed for **self-hosting**. To reduce your attack surface:
 ## Responsible Disclosure
 
 We ask that you give us reasonable time to investigate and release a patch before any public disclosure. We are committed to being transparent about confirmed issues and fixes in the [CHANGELOG](./CHANGELOG.md).
-

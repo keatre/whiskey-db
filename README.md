@@ -61,9 +61,21 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
    - Flip `BACKUP_LOCAL_FILES=true` when you want backups to bundle your top-level `.env` and `docker-compose.yml` alongside the database.
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
    - Mount your NAS share on the Docker host (e.g. `/mnt/restic-whiskey-db`) and ensure `docker-compose.yml` binds it into the backup container at `/remote`.
+   - Configure logging with `LOG_LEVEL` (`none`, `error`, `info`, `debug`), `LOG_FILE_PATH` (default `/logs/whiskey_db.log`), `LOG_MAX_MB`, and `LOG_RETENTION_DAYS`.
+   - (Optional) Set `PUID`/`PGID` so containers run as your host user and avoid root-owned build artifacts.
 2. Bring the stack up:
    ```bash
    docker compose up -d
+
+## 📜 Logging
+
+All application containers stream through a shared log sink that writes to `LOG_FILE_PATH` (defaults to `/logs/whiskey_db.log`, mounted from the host `./logs` directory).
+
+- `LOG_LEVEL` controls what gets persisted: `none` keeps Docker-only logs, `error` records stderr only, `info` (default) captures normal activity, and `debug` keeps everything.
+- The log includes ISO8601 timestamps, service name (`API`, `WEB`, `BACKUP`), and severity.
+- Files auto-rotate once they reach `LOG_MAX_MB` (default 10 MB). Historical files are timestamped and trimmed after `LOG_RETENTION_DAYS`.
+- Docker Compose binds the host `./logs` folder into every service; create it (or point `LOG_FILE_PATH` elsewhere) before deploying.
+- Host access is just a bind mount, so secure the `logs/` directory and include it in your backup policy if desired.
 
 ### 🔐Security Notes
 - Default DB is SQLite (local file under /data/)
