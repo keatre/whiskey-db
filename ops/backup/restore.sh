@@ -3,20 +3,25 @@ set -euo pipefail
 
 # Restore the latest snapshot into ./data
 # Usage:
-#   export RESTIC_REPOSITORY=/path/or/mounted/NAS/folder
+#   export BACKUP_REPOSITORY=/path/or/mounted/NAS/folder
 #   export RESTIC_PASSWORD=...
 #   ./ops/backup/restore.sh
 
 TARGET_DIR="./data"
 
+if [ -z "${RESTIC_REPOSITORY:-}" ] && [ -n "${BACKUP_REPOSITORY:-}" ]; then
+  RESTIC_REPOSITORY="$BACKUP_REPOSITORY"
+fi
+
 if [ -z "${RESTIC_REPOSITORY:-}" ] || [ -z "${RESTIC_PASSWORD:-}" ]; then
-  echo "Set RESTIC_REPOSITORY and RESTIC_PASSWORD in your environment first."
+  echo "Set BACKUP_REPOSITORY (or RESTIC_REPOSITORY) and RESTIC_PASSWORD in your environment first."
   exit 1
 fi
 
 echo "[restore] Restoring latest snapshot to ${TARGET_DIR} ..."
 mkdir -p "${TARGET_DIR}"
 docker run --rm \
+  -e BACKUP_REPOSITORY="${BACKUP_REPOSITORY:-}" \
   -e RESTIC_REPOSITORY \
   -e RESTIC_PASSWORD \
   -v "$(pwd)/data:/restore" \

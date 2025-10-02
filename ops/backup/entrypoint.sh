@@ -33,17 +33,22 @@ fi
 : "${BACKUP_CRON:=0 3 * * *}"                # 3:00 AM daily
 : "${BACKUP_SOURCE:=/data}"                  # where whiskey.db lives
 
-: "${RESTIC_REPOSITORY:=}"              # reuse path for plaintext archives when encryption disabled
+: "${BACKUP_REPOSITORY:=}"              # canonical path for both encrypted + plaintext modes
+# Backward compatibility with legacy RESTIC_REPOSITORY env var
+if [ -z "$BACKUP_REPOSITORY" ] && [ -n "${RESTIC_REPOSITORY:-}" ]; then
+  BACKUP_REPOSITORY="$RESTIC_REPOSITORY"
+fi
+: "${BACKUP_REPOSITORY:=}"
 : "${BACKUP_ARCHIVE_DIR:=}"             # optional override target for plaintext mode
 : "${PLAINTEXT_RETENTION_DAYS:=30}"
 
 if [ "$BACKUP_ENCRYPTED" = "true" ]; then
   : "${RESTIC_PASSWORD:?RESTIC_PASSWORD is required when BACKUP_ENCRYPTED=true}"
-  : "${RESTIC_REPOSITORY:?RESTIC_REPOSITORY is required when BACKUP_ENCRYPTED=true}"  # e.g. /remote/restic-whiskey-db (NAS bind mount)
+  : "${BACKUP_REPOSITORY:?BACKUP_REPOSITORY is required when BACKUP_ENCRYPTED=true}"  # e.g. /remote/restic-whiskey-db (NAS bind mount)
 else
-  : "${BACKUP_ARCHIVE_DIR:=${RESTIC_REPOSITORY:-}}"
+  : "${BACKUP_ARCHIVE_DIR:=${BACKUP_REPOSITORY:-}}"
   if [ -z "$BACKUP_ARCHIVE_DIR" ]; then
-    echo "[backup] ERROR: Set BACKUP_ARCHIVE_DIR (or RESTIC_REPOSITORY) when BACKUP_ENCRYPTED=false."
+    echo "[backup] ERROR: Set BACKUP_ARCHIVE_DIR (or BACKUP_REPOSITORY) when BACKUP_ENCRYPTED=false."
     exit 1
   fi
   mkdir -p "$BACKUP_ARCHIVE_DIR"
@@ -87,16 +92,19 @@ if [ "$BACKUP_ENABLED" != "true" ]; then
   exit 0
 fi
 
+# Keep restic-cli env in sync with canonical name
+RESTIC_REPOSITORY="$BACKUP_REPOSITORY"
+
 # Export for cron (busybox crond has minimal env)
-export BACKUP_SOURCE BACKUP_TAG BACKUP_ENCRYPTED RESTIC_REPOSITORY BACKUP_ARCHIVE_DIR \
+export BACKUP_SOURCE BACKUP_TAG BACKUP_ENCRYPTED BACKUP_REPOSITORY RESTIC_REPOSITORY BACKUP_ARCHIVE_DIR \
        RESTIC_PASSWORD RESTIC_KEEP_DAILY RESTIC_KEEP_WEEKLY RESTIC_KEEP_MONTHLY \
        PLAINTEXT_RETENTION_DAYS BACKUP_LOCAL_FILES
 
 # Initialize repo if needed
 if [ "$BACKUP_ENCRYPTED" = "true" ]; then
-  echo "[backup] BACKUP_ENCRYPTED=true → using restic repository at ${RESTIC_REPOSITORY}."
+  echo "[backup] BACKUP_ENCRYPTED=true → using restic repository at ${BACKUP_REPOSITORY}."
   if ! restic snapshots >/dev/null 2>&1; then
-    echo "[backup] Initializing restic repository at ${RESTIC_REPOSITORY}..."
+    echo "[backup] Initializing restic repository at ${BACKUP_REPOSITORY}..."
     restic init
   fi
 else

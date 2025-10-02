@@ -7,7 +7,7 @@ set -eu
 #   BACKUP_ENCRYPTED          (true|false)
 #   BACKUP_LOCAL_FILES        (true|false) include docker-compose.yml/.env when available
 #   BACKUP_EXTRA_PATHS        (space-separated container paths to include, eg "/extra/dev-docs /extra/notes")
-#   RESTIC_REPOSITORY         (encrypted mode)
+#   BACKUP_REPOSITORY         (canonical path used for both modes)
 #   RESTIC_PASSWORD           (encrypted mode)
 #   RESTIC_KEEP_DAILY/WEEKLY/MONTHLY (encrypted mode retention)
 #   BACKUP_ARCHIVE_DIR        (plaintext mode destination)
@@ -106,12 +106,25 @@ if [ -n "${BACKUP_EXTRA_PATHS:-}" ]; then
   done
 fi
 
+# Canonical repo path (fallback to legacy RESTIC_REPOSITORY if invoked directly)
+if [ -z "${BACKUP_REPOSITORY:-}" ] && [ -n "${RESTIC_REPOSITORY:-}" ]; then
+  BACKUP_REPOSITORY="$RESTIC_REPOSITORY"
+fi
+
 if [ "$BACKUP_ENCRYPTED" = "true" ]; then
+  if [ -z "${BACKUP_REPOSITORY:-}" ]; then
+    log "ERROR: BACKUP_REPOSITORY must be set when BACKUP_ENCRYPTED=true"
+    exit 1
+  fi
+
+  RESTIC_REPOSITORY="$BACKUP_REPOSITORY"
+  export RESTIC_REPOSITORY
+
   log "Starting backup at $(ts)"
   if [ -n "$EXTRA_LABEL" ]; then
-    log "Source: ${BACKUP_SOURCE} (+${EXTRA_LABEL})  Repo: ${RESTIC_REPOSITORY}"
+    log "Source: ${BACKUP_SOURCE} (+${EXTRA_LABEL})  Repo: ${BACKUP_REPOSITORY}"
   else
-    log "Source: ${BACKUP_SOURCE}  Repo: ${RESTIC_REPOSITORY}"
+    log "Source: ${BACKUP_SOURCE}  Repo: ${BACKUP_REPOSITORY}"
   fi
 
   set -- restic backup --tag "${BACKUP_TAG}" --exclude-caches

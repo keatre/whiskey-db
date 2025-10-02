@@ -2,13 +2,29 @@ services:
   web:
     image: node:20
     working_dir: /app
-    command: sh -lc "npm ci --prefer-offline && npm run build && exec npm start"
+    command:
+      - /bin/bash
+      - /logging/with-logging.sh
+      - web
+      - --
+      - bash
+      - -lc
+      - >-
+        echo "Running elevated privileges required for install (npm ci)" &&
+        npm ci --prefer-offline &&
+        npm run build &&
+        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /app/.next /npm-cache || true &&
+        exec npm start
     volumes:
       - ./web:/app
       - web_npm_cache:/npm-cache
+      - ./ops/logging:/logging:ro
+      - ./logs:/logs
     env_file: .env
     environment:
-      - NPM_CONFIG_CACHE=/npm-cache
+      NPM_CONFIG_CACHE: /npm-cache
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
     ports:
       - "8080:3000"
     depends_on:
@@ -20,16 +36,31 @@ services:
   api:
     image: python:3.12
     working_dir: /app
-    command: sh -lc "pip install --cache-dir /pip-cache -r requirements.txt && exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000}"
+    command:
+      - /bin/bash
+      - /logging/with-logging.sh
+      - api
+      - --
+      - bash
+      - -lc
+      - >-
+        echo "Running elevated privileges required for install (pip install)" &&
+        pip install --cache-dir /pip-cache -r requirements.txt &&
+        chown -R ${PUID:-1000}:${PGID:-1000} /pip-cache || true &&
+        exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --log-level ${API_LOG_LEVEL:-info}
     volumes:
       - ./api:/app
       - ./data:/data
       - ./api/static:/app/static
       - api_pip_cache:/pip-cache
+      - ./ops/logging:/logging:ro
+      - ./logs:/logs
     env_file: .env
     environment:
-      - PIP_CACHE_DIR=/pip-cache
-      - DATABASE_URL=${DATABASE_URL:-sqlite:////data/whiskey.db}
+      PIP_CACHE_DIR: /pip-cache
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/whiskey.db}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
     ports:
       - "8000:8000"
     init: true
@@ -58,9 +89,18 @@ services:
       RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
       RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
       BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-/extra/dev-docs}
-      # For NAS we point restic to the CIFS mount inside the container:
-      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/remote/restic-whiskey-db}
+      BACKUP_REPOSITORY: ${BACKUP_REPOSITORY:-/remote/restic-whiskey-db}
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+    entrypoint:
+      - /bin/bash
+      - /logging/with-logging.sh
+      - backup
+      - --
+    command:
+      - /bin/sh
+      - /app/entrypoint.sh
     init: true                 # runs tini as PID 1 (helps reap zombies & forward signals)
     stop_signal: SIGTERM       # send TERM first (entrypoint trap handles it)
     stop_grace_period: 60s     # allow time to end restic/crond/tail cleanly
@@ -71,6 +111,8 @@ services:
       - ./docker-compose.yml:/config/docker-compose.yml:ro
       - ./.env:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote
+      - ./ops/logging:/logging:ro
+      - ./logs:/logs
     restart: unless-stopped
 
   cloudflared:
@@ -81,6 +123,7 @@ services:
     environment:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
 
+#Local Cache Volumes - comment out if you want to use fresh installs every time
 volumes:
   web_npm_cache:
   api_pip_cache:
