@@ -6,6 +6,7 @@
 # Variables (can be overridden, e.g. make release v=1.1.0)
 VERSION ?= 1.1.0
 DOCKER ?= docker
+PYTHON ?= python3
 
 PR_VERSION_RAW := $(shell awk 'match($$0, /^## \[([0-9]+\.[0-9]+\.[0-9]+)\]/, m) {print m[1]; exit}' CHANGELOG.md)
 PR_VERSION := $(strip $(PR_VERSION_RAW))
@@ -29,6 +30,7 @@ help:
 	@echo "  make clean          # Remove build artifacts"
 	@echo "  make prepare-pr     # Stash dev docs, create PR branch, and push"
 	@echo "  make release v=1.2.0  # Tag and push a new release"
+	@echo "  make newbranch      # Create dev/vX.Y.Z branch and matching vX.Y.Z tag"
 
 # --- DEV ---
 web-dev:
@@ -77,6 +79,10 @@ clean:
 	rm -rf web/node_modules web/.next
 	find . -type d -name "__pycache__" -exec rm -rf {} +
 	find . -type d -name "*.egg-info" -exec rm -rf {} +
+
+.PHONY: newbranch
+newbranch:
+	$(PYTHON) scripts/new_release_branch.py
 
 .PHONY: prepare-pr
 prepare-pr:
