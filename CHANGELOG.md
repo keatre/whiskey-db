@@ -4,7 +4,7 @@
 - Admin sessions now refresh automatically while you are active and only expire after inactivity, thanks to a new keep-alive client (`web/src/components/SessionKeepAlive.tsx`, `web/src/app/layout.tsx`).
 - Backup services now use a unified `BACKUP_REPOSITORY` env var for both encrypted and plaintext modes, with legacy `RESTIC_REPOSITORY` still accepted for compatibility (`ops/backup/*`, `docker-compose.yml`).
 - Added centralized log sink with configurable level, rotation, and retention controlled via `.env` (`docker-compose.yml`, `ops/logging/*`).
-- Docker containers can now inherit host user/group IDs via `PUID`/`PGID`, preventing root-owned artifacts during local development (`docker-compose.yml`, `.env*`).
+- Docker install steps now log when they run with elevated privileges and use `PUID`/`PGID` to reset ownership on generated files, preventing root-owned artifacts during local development (`docker-compose.yml`, `.env*`).
 
 ### Added
 - Inactivity warning banner gives a countdown with a quick "Stay signed in" action and, once the timer hits zero, automatically redirects you back to the landing page to reauthenticate.

@@ -2,7 +2,6 @@ services:
   web:
     image: node:20
     working_dir: /app
-    user: "${PUID:-1000}:${PGID:-1000}"
     command:
       - /bin/bash
       - /logging/with-logging.sh
@@ -10,7 +9,12 @@ services:
       - --
       - bash
       - -lc
-      - npm ci --prefer-offline && npm run build && exec npm start
+      - >-
+        echo "Running elevated privileges required for install (npm ci)" &&
+        npm ci --prefer-offline &&
+        npm run build &&
+        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /npm-cache || true &&
+        exec npm start
     volumes:
       - ./web:/app
       - web_npm_cache:/npm-cache
@@ -32,7 +36,6 @@ services:
   api:
     image: python:3.12
     working_dir: /app
-    user: "${PUID:-1000}:${PGID:-1000}"
     command:
       - /bin/bash
       - /logging/with-logging.sh
@@ -40,7 +43,11 @@ services:
       - --
       - bash
       - -lc
-      - pip install --cache-dir /pip-cache -r requirements.txt && exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --log-level ${API_LOG_LEVEL:-info}
+      - >-
+        echo "Running elevated privileges required for install (pip install)" &&
+        pip install --cache-dir /pip-cache -r requirements.txt &&
+        chown -R ${PUID:-1000}:${PGID:-1000} /pip-cache || true &&
+        exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --log-level ${API_LOG_LEVEL:-info}
     volumes:
       - ./api:/app
       - ./data:/data
@@ -67,7 +74,6 @@ services:
     container_name: whiskey-backup
     #profiles: ["backup"]
     working_dir: /app
-    user: "${PUID:-1000}:${PGID:-1000}"
     env_file: .env
     environment:
       TZ: ${TZ:-America/Chicago}

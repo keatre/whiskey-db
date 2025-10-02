@@ -62,7 +62,7 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
    - Mount your NAS share on the Docker host (e.g. `/mnt/restic-whiskey-db`) and ensure `docker-compose.yml` binds it into the backup container at `/remote`.
    - Configure logging with `LOG_LEVEL` (`none`, `error`, `info`, `debug`), `LOG_FILE_PATH` (default `/logs/whiskey_db.log`), `LOG_MAX_MB`, and `LOG_RETENTION_DAYS`.
-   - (Optional) Set `PUID`/`PGID` so containers run as your host user and avoid root-owned build artifacts.
+   - (Optional) Set `PUID`/`PGID` so the install steps can reset ownership on generated files after running with elevated privileges.
 2. Bring the stack up:
    ```bash
    docker compose up -d
