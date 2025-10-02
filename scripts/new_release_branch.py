@@ -95,7 +95,5 @@ def main() -> None:
     create_tag(tag)
     run([GIT, "checkout", branch])
     print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
-
-
-+if __name__ == "__main__":
-+    main()
+if __name__ == "__main__":
+    main()
