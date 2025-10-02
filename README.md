@@ -13,6 +13,7 @@ Self-hosted database for cataloging and valuing your whiskey collection.
 - Grouped bottle browser (by Style → Substyle → Brand/Expression)
 - Mobile-friendly UI (Next.js 14, React 18, TypeScript)
 - REST API powered by FastAPI + SQLModel
+- Admin console for managing users (create, disable, reset credentials)
 - SQLite by default (Postgres optional)
 
 ## 🚀 Getting Started
@@ -47,6 +48,12 @@ Access:
 - Add mash bill or notes using Markdown (tables, lists, headings, etc.)
 - Track purchases with quantity & price
 - UPC lookup auto-fetches current market values
+
+#### Admin Console
+- Visit `/admin` (link in the top navigation when signed in) to reach operational tools.
+- The **User management** section lets administrators invite new users, toggle roles, activate/deactivate accounts, and issue password resets. All passwords are hashed with Argon2 before storage.
+- Use the in-page `Logout` button to end your session quickly, especially on shared devices.
+- The UI now opens in dark mode by default; the theme toggle in the header lets you switch to light mode as needed and remembers your preference.
 
 ## 🛡️ Disaster Recovery to NAS (v1.1.2)
 

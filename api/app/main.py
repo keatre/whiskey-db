@@ -1,16 +1,25 @@
 # api/app/main.py
 import os
 import tempfile
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routers import auth, bottles, purchases, notes, retailers, valuation
+from .routers.admin_users import router as admin_users_router
 from .routers.uploads import router as uploads_router
 from .settings import settings
 
-app = FastAPI(title="Whiskey DB API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    yield
+
+
+app = FastAPI(title="Whiskey DB API", lifespan=lifespan)
 
 # --- CORS (env-driven; cookie auth needs explicit allowed origins) ---
 origins = [o.strip() for o in (settings.ALLOWED_ORIGINS or "").split(",") if o.strip()]
@@ -26,10 +35,6 @@ app.add_middleware(
     max_age=3600,
 )
 
-@app.on_event("startup")
-def on_startup():
-    init_db()
-
 @app.get("/health")
 def health():
     return {"status": "ok"}
@@ -37,6 +42,7 @@ def health():
 # --- Routers (include BEFORE mounting /uploads static) ---
 # Backend lives at ROOT (Case A) – paths like /auth/login, /bottles, /uploads/image, etc.
 app.include_router(auth.router)
+app.include_router(admin_users_router)
 app.include_router(bottles.router)
 app.include_router(purchases.router)
 app.include_router(notes.router)

@@ -10,7 +10,12 @@ export default function NavLinks() {
     <>
       <Link href="/">Home</Link>
       <Link href="/bottles">Bottles</Link>
-      {isAdmin && <Link href="/retailers">Retailers</Link>}
+      {isAdmin && (
+        <>
+          <Link href="/retailers">Retailers</Link>
+          <Link href="/admin">Admin</Link>
+        </>
+      )}
     </>
   );
 }

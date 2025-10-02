@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { me as apiMe, login, logout, type MeResponse } from '../lib/auth';
-import { mutate } from 'swr';                 // ⬅️ NEW
-import { ME_KEY } from '../lib/useMe';        // ⬅️ NEW
+import { mutate } from 'swr';
+import { ME_KEY } from '../lib/useMe';
 
 // Keep a local alias so the rest of the file reads nicely.
 type Me = MeResponse;
@@ -34,7 +34,7 @@ export default function HeaderAuthControl() {
 
   if (!user) return null;
 
-  const isAdmin = user.role === 'admin';
+  const isAuthenticated = user.authenticated;
 
   // Tell the entire app that auth changed
   const notifyAuthChanged = () => {
@@ -61,7 +61,7 @@ export default function HeaderAuthControl() {
       setUser(u);
       setOpen(false);
       setForm({ username: '', password: '' });
-      notifyAuthChanged(); // ⬅️ key line
+      notifyAuthChanged();
     } catch (e: any) {
       setErr(e?.message || 'Login failed');
     } finally {
@@ -75,41 +75,40 @@ export default function HeaderAuthControl() {
     } finally {
       const u = await apiMe(); // should come back as guest
       setUser(u);
-      notifyAuthChanged(); // ⬅️ key line
+      notifyAuthChanged();
     }
   }
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      {isAdmin ? (
-        <button onClick={doLogout}>Logout</button>
-      ) : (
-        <>
-          <button onClick={() => setOpen((v) => !v)}>Admin</button>
-          {open && (
-            <form onSubmit={doLogin} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              <input
-                placeholder="Username"
-                value={form.username}
-                onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
-                required
-                autoComplete="username"
-              />
-              <input
-                type="password"
-                placeholder="Password"
-                value={form.password}
-                onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                required
-                autoComplete="current-password"
-              />
-              <button type="submit" disabled={busy}>
-                {busy ? 'Signing in…' : 'Sign in'}
-              </button>
-              {err && <span style={{ color: 'salmon', marginLeft: 6 }}>{err}</span>}
-            </form>
-          )}
-        </>
+      <button onClick={() => setOpen((v) => !v)}>Admin</button>
+      {isAuthenticated && (
+        <button onClick={doLogout} style={{ marginLeft: 4 }}>
+          Logout
+        </button>
+      )}
+      {open && !isAuthenticated && (
+        <form onSubmit={doLogin} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <input
+            placeholder="Username"
+            value={form.username}
+            onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
+            required
+            autoComplete="username"
+          />
+          <input
+            type="password"
+            placeholder="Password"
+            value={form.password}
+            onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+            required
+            autoComplete="current-password"
+          />
+          <button type="submit" disabled={busy}>
+            {busy ? 'Signing in…' : 'Sign in'}
+          </button>
+          {err && <span style={{ color: 'salmon', marginLeft: 6 }}>{err}</span>}
+        </form>
       )}
     </div>
   );

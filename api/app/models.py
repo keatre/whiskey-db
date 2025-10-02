@@ -1,5 +1,6 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 from typing import Optional, List
+from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlmodel import SQLModel, Field, Relationship
 
 # --- Link table FIRST ---
@@ -43,14 +44,14 @@ class BottleAudit(SQLModel, table=True):
     audit_id: Optional[int] = Field(default=None, primary_key=True)
     bottle_id: int
     changed_by: Optional[str] = None        # future: user id/subject
-    changed_at: datetime = Field(default_factory=datetime.utcnow)
+    changed_at: datetime = Field(default_factory=_utcnow)
     # store as JSON string (SQLite TEXT)
     changes_json: str
 
 class Bottle(BottleBase, table=True):
     bottle_id: Optional[int] = Field(default=None, primary_key=True)
-    created_utc: datetime = Field(default_factory=datetime.utcnow)
-    updated_utc: datetime = Field(default_factory=datetime.utcnow)
+    created_utc: datetime = Field(default_factory=_utcnow)
+    updated_utc: datetime = Field(default_factory=_utcnow)
 
     purchases: List["Purchase"] = Relationship(back_populates="bottle")
     tags: List[Tag] = Relationship(back_populates="bottles", link_model=BottleTag)
@@ -82,8 +83,8 @@ class TastingNote(SQLModel, table=True):
     finish: Optional[str] = None
     rating_100: Optional[int] = None
     notes_markdown: Optional[str] = None
-    created_utc: datetime = Field(default_factory=datetime.utcnow)
-    updated_utc: datetime = Field(default_factory=datetime.utcnow)
+    created_utc: datetime = Field(default_factory=_utcnow)
+    updated_utc: datetime = Field(default_factory=_utcnow)
 
 class PurchaseUpdate(SQLModel):
     bottle_id: Optional[int] = None
@@ -100,10 +101,16 @@ class PurchaseUpdate(SQLModel):
 
 class User(SQLModel, table=True):
     __tablename__ = "users"
+    __table_args__ = (
+        UniqueConstraint("username"),
+        CheckConstraint("role IN ('admin','user')"),
+    )
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: Optional[str] = Field(default=None, index=True)
-    email: Optional[str] = Field(default=None, index=True)
+    username: str = Field(index=True)
+    email: Optional[str] = Field(default=None)
     password_hash: str
-    role: str  # 'admin' or 'guest'
+    role: str  # 'admin' or 'user'
     is_active: bool = True
-    created_at: Optional[datetime] = None
+    created_at: Optional[datetime] = Field(default_factory=_utcnow)
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)

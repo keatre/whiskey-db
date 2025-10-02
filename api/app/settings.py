@@ -1,7 +1,8 @@
 # api/app/settings.py
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env")
     # --- Database ---
     DATABASE_URL: str = "sqlite:////data/whiskey.db"
 
@@ -33,8 +34,5 @@ class Settings(BaseSettings):
     LOGIN_WINDOW_SECONDS: int = 60          # sliding window size
     LOGIN_MAX_ATTEMPTS: int = 10            # max failed attempts within window
     LOGIN_LOCKOUT_SECONDS: int = 180        # temporary lockout after exceeding
-
-    class Config:
-        env_file = ".env"
 
 settings = Settings()

@@ -31,6 +31,7 @@ help:
 	@echo "  make prepare-pr     # Stash dev docs, create PR branch, and push"
 	@echo "  make release v=1.2.0  # Tag and push a new release"
 	@echo "  make newbranch      # Create dev/vX.Y.Z branch and matching vX.Y.Z tag"
+	@echo "  make ssh-agent      # Restart ssh-agent with a 2h lifetime"
 
 # --- DEV ---
 web-dev:
@@ -83,6 +84,19 @@ clean:
 .PHONY: newbranch
 newbranch:
 	$(PYTHON) scripts/new_release_branch.py
+
+.PHONY: ssh-agent
+ssh-agent:
+	@if ssh-add -l >/dev/null 2>&1; then \
+		echo "🧹 Removing keys from existing ssh-agent"; \
+		ssh-add -D >/dev/null; \
+	fi
+	@if [ -n "$$SSH_AGENT_PID" ]; then \
+		echo "🛑 Stopping existing ssh-agent ($$SSH_AGENT_PID)"; \
+		ssh-agent -k >/dev/null; \
+	fi
+	@echo "🔐 Starting new ssh-agent (expires in 2h)";
+	@ssh-agent -s -t 7200
 
 .PHONY: prepare-pr
 prepare-pr:

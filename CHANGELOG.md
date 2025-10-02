@@ -1,3 +1,22 @@
+## [1.3.1] - 2025-10-02
+
+### Added
+- Admin console now exposes a full user-management dashboard for admins, including create, role toggle, account activation, and password reset flows (`api/app/routers/admin_users.py`, `web/src/app/admin/users/page.tsx`).
+- Automatic SQLite migration upgrades existing `users` tables to enforce username uniqueness, allow optional emails, and adopt the new `admin/user` role model while preserving existing accounts (`api/app/db.py`).
+- Frontend navigation shows a contextual `Logout` control when signed in so admins can end sessions without digging into menus (`web/src/components/HeaderAuthControl.tsx`).
+- Default UI theme is now dark on first load; users can still toggle between light/dark and their choice persists across visits (`web/src/components/ThemeToggle.tsx`).
+
+### Changed
+- Login failures now return a polished "Incorrect username or password." response on both API and UI, avoiding raw error text leaks and giving end users a clearer prompt (`api/app/routers/auth.py`, `web/src/api/auth.ts`).
+- Admin navigation is always visible for authorized users via the new `/admin` landing page, centralizing configuration links (`web/src/components/NavLinks.tsx`, `web/src/app/admin/page.tsx`).
+
+### Fixed
+- Creating users without an email address no longer triggers database integrity errors; empty inputs are normalized and surfaced as `null` in responses (`api/app/admin_users_schemas.py`, `api/app/routers/admin_users.py`).
+- Legacy `guest` role data is migrated to the supported `user` role, preventing CHECK constraint violations during admin actions (`api/app/db.py`).
+- Eliminated framework deprecation warnings by moving app startup to FastAPI lifespan hooks, using timezone-aware timestamps, switching SQLModel queries to `session.exec()`, and preferring Pillow’s image inspection over deprecated stdlib helpers (`api/app/main.py`, `api/app/models.py`, `api/app/routers/auth.py`, `api/app/routers/uploads.py`).
+
+---
+
 ## [1.2.6] - 2025-10-02
 
 ### Changed

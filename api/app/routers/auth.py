@@ -6,6 +6,7 @@ from typing import Deque, Dict
 
 from fastapi import APIRouter, Depends, Response, Request, HTTPException, status
 from sqlalchemy.orm import Session
+from sqlmodel import select
 from datetime import timedelta
 
 from ..db import get_session
@@ -149,14 +150,14 @@ def login(
     ip = _ip_from_request(request)
     _throttle_check(ip)
 
-    user = (
-        db.query(User)
-        .filter(User.username == data.username, User.is_active.is_(True))
-        .first()
-    )
+    stmt = select(User).where(User.username == data.username, User.is_active.is_(True))
+    user = db.exec(stmt).first()
     if not user or not verify_password(data.password, user.password_hash):
         _throttle_record(ip, success=False)
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password.",
+        )
 
     # Create tokens
     access = create_token(user.username, user.role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -220,11 +221,8 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
     username = payload.get("sub")
     role = payload.get("role")
 
-    user = (
-        db.query(User)
-        .filter(User.username == username, User.is_active.is_(True))
-        .first()
-    )
+    stmt = select(User).where(User.username == username, User.is_active.is_(True))
+    user = db.exec(stmt).first()
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
 

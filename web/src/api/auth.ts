@@ -41,8 +41,30 @@ export async function login(
     redirect: "follow",
   });
   if (!res.ok) {
-    const msg = await res.text().catch(() => "");
-    throw new Error(msg || `Login failed (${res.status})`);
+    let message = "Sign-in failed. Please try again.";
+    try {
+      const body = await res.text();
+      if (body) {
+        try {
+          const parsed = JSON.parse(body);
+          if (typeof parsed?.detail === "string") {
+            message = parsed.detail;
+          } else if (typeof parsed?.message === "string") {
+            message = parsed.message;
+          } else {
+            message = body;
+          }
+        } catch {
+          message = body;
+        }
+      }
+    } catch {
+      /* ignore */
+    }
+    if (res.status === 401) {
+      message = "Incorrect username or password.";
+    }
+    throw new Error(message || `Login failed (${res.status})`);
   }
   return res.json() as Promise<MeResponse>;
 }

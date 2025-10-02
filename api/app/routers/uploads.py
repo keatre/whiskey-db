@@ -1,10 +1,10 @@
 # api/app/routers/uploads.py
 import os
 import uuid
-import imghdr
 
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
 from fastapi.responses import JSONResponse
+from PIL import Image, UnidentifiedImageError
 
 from ..deps import require_admin
 from ..settings import settings
@@ -16,7 +16,7 @@ MAX_SIZE_BYTES = int(settings.UPLOAD_MAX_MB) * 1024 * 1024
 UPLOAD_DIR = settings.UPLOAD_DIR  # e.g., /data/uploads
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-ALLOWED_IMGHDR = {"jpeg", "png", "gif", "webp"}  # formats we accept as-is
+ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "GIF", "WEBP"}
 
 
 def _api_base_prefix() -> str:
@@ -122,19 +122,19 @@ async def upload_image(file: UploadFile = File(...)):
             return JSONResponse({"url": public_url})
 
         # ---- Non-DNG path: accept common web raster formats as-is ----
-        kind = imghdr.what(tmp_path)  # returns 'jpeg', 'png', 'gif', 'webp', etc.
-        if kind not in ALLOWED_IMGHDR:
+        image_format = _identify_image(tmp_path)
+        if not image_format:
             try:
                 os.remove(tmp_path)
             except Exception:
                 pass
             raise HTTPException(
                 status_code=415,
-                detail=f"Unsupported image type. Allowed: {', '.join(sorted(ALLOWED_IMGHDR))} or DNG (auto-converted)."
+                detail=f"Unsupported image type. Allowed: {', '.join(sorted(ALLOWED_IMAGE_FORMATS))} or DNG (auto-converted)."
             )
 
-        ext_map = {"jpeg": ".jpg", "png": ".png", "gif": ".gif", "webp": ".webp"}
-        final_name = f"{uuid.uuid4().hex}{ext_map[kind]}"
+        ext_map = {"JPEG": ".jpg", "PNG": ".png", "GIF": ".gif", "WEBP": ".webp"}
+        final_name = f"{uuid.uuid4().hex}{ext_map[image_format]}"
         final_path = os.path.join(UPLOAD_DIR, final_name)
         os.replace(tmp_path, final_path)
 
@@ -151,3 +151,12 @@ async def upload_image(file: UploadFile = File(...)):
             except Exception:
                 pass
         raise
+def _identify_image(path: str) -> str | None:
+    try:
+        with Image.open(path) as img:
+            fmt = (img.format or "").upper()
+    except (UnidentifiedImageError, OSError):
+        return None
+    if fmt in ALLOWED_IMAGE_FORMATS:
+        return fmt
+    return None
