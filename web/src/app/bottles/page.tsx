@@ -146,6 +146,8 @@ export default function BottlesPage() {
 
       <div style={{ display: 'flex', gap: 8, marginTop: 12, alignItems: 'center' }}>
         <input
+          id="bottles-search"
+          name="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="Search brand / expression / distillery / style"
@@ -159,9 +161,14 @@ export default function BottlesPage() {
           }}
         />
         <button style={{ padding: '8px 12px', borderRadius: 8 }}>Search</button>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+        <label
+          htmlFor="bottles-rare-only"
+          style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}
+        >
           <input
             type="checkbox"
+            id="bottles-rare-only"
+            name="rareOnly"
             checked={rareOnly}
             onChange={(e) => setRareOnly(e.target.checked)}
             style={{ width: 16, height: 16 }}

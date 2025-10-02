@@ -1,3 +1,4 @@
+import type { Metadata } from 'next';
 import './global.css';
 import ThemeToggle from '../components/ThemeToggle';
 import HeaderAuthControl from '../components/HeaderAuthControl';
@@ -11,9 +12,14 @@ const SessionKeepAlive = dynamic(() => import('../components/SessionKeepAlive'),
 // ⬇️ add SWR provider
 import { SWRConfig } from 'swr';
 
-export const metadata = {
-  title: 'Whiskey DB',
-  description: 'Self-hosted whiskey collection',
+const appName =
+  process.env.NEXT_PUBLIC_APP_NAME?.trim() ||
+  process.env.APP_NAME?.trim() ||
+  'Whiskey DB';
+
+export const metadata: Metadata = {
+  title: appName,
+  description: `${appName} — Self-hosted whiskey collection`,
   icons: {
     icon: '/favicon.ico',
     shortcut: '/favicon-16x16.png',

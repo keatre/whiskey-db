@@ -54,6 +54,9 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
 
 ### Setup
 1. Copy `.env.example` → `.env` and fill:
+   - `APP_NAME` / `NEXT_PUBLIC_APP_NAME` to control the app/browser title (defaults to “Whiskey DB”).
+   - `ACCESS_TOKEN_EXPIRE_MINUTES` sets the admin session lifetime for both backend and frontend (override via `NEXT_PUBLIC_SESSION_IDLE_MINUTES` only when testing shorter windows).
+   - `COOKIE_SECURE=true` locks cookies to HTTPS; leave `COOKIE_DOMAIN` unset unless you need cross-subdomain auth.
    - `BACKUP_REPOSITORY` (path inside the backup container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
    - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
    - Set `TZ=America/Chicago` (or your preferred zone) so backup timestamps follow your local time.

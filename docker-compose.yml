@@ -13,7 +13,7 @@ services:
         echo "Running elevated privileges required for install (npm ci)" &&
         npm ci --prefer-offline &&
         npm run build &&
-        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /npm-cache || true &&
+        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /app/.next /npm-cache || true &&
         exec npm start
     volumes:
       - ./web:/app

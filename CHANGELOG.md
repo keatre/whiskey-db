@@ -5,6 +5,10 @@
 - Backup services now use a unified `BACKUP_REPOSITORY` env var for both encrypted and plaintext modes, with legacy `RESTIC_REPOSITORY` still accepted for compatibility (`ops/backup/*`, `docker-compose.yml`).
 - Added centralized log sink with configurable level, rotation, and retention controlled via `.env` (`docker-compose.yml`, `ops/logging/*`).
 - Docker install steps now log when they run with elevated privileges and use `PUID`/`PGID` to reset ownership on generated files, preventing root-owned artifacts during local development (`docker-compose.yml`, `.env*`).
+- Web container now re-chowns `.next` alongside `node_modules` so local builds stop hitting permission errors after container rebuilds (`docker-compose.yml`).
+- Keeper banner counts down in real time, clears both auth cookies, and hard-redirects after expiry so idle sessions can’t silently refresh (`web/src/components/SessionKeepAlive.tsx`).
+- Bottles filter inputs now carry `id`/`name` attributes to keep browser audits happy (`web/src/app/bottles/page.tsx`).
+- Browser title/description now respect `APP_NAME`/`NEXT_PUBLIC_APP_NAME`, so renaming the product is an env change instead of a code edit (`web/src/app/layout.tsx`).
 
 ### Added
 - Inactivity warning banner gives a countdown with a quick "Stay signed in" action and, once the timer hits zero, automatically redirects you back to the landing page to reauthenticate.

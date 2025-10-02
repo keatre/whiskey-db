@@ -8,7 +8,7 @@ import {
   type CSSProperties,
 } from 'react';
 import { useRouter } from 'next/navigation';
-import { refresh as refreshSession } from '../lib/auth';
+import { refresh as refreshSession, logout as apiLogout } from '../lib/auth';
 import { GUEST, ME_KEY, useMe } from '../lib/useMe';
 import { useSWRConfig } from 'swr';
 
@@ -21,7 +21,7 @@ const parseEnvNumber = (value: string | undefined, fallback: number): number => 
 
 const IDLE_MINUTES = parseEnvNumber(
   process.env.NEXT_PUBLIC_SESSION_IDLE_MINUTES,
-  parseEnvNumber(process.env.NEXT_PUBLIC_ACCESS_TOKEN_MINUTES, 20),
+  parseEnvNumber(process.env.ACCESS_TOKEN_EXPIRE_MINUTES, 20),
 );
 const IDLE_TIMEOUT_MS = Math.max(IDLE_MINUTES, 1) * 60_000;
 
@@ -32,18 +32,24 @@ const REFRESH_BUFFER_MS = (() => {
   return Math.max(15_000, Math.min(desired, cap));
 })();
 
-const REFRESH_INTERVAL_MS = Math.max(IDLE_TIMEOUT_MS - REFRESH_BUFFER_MS, 60_000);
+const REFRESH_INTERVAL_MS = Math.max(
+  Math.min(IDLE_TIMEOUT_MS - REFRESH_BUFFER_MS, Math.floor(IDLE_TIMEOUT_MS / 2)),
+  5_000,
+);
 
 const CHECK_INTERVAL_MS = Math.max(
-  parseEnvNumber(process.env.NEXT_PUBLIC_SESSION_CHECK_INTERVAL_SECONDS, 30) * 1000,
-  5_000,
+  1_000,
+  Math.min(
+    parseEnvNumber(process.env.NEXT_PUBLIC_SESSION_CHECK_INTERVAL_SECONDS, 1) * 1000,
+    1_000,
+  ),
 );
 
 const WARNING_MS = Math.max(
   5_000,
   Math.min(
     parseEnvNumber(process.env.NEXT_PUBLIC_SESSION_WARNING_SECONDS, 60) * 1000,
-    REFRESH_BUFFER_MS,
+    Math.max(5_000, Math.floor(IDLE_TIMEOUT_MS * 0.6)),
   ),
 );
 
@@ -54,6 +60,14 @@ const ACTIVITY_EVENTS: Array<keyof WindowEventMap> = [
   'scroll',
   'touchstart',
 ];
+
+const ACCESS_COOKIE_NAME =
+  process.env.NEXT_PUBLIC_JWT_COOKIE_NAME?.trim() || 'access_token';
+const REFRESH_COOKIE_NAME =
+  process.env.NEXT_PUBLIC_JWT_REFRESH_COOKIE_NAME?.trim() || 'refresh_token';
+const COOKIE_DOMAIN = process.env.NEXT_PUBLIC_COOKIE_DOMAIN?.trim();
+const COOKIE_SECURE = process.env.NEXT_PUBLIC_COOKIE_SECURE?.trim().toLowerCase();
+const COOKIE_SAMESITE = process.env.NEXT_PUBLIC_COOKIE_SAMESITE?.trim();
 
 const bannerStyle: CSSProperties = {
   position: 'fixed',
@@ -80,6 +94,15 @@ const buttonStyle: CSSProperties = {
   padding: '8px 16px',
   fontWeight: 600,
   cursor: 'pointer',
+};
+
+const expireCookie = (name: string) => {
+  if (typeof document === 'undefined') return;
+  let cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+  if (COOKIE_DOMAIN) cookie += `; domain=${COOKIE_DOMAIN}`;
+  if (COOKIE_SECURE && COOKIE_SECURE !== 'false' && COOKIE_SECURE !== '0') cookie += '; Secure';
+  if (COOKIE_SAMESITE) cookie += `; SameSite=${COOKIE_SAMESITE}`;
+  document.cookie = cookie;
 };
 
 export default function SessionKeepAlive() {
@@ -168,20 +191,22 @@ export default function SessionKeepAlive() {
       const idleFor = now - lastActivityRef.current;
       const remaining = IDLE_TIMEOUT_MS - idleFor;
 
-      if (!document.hidden) {
-        if (remaining <= 0) {
-          setWarningSeconds((prev) => (prev === 0 ? prev : 0));
-        } else if (remaining <= WARNING_MS) {
-          const seconds = Math.ceil(remaining / 1000);
-          setWarningSeconds((prev) => (prev === seconds ? prev : seconds));
-        } else {
-          setWarningSeconds((prev) => (prev === null ? prev : null));
-        }
+      if (remaining <= 0 && !expired) {
+        setWarningSeconds(0);
+        handleSessionExpired();
+        return;
+      }
+
+      if (remaining <= WARNING_MS) {
+        const seconds = Math.max(0, Math.ceil(remaining / 1000));
+        setWarningSeconds((prev) => (prev === seconds ? prev : seconds));
+      } else {
+        setWarningSeconds((prev) => (prev === null ? prev : null));
       }
 
       const shouldRefresh =
         !document.hidden &&
-        idleFor <= IDLE_TIMEOUT_MS - REFRESH_BUFFER_MS &&
+        idleFor <= Math.max(IDLE_TIMEOUT_MS - REFRESH_BUFFER_MS, IDLE_TIMEOUT_MS * 0.25) &&
         now - lastRefreshRef.current >= REFRESH_INTERVAL_MS;
 
       if (shouldRefresh) {
@@ -219,6 +244,10 @@ export default function SessionKeepAlive() {
     lastActivityRef.current = Date.now();
     lastRefreshRef.current = Date.now();
 
+    expireCookie(ACCESS_COOKIE_NAME);
+    expireCookie(REFRESH_COOKIE_NAME);
+    void apiLogout();
+
     void mutate(ME_KEY, GUEST, { revalidate: false });
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new Event('auth:changed'));
@@ -235,6 +264,14 @@ export default function SessionKeepAlive() {
     } catch {
       /* ignore navigation failures */
     }
+
+    setTimeout(() => {
+      try {
+        window.location.replace('/');
+      } catch {
+        /* ignore */
+      }
+    }, 500);
   }, [expired, mutate, router]);
 
   const handleStaySignedIn = useCallback(() => {
@@ -246,10 +283,11 @@ export default function SessionKeepAlive() {
   }, [runRefresh]);
 
   useEffect(() => {
+    if (expired) return;
     if (warningSeconds === 0) {
       handleSessionExpired();
     }
-  }, [handleSessionExpired, warningSeconds]);
+  }, [expired, handleSessionExpired, warningSeconds]);
 
   if (warningSeconds === null) return null;
 
