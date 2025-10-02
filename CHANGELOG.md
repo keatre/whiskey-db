@@ -9,6 +9,8 @@
 ### Added
 - Inactivity warning banner gives a countdown with a quick "Stay signed in" action and, once the timer hits zero, automatically redirects you back to the landing page to reauthenticate.
 
+---
+
 ## [1.2.5] - 2025-10-01
 
 ### Added
@@ -35,6 +37,8 @@
 ### Changed
 - Very minor updates to documentation only in preperation for release.
 - Update GitHub release drafter.
+
+---
 
 ## [1.1.6] - 2025-09-30
 
