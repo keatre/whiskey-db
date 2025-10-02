@@ -18,7 +18,6 @@ import argparse
 import re
 import subprocess
 import sys
-from pathlib import Path
 
 GIT = "git"
 
@@ -39,10 +38,36 @@ def checkout_main() -> None:
 
 def fast_forward_main() -> None:
     try:
-        run([GIT, "fetch", "origin"])
+        run([GIT, "fetch", "origin", "--prune"])
         run([GIT, "pull", "--ff-only", "origin", "main"])
     except subprocess.CalledProcessError as exc:
         sys.exit(f"Failed to update main: {exc}")
+
+
+def branch_exists_remotely(branch: str) -> bool:
+    ref = f"refs/remotes/origin/{branch}"
+    return run([GIT, "show-ref", "--verify", "--quiet", ref], check=False).returncode == 0
+
+
+def remove_stale_dev_branches(*, keep: set[str]) -> None:
+    res = run(
+        [GIT, "for-each-ref", "refs/heads", "--format=%(refname:short)"],
+        capture_output=True,
+    )
+    branches = [line.strip() for line in res.stdout.splitlines() if line.strip()]
+    stale_branches: list[str] = []
+    for branch in branches:
+        if branch in keep:
+            continue
+        if not branch.startswith("dev/"):
+            continue
+        if branch_exists_remotely(branch):
+            continue
+        stale_branches.append(branch)
+
+    for branch in stale_branches:
+        run([GIT, "branch", "-D", branch])
+        print(f"🧹 Removed stale local branch {branch}")
 
 
 def prompt_version() -> str:
@@ -86,6 +111,7 @@ def main() -> None:
     ensure_clean_worktree()
     checkout_main()
     fast_forward_main()
+    remove_stale_dev_branches(keep={"main"})
     version = prompt_version()
     branch = f"dev/v{version}"
     tag = f"v{version}"
@@ -95,5 +121,9 @@ def main() -> None:
     create_tag(tag)
     run([GIT, "checkout", branch])
     print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
+    run([GIT, "fetch", "origin", "--prune"])
+    branches = run([GIT, "branch", "-a"], capture_output=True)
+    print(branches.stdout.rstrip())
+
 if __name__ == "__main__":
     main()
