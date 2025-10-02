@@ -16,14 +16,13 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000
 
-# Copy the standalone server output
-COPY --from=builder /app/.next/standalone ./
-# Static assets and public
-COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/next.config.mjs ./next.config.mjs
 
-# Use the pre-existing non-root user provided by the node image
 USER node
 
 EXPOSE 3000
-CMD ["node", "server.js"]
+CMD ["npm", "run", "start"]

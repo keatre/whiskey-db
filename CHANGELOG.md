@@ -6,6 +6,7 @@
 - Added centralized log sink with configurable level, rotation, and retention controlled via `.env` (`docker-compose.yml`, `ops/logging/*`).
 - Docker install steps now log when they run with elevated privileges and use `PUID`/`PGID` to reset ownership on generated files, preventing root-owned artifacts during local development (`docker-compose.yml`, `.env*`).
 - Web container now re-chowns `.next` alongside `node_modules` so local builds stop hitting permission errors after container rebuilds (`docker-compose.yml`).
+- Docker web image now relies on the standard Next.js build output (no `/app/.next/standalone` copy), which fixes the CI build failure introduced after dropping standalone mode (`web/Dockerfile`).
 - Keeper banner counts down in real time, clears both auth cookies, and hard-redirects after expiry so idle sessions can’t silently refresh (`web/src/components/SessionKeepAlive.tsx`).
 - Bottles filter inputs now carry `id`/`name` attributes to keep browser audits happy (`web/src/app/bottles/page.tsx`).
 - Browser title/description now respect `APP_NAME`/`NEXT_PUBLIC_APP_NAME`, so renaming the product is an env change instead of a code edit (`web/src/app/layout.tsx`).
