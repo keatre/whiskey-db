@@ -54,13 +54,13 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
 
 ### Setup
 1. Copy `.env.example` → `.env` and fill:
-   - `NAS_SMB_HOST`, `NAS_SMB_SHARE`
-   - `NAS_SMB_USER`, `NAS_SMB_PASS`
+   - `BACKUP_REPOSITORY` (path inside the backup container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
    - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
    - Set `TZ=America/Chicago` (or your preferred zone) so backup timestamps follow your local time.
    - Set `BACKUP_ENCRYPTED=false` for plaintext archives and optionally point `BACKUP_ARCHIVE_DIR` elsewhere.
    - Flip `BACKUP_LOCAL_FILES=true` when you want backups to bundle your top-level `.env` and `docker-compose.yml` alongside the database.
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
+   - Mount your NAS share on the Docker host (e.g. `/mnt/restic-whiskey-db`) and ensure `docker-compose.yml` binds it into the backup container at `/remote`.
 2. Bring the stack up:
    ```bash
    docker compose up -d

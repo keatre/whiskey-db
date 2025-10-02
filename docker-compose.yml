@@ -59,7 +59,7 @@ services:
       RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
       BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-/extra/dev-docs}
       # For NAS we point restic to the CIFS mount inside the container:
-      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:-/remote/restic-whiskey-db}
+      BACKUP_REPOSITORY: ${BACKUP_REPOSITORY:-/remote/restic-whiskey-db}
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
     init: true                 # runs tini as PID 1 (helps reap zombies & forward signals)
     stop_signal: SIGTERM       # send TERM first (entrypoint trap handles it)

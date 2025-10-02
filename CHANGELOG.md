@@ -1,3 +1,12 @@
+## [1.2.6] - 2025-10-02
+
+### Changed
+- Admin sessions now refresh automatically while you are active and only expire after inactivity, thanks to a new keep-alive client (`web/src/components/SessionKeepAlive.tsx`, `web/src/app/layout.tsx`).
+- Backup services now use a unified `BACKUP_REPOSITORY` env var for both encrypted and plaintext modes, with legacy `RESTIC_REPOSITORY` still accepted for compatibility (`ops/backup/*`, `docker-compose.yml`).
+
+### Added
+- Inactivity warning banner gives a countdown with a quick "Stay signed in" action so you can extend your session before logout.
+
 ## [1.2.5] - 2025-10-01
 
 ### Added

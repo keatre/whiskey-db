@@ -6,6 +6,7 @@ import NavLinks from '../components/NavLinks';
 // Client-only watcher (optional now that SWR is in place)
 import dynamic from 'next/dynamic';
 const AuthWatcher = dynamic(() => import('../components/AuthWatcher'), { ssr: false });
+const SessionKeepAlive = dynamic(() => import('../components/SessionKeepAlive'), { ssr: false });
 
 // ⬇️ add SWR provider
 import { SWRConfig } from 'swr';
@@ -36,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             shouldRetryOnError: false,
           }}
         >
+          <SessionKeepAlive />
           <nav className="nav">
             {/* Left: primary navigation (Retailers link hidden for guests inside NavLinks) */}
             <NavLinks />
