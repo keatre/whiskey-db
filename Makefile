@@ -27,6 +27,7 @@ help:
 	@echo "  make api-test       # Run backend pytest suite"
 	@echo "  make lint           # Run Ruff (API) and TypeScript check (web)"
 	@echo "  make test           # Run full test suite (API pytest + web build check)"
+	@echo "  make test-code      # Bootstrap venv and run Ruff + pytest (logs to logs/whiskey_db.log)"
 	@echo "  make clean          # Remove build artifacts"
 	@echo "  make prepare-pr     # Stash dev docs, create PR branch, and push"
 	@echo "  make release v=1.2.0  # Tag and push a new release"
@@ -61,6 +62,11 @@ api-test:
 test: api-test
 	@echo "▶ Running frontend type-check and build..."
 	cd web && npx tsc --noEmit && npm run build
+
+.PHONY: test-code
+test-code:
+	@echo "▶ Running local CI checks via scripts/run_ci_checks.py"
+	$(PYTHON) scripts/run_ci_checks.py
 
 # --- LINT ---
 lint:
