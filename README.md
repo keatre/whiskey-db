@@ -99,6 +99,9 @@ npm run dev
 
 cd api
 uvicorn app.main:app --reload
+
+# Run combined lint/tests (creates .venv, installs deps, logs to logs/whiskey_db.log)
+./scripts/run_ci_checks.py
 ```
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)
