@@ -16,7 +16,7 @@
 - Eliminated framework deprecation warnings by moving app startup to FastAPI lifespan hooks, using timezone-aware timestamps, switching SQLModel queries to `session.exec()`, and preferring Pillow’s image inspection over deprecated stdlib helpers (`api/app/main.py`, `api/app/models.py`, `api/app/routers/auth.py`, `api/app/routers/uploads.py`).
 - Resolved API startup crash caused by `_utcnow` being referenced before definition by lifting the helper above SQLModel declarations (`api/app/models.py`).
 - Updated admin user tests to configure the temporary SQLite database and ensure the `api` package is importable during local runs (`api/tests/test_admin_users.py`).
-- Added `scripts/run_ci_checks.py` to automate virtualenv creation, dependency installation, and local Ruff/pytest runs (now exporting an absolute `PYTHONPATH`) with results logged to `logs/whiskey_db.log` (and exposed via `make test-code`).
+- Added `scripts/run_ci_checks.py` to automate virtualenv creation, dependency installation, and local Ruff/pytest runs (now exporting the repo root on `PYTHONPATH`) with results logged to `logs/whiskey_db.log` (and exposed via `make test-code`).
 - Added `scripts/run_ci_checks.py` to automate virtualenv creation, dependency installation, and local Ruff/pytest runs with results logged to `logs/whiskey_db.log`.
 
 ---
