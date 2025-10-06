@@ -1,10 +1,7 @@
+from __future__ import annotations
+
 import os
 import tempfile
-
-# Configure a temp database before importing the app
-_db_fd, _db_path = tempfile.mkstemp(prefix="test-admin-users", suffix=".db")
-os.close(_db_fd)
-os.environ["DATABASE_URL"] = f"sqlite:///{_db_path}"
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
@@ -13,6 +10,15 @@ from app.db import engine, init_db
 from app.main import app
 from app.models import User
 from app.security import hash_password
+
+
+def _configure_test_db() -> None:
+    fd, path_str = tempfile.mkstemp(prefix="test-admin-users", suffix=".db")
+    os.close(fd)
+    os.environ["DATABASE_URL"] = f"sqlite:///{path_str}"
+
+
+_configure_test_db()
 
 
 def bootstrap_admin(username: str = "root", password: str = "AdminPass123!") -> None:

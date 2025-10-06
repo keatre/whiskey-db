@@ -15,6 +15,7 @@
 - Legacy `guest` role data is migrated to the supported `user` role, preventing CHECK constraint violations during admin actions (`api/app/db.py`).
 - Eliminated framework deprecation warnings by moving app startup to FastAPI lifespan hooks, using timezone-aware timestamps, switching SQLModel queries to `session.exec()`, and preferring Pillow’s image inspection over deprecated stdlib helpers (`api/app/main.py`, `api/app/models.py`, `api/app/routers/auth.py`, `api/app/routers/uploads.py`).
 - Resolved API startup crash caused by `_utcnow` being referenced before definition by lifting the helper above SQLModel declarations (`api/app/models.py`).
+- Updated admin user tests to configure the temporary SQLite database via a helper so imports stay at the top of the module and ruff passes (`api/tests/test_admin_users.py`).
 
 ---
 
