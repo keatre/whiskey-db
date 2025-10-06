@@ -14,6 +14,7 @@
 - Creating users without an email address no longer triggers database integrity errors; empty inputs are normalized and surfaced as `null` in responses (`api/app/admin_users_schemas.py`, `api/app/routers/admin_users.py`).
 - Legacy `guest` role data is migrated to the supported `user` role, preventing CHECK constraint violations during admin actions (`api/app/db.py`).
 - Eliminated framework deprecation warnings by moving app startup to FastAPI lifespan hooks, using timezone-aware timestamps, switching SQLModel queries to `session.exec()`, and preferring Pillow’s image inspection over deprecated stdlib helpers (`api/app/main.py`, `api/app/models.py`, `api/app/routers/auth.py`, `api/app/routers/uploads.py`).
+- Resolved API startup crash caused by `_utcnow` being referenced before definition by lifting the helper above SQLModel declarations (`api/app/models.py`).
 
 ---
 

@@ -3,6 +3,11 @@ from typing import Optional, List
 from sqlalchemy import CheckConstraint, UniqueConstraint
 from sqlmodel import SQLModel, Field, Relationship
 
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 # --- Link table FIRST ---
 class BottleTag(SQLModel, table=True):
     bottle_id: int = Field(foreign_key="bottle.bottle_id", primary_key=True)
@@ -69,8 +74,8 @@ class Purchase(SQLModel, table=True):
     opened_dt: Optional[datetime] = None
     killed_dt: Optional[datetime] = None
     status: Optional[str] = None          # sealed/open/finished
-    created_utc: datetime = Field(default_factory=datetime.utcnow)
-    updated_utc: datetime = Field(default_factory=datetime.utcnow)
+    created_utc: datetime = Field(default_factory=_utcnow)
+    updated_utc: datetime = Field(default_factory=_utcnow)
 
     bottle: "Bottle" = Relationship(back_populates="purchases")
 
@@ -112,5 +117,3 @@ class User(SQLModel, table=True):
     role: str  # 'admin' or 'user'
     is_active: bool = True
     created_at: Optional[datetime] = Field(default_factory=_utcnow)
-def _utcnow() -> datetime:
-    return datetime.now(timezone.utc)
