@@ -74,7 +74,7 @@ def run_checks(logger: logging.Logger) -> None:
 
     temp_upload_dir = tempfile.mkdtemp(prefix="pytest-uploads-")
     env = os.environ.copy()
-    env["PYTHONPATH"] = "api"
+    env["PYTHONPATH"] = str((REPO_ROOT / "api").resolve())
     env["UPLOAD_DIR"] = temp_upload_dir
     try:
         run([str(PYTHON_BIN), "-m", "pytest", "api/tests", "-q"], logger=logger, description="pytest")
