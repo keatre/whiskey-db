@@ -2,7 +2,7 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env")
+    model_config = SettingsConfigDict(env_file=".env", extra="allow")
     # --- Database ---
     DATABASE_URL: str = "sqlite:////data/whiskey.db"
 
@@ -28,9 +28,9 @@ class Settings(BaseSettings):
     
     # --- Uploads ---
     UPLOAD_MAX_MB: int = 10                 # max image size in megabytes
-    UPLOAD_DIR: str = "static/uploads"      # where files are saved (served by /static
+    UPLOAD_DIR: str = "static/uploads"      # where files are saved (served by /static)
 
-     # --- Login rate limit (per IP) ---
+    # --- Login rate limit (per IP) ---
     LOGIN_WINDOW_SECONDS: int = 60          # sliding window size
     LOGIN_MAX_ATTEMPTS: int = 10            # max failed attempts within window
     LOGIN_LOCKOUT_SECONDS: int = 180        # temporary lockout after exceeding

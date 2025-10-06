@@ -18,9 +18,12 @@ def _configure_test_db() -> None:
 
 _configure_test_db()
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+REPO_ROOT = Path(__file__).resolve().parents[2]
+API_ROOT = REPO_ROOT / "api"
+for entry in (API_ROOT, REPO_ROOT):
+    entry_str = str(entry)
+    if entry_str not in sys.path:
+        sys.path.insert(0, entry_str)
 
 db_module = importlib.import_module("app.db")
 engine = db_module.engine

@@ -20,6 +20,7 @@ import tempfile
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+API_ROOT = REPO_ROOT / "api"
 VENV_DIR = REPO_ROOT / ".venv"
 LOG_FILE = REPO_ROOT / "logs" / "whiskey_db.log"
 LOG_TAG = "compile_test"
@@ -74,7 +75,10 @@ def run_checks(logger: logging.Logger) -> None:
 
     temp_upload_dir = tempfile.mkdtemp(prefix="pytest-uploads-")
     env = os.environ.copy()
-    env["PYTHONPATH"] = str(REPO_ROOT.resolve())
+    pythonpath_parts = [str(API_ROOT.resolve()), str(REPO_ROOT.resolve())]
+    if env.get("PYTHONPATH"):
+        pythonpath_parts.append(env["PYTHONPATH"])
+    env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
     env["UPLOAD_DIR"] = temp_upload_dir
     try:
         run([str(PYTHON_BIN), "-m", "pytest", "api/tests", "-q"], logger=logger, description="pytest")
