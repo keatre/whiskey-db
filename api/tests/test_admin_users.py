@@ -3,13 +3,20 @@ from __future__ import annotations
 import os
 import tempfile
 
+import importlib
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
-from app.db import engine, init_db
-from app.main import app
-from app.models import User
-from app.security import hash_password
+_configure_test_db()
+
+db_module = importlib.import_module("app.db")
+engine = db_module.engine
+init_db = db_module.init_db
+
+app = importlib.import_module("app.main").app
+User = importlib.import_module("app.models").User
+hash_password = importlib.import_module("app.security").hash_password
 
 
 def _configure_test_db() -> None:
@@ -17,8 +24,6 @@ def _configure_test_db() -> None:
     os.close(fd)
     os.environ["DATABASE_URL"] = f"sqlite:///{path_str}"
 
-
-_configure_test_db()
 
 
 def bootstrap_admin(username: str = "root", password: str = "AdminPass123!") -> None:
