@@ -27,10 +27,12 @@ help:
 	@echo "  make api-test       # Run backend pytest suite"
 	@echo "  make lint           # Run Ruff (API) and TypeScript check (web)"
 	@echo "  make test           # Run full test suite (API pytest + web build check)"
+	@echo "  make test-code      # Bootstrap venv and run Ruff + pytest (logs to logs/whiskey_db.log)"
 	@echo "  make clean          # Remove build artifacts"
 	@echo "  make prepare-pr     # Stash dev docs, create PR branch, and push"
 	@echo "  make release v=1.2.0  # Tag and push a new release"
 	@echo "  make newbranch      # Create dev/vX.Y.Z branch and matching vX.Y.Z tag"
+	@echo "  make ssh-agent      # Restart ssh-agent with a 2h lifetime"
 
 # --- DEV ---
 web-dev:
@@ -61,6 +63,11 @@ test: api-test
 	@echo "▶ Running frontend type-check and build..."
 	cd web && npx tsc --noEmit && npm run build
 
+.PHONY: test-code
+test-code:
+	@echo "▶ Running local CI checks via scripts/run_ci_checks.py"
+	$(PYTHON) scripts/run_ci_checks.py
+
 # --- LINT ---
 lint:
 	cd api && ruff check .
@@ -83,6 +90,19 @@ clean:
 .PHONY: newbranch
 newbranch:
 	$(PYTHON) scripts/new_release_branch.py
+
+.PHONY: ssh-agent
+ssh-agent:
+	@if ssh-add -l >/dev/null 2>&1; then \
+		echo "🧹 Removing keys from existing ssh-agent"; \
+		ssh-add -D >/dev/null; \
+	fi
+	@if [ -n "$$SSH_AGENT_PID" ]; then \
+		echo "🛑 Stopping existing ssh-agent ($$SSH_AGENT_PID)"; \
+		ssh-agent -k >/dev/null; \
+	fi
+	@echo "🔐 Starting new ssh-agent (expires in 2h)";
+	@ssh-agent -s -t 7200
 
 .PHONY: prepare-pr
 prepare-pr:
