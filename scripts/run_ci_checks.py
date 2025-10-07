@@ -80,6 +80,7 @@ def run_checks(logger: logging.Logger) -> None:
         pythonpath_parts.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
     env["UPLOAD_DIR"] = temp_upload_dir
+    env.setdefault("DATABASE_URL", f"sqlite:///{tempfile.mktemp(prefix='compile-test-db-', suffix='.db')}")
     try:
         run([str(PYTHON_BIN), "-m", "pytest", "api/tests", "-q"], logger=logger, description="pytest")
     finally:

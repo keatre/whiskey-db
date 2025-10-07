@@ -1,5 +1,6 @@
 # api/app/routers/uploads.py
 import os
+import tempfile
 import uuid
 
 from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
@@ -13,8 +14,19 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 
 # Config from settings / .env
 MAX_SIZE_BYTES = int(settings.UPLOAD_MAX_MB) * 1024 * 1024
-UPLOAD_DIR = settings.UPLOAD_DIR  # e.g., /data/uploads
-os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+
+def _resolve_upload_dir(configured: str) -> str:
+    try:
+        os.makedirs(configured, exist_ok=True)
+        return configured
+    except PermissionError:
+        fallback = os.path.join(tempfile.gettempdir(), "whiskey_uploads")
+        os.makedirs(fallback, exist_ok=True)
+        return fallback
+
+
+UPLOAD_DIR = _resolve_upload_dir(settings.UPLOAD_DIR)  # e.g., /data/uploads or temp fallback
 
 ALLOWED_IMAGE_FORMATS = {"JPEG", "PNG", "GIF", "WEBP"}
 
