@@ -109,6 +109,23 @@ def _to_bool(v) -> bool:
     s = str(v).strip().lower()
     return s in {"1", "true", "yes", "y", "on"}
 
+def _is_secure_request(request: Request) -> bool:
+    """
+    Determine if the originating request was HTTPS.
+    - Honor X-Forwarded-Proto when present (first entry wins).
+    - Fall back to the request's own scheme.
+    """
+    forwarded = request.headers.get("x-forwarded-proto") or ""
+    if forwarded:
+        proto = forwarded.split(",")[0].strip().lower()
+        if proto in {"https", "wss"}:
+            return True
+        if proto in {"http", "ws"}:
+            return False
+    scheme = (request.url.scheme or "").lower()
+    return scheme in {"https", "wss"}
+
+
 def _cookie_flags(request: Request) -> dict:
     """
     Decide cookie security flags based on env + request scheme.
@@ -118,13 +135,16 @@ def _cookie_flags(request: Request) -> dict:
     - If settings.COOKIE_DOMAIN is set, include it; otherwise omit (binds to current host).
     """
     raw_secure = getattr(settings, "COOKIE_SECURE", None)
+    is_secure_req = _is_secure_request(request)
 
     # auto-detect when missing or "auto"
     if raw_secure is None or (isinstance(raw_secure, str) and raw_secure.strip().lower() == "auto"):
-        scheme = (request.headers.get("x-forwarded-proto") or request.url.scheme or "").lower()
-        secure = (scheme == "https")
+        secure = is_secure_req
     else:
-        secure = _to_bool(raw_secure)
+        forced = _to_bool(raw_secure)
+        # Respect explicit False. If explicitly True but the request is plain HTTP,
+        # fall back to False so local/test clients can still receive cookies.
+        secure = forced and is_secure_req
 
     samesite = (getattr(settings, "COOKIE_SAMESITE", None) or "lax").lower()
     domain = getattr(settings, "COOKIE_DOMAIN", None) or None

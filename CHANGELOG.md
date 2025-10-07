@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Fixed
+- Admin login cookies now fall back to non-secure mode when the request is plain HTTP, allowing local/test clients to authenticate even when `COOKIE_SECURE` is forced on (`api/app/routers/auth.py`).
+
 ## [1.3.1] - 2025-10-02
 
 ### Added
