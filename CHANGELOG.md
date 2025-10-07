@@ -1,3 +1,8 @@
+## [Unreleased]
+
+### Changed
+- `scripts/new_release_branch.py` now boots an SSH agent with a two-hour lifetime before running git commands, so release branch/tag creation reuses cached credentials without manual setup.
+
 ## [1.3.1] - 2025-10-02
 
 ### Added

@@ -15,6 +15,7 @@ No changes are made if any step fails.
 from __future__ import annotations
 
 import argparse
+import os
 import re
 import subprocess
 import sys
@@ -24,6 +25,30 @@ GIT = "git"
 
 def run(cmd: list[str], *, check: bool = True, capture_output: bool = False, text: bool = True) -> subprocess.CompletedProcess:
     return subprocess.run(cmd, check=check, capture_output=capture_output, text=text)
+
+
+def start_ssh_agent(lifetime_seconds: int = 7200) -> None:
+    try:
+        proc = run(["ssh-agent", "-s", "-t", str(lifetime_seconds)], capture_output=True)
+    except FileNotFoundError:
+        sys.exit("ssh-agent not found; install OpenSSH client tools.")
+    output = proc.stdout.strip()
+    env_updates: dict[str, str] = {}
+    for line in output.splitlines():
+        if ";" in line:
+            line = line.split(";", 1)[0]
+        if "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        if key in {"SSH_AUTH_SOCK", "SSH_AGENT_PID"}:
+            env_updates[key] = value
+    if not env_updates.get("SSH_AUTH_SOCK") or not env_updates.get("SSH_AGENT_PID"):
+        sys.exit(f"Unable to parse ssh-agent output:\n{output}")
+    os.environ.update(env_updates)
+    print(f"[ssh-agent] started (keys expire in {lifetime_seconds // 3600}h).")
+    add_proc = run(["ssh-add"], check=False)
+    if add_proc.returncode != 0:
+        sys.exit("ssh-add failed; ensure your SSH key is available.")
 
 
 def ensure_clean_worktree() -> None:
@@ -108,6 +133,7 @@ def create_tag(tag: str) -> None:
 
 
 def main() -> None:
+    start_ssh_agent()
     ensure_clean_worktree()
     checkout_main()
     fast_forward_main()
