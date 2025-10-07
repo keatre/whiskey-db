@@ -1,8 +1,3 @@
-## [Unreleased]
-
-### Fixed
-- Admin login cookies now fall back to non-secure mode when the request is plain HTTP, allowing local/test clients to authenticate even when `COOKIE_SECURE` is forced on (`api/app/routers/auth.py`).
-
 ## [1.3.1] - 2025-10-02
 
 ### Added
@@ -23,6 +18,7 @@
 - Updated admin user tests to configure the temporary SQLite database and ensure the `api` package is importable during local runs (`api/tests/test_admin_users.py`).
 - Added `scripts/run_ci_checks.py` to automate virtualenv creation, dependency installation, and local Ruff/pytest runs (exporting both the API module path and repo root on `PYTHONPATH`) with results logged to `logs/whiskey_db.log` (and exposed via `make test-code`).
 - Settings now allow unknown environment variables so Docker-only keys in `.env` no longer break local tests (`api/app/settings.py`).
+- Admin login cookies now fall back to non-secure mode when the request is plain HTTP, allowing local/test clients to authenticate even when `COOKIE_SECURE` is forced on (`api/app/routers/auth.py`).
 
 ---
 
