@@ -10,6 +10,7 @@ Self-hosted database for cataloging and valuing your whiskey collection.
 - Mash bill & tasting notes with full **Markdown support** (tables, lists, headers, etc.)
 - Purchases tracking with quantity, price, and status
 - Market valuation API (UPC lookup)
+- Admin price management (manual uploads plus optional provider sync)
 - Grouped bottle browser (by Style → Substyle → Brand/Expression)
 - Mobile-friendly UI (Next.js 14, React 18, TypeScript)
 - REST API powered by FastAPI + SQLModel
@@ -52,6 +53,7 @@ Access:
 #### Admin Console
 - Visit `/admin` (link in the top navigation when signed in) to reach operational tools.
 - The **User management** section lets administrators invite new users, toggle roles, activate/deactivate accounts, and issue password resets. All passwords are hashed with Argon2 before storage.
+- The **Market prices** page records manual price uploads, triggers one-off provider syncs, and lists the latest valuation per UPC. Configure external lookups with `MARKET_PRICE_PROVIDER_URL` (supports `{upc}` templating), optional `MARKET_PRICE_PROVIDER_API_KEY`, `MARKET_PRICE_PROVIDER_NAME`, and `MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS`.
 - Use the in-page `Logout` button to end your session quickly, especially on shared devices.
 - The UI now opens in dark mode by default; the theme toggle in the header lets you switch to light mode as needed and remembers your preference.
 

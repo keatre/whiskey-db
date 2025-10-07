@@ -1,8 +1,25 @@
+## [Unreleased]
+
+### Added
+- Admin price management API with manual entry, provider sync, and history listing plus matching frontend workflow for uploading valuations (`api/app/models.py`, `api/app/routers/admin_prices.py`, `api/app/services/market_prices.py`, `web/src/api/marketPrices.ts`, `web/src/app/admin/prices/page.tsx`, `web/src/components/NavLinks.tsx`, `web/src/app/admin/page.tsx`).
+- Automated coverage for valuation lookups, manual uploads, and provider sync persistence (`api/tests/test_market_prices.py`).
+
+### Changed
+- Valuation endpoint now consults the database first, optionally backfilling via configured providers before falling back to legacy CSV files (`api/app/routers/valuation.py`, `api/app/settings.py`).
+
+---
+
+## [1.3.5] - 2025-10-07
+
+---
+
 ## [1.3.2] - 2025-10-07
 
 ### Changed
 - `scripts/new_release_branch.py` now launches `ssh-agent` with a two-hour lifetime before performing git operations, automatically loading keys so release branch and tag pushes reuse cached credentials.
 - The Release Drafter workflow runs under a shared concurrency group to prevent parallel executions from creating duplicate draft releases (`.github/workflows/release-drafter.yml`).
+
+---
 
 ## [1.3.1] - 2025-10-02
 

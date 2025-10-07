@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
 from .routers import auth, bottles, purchases, notes, retailers, valuation
+from .routers.admin_prices import router as admin_prices_router
 from .routers.admin_users import router as admin_users_router
 from .routers.uploads import router as uploads_router, UPLOAD_DIR
 from .settings import settings
@@ -42,6 +43,7 @@ def health():
 # Backend lives at ROOT (Case A) – paths like /auth/login, /bottles, /uploads/image, etc.
 app.include_router(auth.router)
 app.include_router(admin_users_router)
+app.include_router(admin_prices_router)
 app.include_router(bottles.router)
 app.include_router(purchases.router)
 app.include_router(notes.router)

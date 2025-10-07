@@ -13,6 +13,9 @@ export default function AdminHome() {
           <li>
             <Link href="/admin/users">User management</Link>
           </li>
+          <li>
+            <Link href="/admin/prices">Market prices</Link>
+          </li>
         </ul>
       </main>
     </AdminOnly>

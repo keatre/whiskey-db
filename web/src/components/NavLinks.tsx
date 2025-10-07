@@ -14,6 +14,7 @@ export default function NavLinks() {
         <>
           <Link href="/retailers">Retailers</Link>
           <Link href="/admin">Admin</Link>
+          <Link href="/admin/prices">Price updates</Link>
         </>
       )}
     </>

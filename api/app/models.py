@@ -117,3 +117,22 @@ class User(SQLModel, table=True):
     role: str  # 'admin' or 'user'
     is_active: bool = True
     created_at: Optional[datetime] = Field(default_factory=_utcnow)
+
+
+class MarketPrice(SQLModel, table=True):
+    __tablename__ = "market_price"
+    __table_args__ = (
+        CheckConstraint("ingest_type IN ('manual','provider','csv')"),
+    )
+
+    price_id: Optional[int] = Field(default=None, primary_key=True)
+    barcode_upc: str = Field(index=True)
+    price: Optional[float] = None
+    currency: str = Field(default="USD")
+    source: Optional[str] = None
+    provider: Optional[str] = None
+    as_of: Optional[datetime] = None
+    fetched_at: datetime = Field(default_factory=_utcnow)
+    notes: Optional[str] = None
+    ingest_type: str = Field(default="manual")
+    created_by: Optional[str] = None
