@@ -7,6 +7,9 @@
 ### Changed
 - Valuation endpoint now consults the database first, optionally backfilling via configured providers before falling back to legacy CSV files (`api/app/routers/valuation.py`, `api/app/settings.py`).
 
+### Fixed
+- Log writer now reapplies `PUID`/`PGID` ownership when creating or rotating log files so fresh startups no longer leave root-owned logs (`ops/logging/log_writer.sh`, `README.md`).
+
 ---
 
 ## [1.3.5] - 2025-10-07

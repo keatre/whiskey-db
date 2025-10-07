@@ -87,6 +87,7 @@ All application containers stream through a shared log sink that writes to `LOG_
 - The log includes ISO8601 timestamps, service name (`API`, `WEB`, `BACKUP`), and severity.
 - Files auto-rotate once they reach `LOG_MAX_MB` (default 10 MB). Historical files are timestamped and trimmed after `LOG_RETENTION_DAYS`.
 - Docker Compose binds the host `./logs` folder into every service; create it (or point `LOG_FILE_PATH` elsewhere) before deploying.
+- When `PUID`/`PGID` are set, the log writer ensures both the active log file and its lock are owned by that user, preventing root-owned artifacts on restart.
 - Host access is just a bind mount, so secure the `logs/` directory and include it in your backup policy if desired.
 
 ### 🔐Security Notes
