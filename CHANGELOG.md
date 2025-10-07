@@ -1,7 +1,8 @@
-## [Unreleased]
+## [1.3.2] - 2025-10-07
 
 ### Changed
-- `scripts/new_release_branch.py` now boots an SSH agent with a two-hour lifetime before running git commands, so release branch/tag creation reuses cached credentials without manual setup.
+- `scripts/new_release_branch.py` now launches `ssh-agent` with a two-hour lifetime before performing git operations, automatically loading keys so release branch and tag pushes reuse cached credentials.
+- The Release Drafter workflow runs under a shared concurrency group to prevent parallel executions from creating duplicate draft releases (`.github/workflows/release-drafter.yml`).
 
 ## [1.3.1] - 2025-10-02
 
