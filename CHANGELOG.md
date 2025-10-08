@@ -9,6 +9,7 @@
 
 ### Fixed
 - Log writer now reapplies `PUID`/`PGID` ownership when creating or rotating log files so fresh startups no longer leave root-owned logs (`ops/logging/log_writer.sh`, `README.md`).
+- Market price sync regression test now monkeypatches the admin router directly so CI consistently exercises provider persistence (`api/tests/test_market_prices.py`).
 
 ---
 

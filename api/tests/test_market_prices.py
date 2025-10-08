@@ -129,6 +129,7 @@ def test_admin_can_create_price_record():
 
 def test_sync_price_persists_external_quote(monkeypatch):
     from app.services import market_prices as market_services
+    admin_prices_module = importlib.import_module("app.routers.admin_prices")
 
     init_db()
     bootstrap_admin()
@@ -150,6 +151,7 @@ def test_sync_price_persists_external_quote(monkeypatch):
         )
 
     monkeypatch.setattr(market_services, "fetch_external_quote", fake_fetch)
+    monkeypatch.setattr(admin_prices_module, "fetch_external_quote", fake_fetch)
 
     resp = client.post("/admin/prices/sync", json={"barcode_upc": upc, "notes": "Synced for test"})
     assert resp.status_code == 201, resp.text
