@@ -4,6 +4,7 @@
 ### Added
 - Admin price management API with manual entry, provider sync, and history listing plus matching frontend workflow for uploading valuations (`api/app/models.py`, `api/app/routers/admin_prices.py`, `api/app/services/market_prices.py`, `web/src/api/marketPrices.ts`, `web/src/app/admin/prices/page.tsx`, `web/src/components/NavLinks.tsx`, `web/src/app/admin/page.tsx`).
 - Automated coverage for valuation lookups, manual uploads, and provider sync persistence (`api/tests/test_market_prices.py`).
+- Sample market price provider environment variables are now included in `.env.example` to speed up configuration (`.env.example`).
 
 ### Changed
 - Valuation endpoint now consults the database first, optionally backfilling via configured providers before falling back to legacy CSV files (`api/app/routers/valuation.py`, `api/app/settings.py`).

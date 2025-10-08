@@ -45,6 +45,7 @@ This project is designed for **self-hosting**. To reduce your attack surface:
 - Regularly **back up** your `/data` volume.
 - Uploaded images are stored on disk. Consider serving them through the backend with authentication if hosting outside your LAN.
 - Centralised application logs are written to the path defined by `LOG_FILE_PATH` (default `./logs/whiskey_db.log`). Keep that directory on trusted storage and rotate/ship it according to your retention requirements.
+- When enabling automated market price polling, treat `MARKET_PRICE_PROVIDER_URL` and `MARKET_PRICE_PROVIDER_API_KEY` like other secrets; the provider endpoint should be HTTPS and scoped API keys should be stored only in your `.env` file.
 - On first boot after upgrading to v1.3.1, the API auto-migrates the `users` table so emails can be optional and legacy `guest` roles are upgraded safely; no manual SQL steps are required.
 - Supply `PUID`/`PGID` so dependency installs can run elevated but immediately reset ownership on generated artifacts, and always enable `COOKIE_SECURE` in HTTPS deployments to keep auth cookies encrypted in transit.
 - UI sessions now default to dark mode, which reduces glare in low-light deployments while leaving the theme toggle available for users who prefer light mode.
