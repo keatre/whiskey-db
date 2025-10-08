@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import AdminOnly from '../../../components/AdminOnly';
 import type { AdminUser } from '../../../api/adminUsers';
 import { AdminUsersApi } from '../../../api/adminUsers';
+import { formatDateTime } from '../../../lib/formatDate';
 
 const USERS_KEY = '/admin/users';
 
@@ -164,7 +165,7 @@ function UserRow({ user, refresh }: { user: AdminUser; refresh: () => Promise<un
   const [password, setPassword] = useState('');
   const [resetting, setResetting] = useState(false);
 
-  const createdLabel = user.created_at ? new Date(user.created_at).toLocaleString() : '—';
+  const createdLabel = formatDateTime(user.created_at);
 
   const update = async (patch: Parameters<typeof AdminUsersApi.updateUser>[1]) => {
     setSaving(true);

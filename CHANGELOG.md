@@ -8,6 +8,7 @@
 
 ### Changed
 - Valuation endpoint now consults the database first, optionally backfilling via configured providers before falling back to legacy CSV files (`api/app/routers/valuation.py`, `api/app/settings.py`).
+- Frontend timestamps now respect `NEXT_PUBLIC_TZ`, aligning bottle valuations and admin price history with the deployment locale (`web/src/lib/formatDate.ts`, `web/src/app/admin/users/page.tsx`, `web/src/app/admin/prices/page.tsx`, `web/src/app/bottles/[id]/page.tsx`).
 
 ### Fixed
 - Log writer now reapplies `PUID`/`PGID` ownership when creating or rotating log files so fresh startups no longer leave root-owned logs (`ops/logging/log_writer.sh`, `README.md`).

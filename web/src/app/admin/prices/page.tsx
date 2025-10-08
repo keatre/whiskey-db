@@ -7,6 +7,7 @@ import useSWR from 'swr';
 import AdminOnly from '../../../components/AdminOnly';
 import type { MarketPrice } from '../../../api/marketPrices';
 import { MarketPricesApi } from '../../../api/marketPrices';
+import { formatDateTime } from '../../../lib/formatDate';
 
 const LATEST_KEY = ['/admin/prices', 'latest'];
 
@@ -304,12 +305,7 @@ function PriceTable({ prices }: { prices: MarketPrice[] }) {
     [prices]
   );
 
-  const formatDate = (value: string | null) => {
-    if (!value) return '—';
-    const dt = new Date(value);
-    if (Number.isNaN(dt.getTime())) return value;
-    return dt.toLocaleString();
-  };
+  const formatDate = (value: string | null) => formatDateTime(value);
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 16 }}>

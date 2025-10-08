@@ -8,6 +8,7 @@ import { currency } from '../../../lib/format';
 import MarkdownViewer from '../../../components/MarkdownViewer';
 // import AdminOnly from '../../../components/AdminOnly'; // ⬅️ remove
 import { useMe } from '../../../lib/useMe'; // ⬅️ add
+import { formatDateTime } from '../../../lib/formatDate';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -153,6 +154,7 @@ export default function BottleDetailPage() {
   }, [purchases]);
 
   const marketPrice = valuation?.price ?? null;
+  const valuationAsOf = formatDateTime(valuation?.as_of);
   const delta = yourPrice != null && marketPrice != null ? marketPrice - yourPrice : null;
   const deltaStr = delta == null ? undefined : `${delta >= 0 ? '+' : ''}${currency(delta)}`;
 
@@ -253,7 +255,7 @@ export default function BottleDetailPage() {
                   <>
                     {' '}
                     <span style={{ opacity: 0.7 }}>( {valuation.source}
-                    {valuation.as_of ? <span style={{ opacity: 0.7 }}>, {valuation.as_of}</span> : null}
+                    {valuation.as_of ? <span style={{ opacity: 0.7 }}>, {valuationAsOf}</span> : null}
                     )</span>
                   </>
                 )}
