@@ -135,7 +135,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
           display: 'grid',
           gap: 12,
           width: '100%',
-          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 140px)',
+          gridTemplateColumns: 'minmax(0, 1fr) auto',
           alignItems: 'end',
         }}
       >
@@ -161,10 +161,8 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
           style={{
             display: 'grid',
             gap: 4,
-            minWidth: 0,
-            width: '100%',
-            maxWidth: 160,
             justifySelf: 'end',
+            width: 'fit-content',
           }}
         >
           <span>Currency</span>
@@ -174,6 +172,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
             onChange={e => setCurrency(e.target.value.toUpperCase())}
             placeholder="USD"
             maxLength={6}
+            style={{ width: '6ch' }}
           />
         </label>
       </div>
