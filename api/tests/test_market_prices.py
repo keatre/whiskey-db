@@ -9,12 +9,14 @@ from pathlib import Path
 
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
+from zoneinfo import ZoneInfo
 
 
 def _configure_test_db() -> None:
     fd, path_str = tempfile.mkstemp(prefix="test-market-prices", suffix=".db")
     os.close(fd)
     os.environ["DATABASE_URL"] = f"sqlite:///{path_str}"
+    os.environ.setdefault("TZ", "America/Chicago")
 
 
 _configure_test_db()
@@ -108,7 +110,7 @@ def test_admin_can_create_price_record():
         "currency": "usd",
         "source": "Auction Sheet",
         "provider": "auction_house",
-        "as_of": "2024-07-01T00:00:00Z",
+        "as_of": "2024-07-01T00:00:00",
         "notes": "Summer catalog",
     }
     resp = client.post("/admin/prices", json=payload)
@@ -120,6 +122,12 @@ def test_admin_can_create_price_record():
     assert data["source"] == payload["source"]
     assert data["provider"] == payload["provider"]
     assert data["notes"] == payload["notes"]
+    tz = ZoneInfo(os.environ.get("TZ", "UTC"))
+    as_of = datetime.fromisoformat(data["as_of"])
+    if as_of.tzinfo is None:
+        as_of = as_of.replace(tzinfo=tz)
+    expected = datetime(2024, 7, 1, 0, 0, tzinfo=tz)
+    assert as_of == expected
 
     resp2 = client.get("/valuation", params={"upc": payload["barcode_upc"]})
     assert resp2.status_code == 200

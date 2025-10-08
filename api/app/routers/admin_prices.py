@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from datetime import datetime
+import os
+from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -14,6 +15,7 @@ from ..db import get_session
 from ..deps import require_admin
 from ..models import MarketPrice
 from ..services.market_prices import fetch_external_quote, persist_quote
+from zoneinfo import ZoneInfo
 
 router = APIRouter(
     prefix="/admin/prices",
@@ -139,7 +141,7 @@ def create_price(
         currency=payload.currency or "USD",
         source=payload.source,
         provider=payload.provider or payload.source,
-        as_of=payload.as_of,
+        as_of=_ensure_timezone(payload.as_of),
         ingest_type=payload.ingest_type,
         created_by=admin["username"],
         notes=payload.notes,
@@ -203,7 +205,7 @@ def update_price(
         record.provider = data["provider"]
 
     if "as_of" in data:
-        record.as_of = data["as_of"]
+        record.as_of = _ensure_timezone(data["as_of"])
 
     if "notes" in data:
         record.notes = data["notes"]
@@ -213,3 +215,15 @@ def update_price(
     session.commit()
     session.refresh(record)
     return record
+_TZ_NAME = os.getenv("TZ") or "UTC"
+
+
+def _ensure_timezone(value: Optional[datetime]) -> Optional[datetime]:
+    if value is None:
+        return None
+    if value.tzinfo is not None:
+        return value
+    try:
+        return value.replace(tzinfo=ZoneInfo(_TZ_NAME))
+    except Exception:
+        return value.replace(tzinfo=timezone.utc)

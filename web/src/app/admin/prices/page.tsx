@@ -20,6 +20,14 @@ function toDateTimeLocal(value: string | null): string {
   return local.toISOString().slice(0, 16);
 }
 
+function toNaiveIso(value: string): string | null {
+  if (!value) return null;
+  if (value.length === 16) {
+    return `${value}:00`;
+  }
+  return value;
+}
+
 export default function AdminPricesPage() {
   return (
     <AdminOnly>
@@ -104,7 +112,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
         throw new Error('Price must be a number');
       }
 
-      const isoDate = asOf ? new Date(asOf).toISOString() : null;
+      const isoDate = toNaiveIso(asOf);
 
       await MarketPricesApi.createPrice({
         barcode_upc: barcode.trim(),
@@ -331,7 +339,7 @@ function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCan
         throw new Error('Price must be a number');
       }
 
-      const isoDate = asOf ? new Date(asOf).toISOString() : null;
+      const isoDate = toNaiveIso(asOf);
 
       await MarketPricesApi.updatePrice(price.price_id, {
         price: numericPrice,
