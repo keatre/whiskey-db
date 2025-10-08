@@ -35,4 +35,10 @@ class Settings(BaseSettings):
     LOGIN_MAX_ATTEMPTS: int = 10            # max failed attempts within window
     LOGIN_LOCKOUT_SECONDS: int = 180        # temporary lockout after exceeding
 
+    # --- Market price providers ---
+    MARKET_PRICE_PROVIDER_URL: str | None = None
+    MARKET_PRICE_PROVIDER_API_KEY: str | None = None
+    MARKET_PRICE_PROVIDER_NAME: str | None = None
+    MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS: int = 8
+
 settings = Settings()

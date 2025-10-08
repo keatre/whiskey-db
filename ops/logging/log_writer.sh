@@ -12,6 +12,8 @@ LOG_LEVEL=${LOG_LEVEL:-info}
 LOG_MAX_MB=${LOG_MAX_MB:-10}
 LOG_RETENTION_DAYS=${LOG_RETENTION_DAYS:-14}
 LOG_ECHO=${LOG_ECHO:-1}
+PUID=${PUID:-}
+PGID=${PGID:-}
 
 normalize() {
   printf '%s' "$1" | tr '[:upper:]' '[:lower:]'
@@ -56,14 +58,28 @@ LOCK_FILE="${LOG_FILE_PATH}.lock"
 
 mkdir -p "$DIRNAME"
 touch "$LOCK_FILE"
+if [ -n "$PUID" ] && [ -n "$PGID" ]; then
+  chown "$PUID":"$PGID" "$LOCK_FILE" 2>/dev/null || true
+fi
 
 # Open FD for flock once
 exec 200>>"$LOCK_FILE"
+
+ensure_owner() {
+  local path="$1"
+  if [ -z "$path" ]; then
+    return
+  fi
+  if [ -n "$PUID" ] && [ -n "$PGID" ]; then
+    chown "$PUID":"$PGID" "$path" 2>/dev/null || true
+  fi
+}
 
 rotate_if_needed() {
   # Ensure file exists
   if [ ! -f "$LOG_FILE_PATH" ]; then
     touch "$LOG_FILE_PATH"
+    ensure_owner "$LOG_FILE_PATH"
     return
   fi
 
@@ -73,6 +89,8 @@ rotate_if_needed() {
     rotated="${LOG_FILE_PATH}.${stamp}"
     mv "$LOG_FILE_PATH" "$rotated"
     touch "$LOG_FILE_PATH"
+    ensure_owner "$LOG_FILE_PATH"
+    ensure_owner "$rotated"
   fi
 
   if [ "$RETENTION_DAYS" -gt 0 ]; then
@@ -86,6 +104,7 @@ write_line() {
   ts=$(date +"%Y-%m-%dT%H:%M:%S%z")
   flock 200
   rotate_if_needed
+  ensure_owner "$LOG_FILE_PATH"
   printf '%s [%s] [%s] %s\n' "$ts" "${SERVICE^^}" "${LEVEL_NORM^^}" "$line" >> "$LOG_FILE_PATH"
   flock -u 200
 }

@@ -10,6 +10,7 @@ Self-hosted database for cataloging and valuing your whiskey collection.
 - Mash bill & tasting notes with full **Markdown support** (tables, lists, headers, etc.)
 - Purchases tracking with quantity, price, and status
 - Market valuation API (UPC lookup)
+- Admin price management (manual uploads plus optional provider sync)
 - Grouped bottle browser (by Style → Substyle → Brand/Expression)
 - Mobile-friendly UI (Next.js 14, React 18, TypeScript)
 - REST API powered by FastAPI + SQLModel
@@ -52,6 +53,7 @@ Access:
 #### Admin Console
 - Visit `/admin` (link in the top navigation when signed in) to reach operational tools.
 - The **User management** section lets administrators invite new users, toggle roles, activate/deactivate accounts, and issue password resets. All passwords are hashed with Argon2 before storage.
+- The **Market prices** page records manual price uploads, triggers one-off provider syncs, lets you adjust the latest stored valuation, and lists the freshest price per UPC. Configure external lookups with `MARKET_PRICE_PROVIDER_URL` (supports `{upc}` templating), optional `MARKET_PRICE_PROVIDER_API_KEY`, `MARKET_PRICE_PROVIDER_NAME`, and `MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS`. See `.env.example` for sample values.
 - Use the in-page `Logout` button to end your session quickly, especially on shared devices.
 - The UI now opens in dark mode by default; the theme toggle in the header lets you switch to light mode as needed and remembers your preference.
 
@@ -66,7 +68,7 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
    - `COOKIE_SECURE=true` locks cookies to HTTPS; leave `COOKIE_DOMAIN` unset unless you need cross-subdomain auth.
    - `BACKUP_REPOSITORY` (path inside the backup container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
    - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
-   - Set `TZ=America/Chicago` (or your preferred zone) so backup timestamps follow your local time.
+   - Set `TZ=America/Chicago` (or your preferred zone); the frontend reuses this value for localized timestamps (bottle valuations, admin price history, etc.).
    - Set `BACKUP_ENCRYPTED=false` for plaintext archives and optionally point `BACKUP_ARCHIVE_DIR` elsewhere.
    - Flip `BACKUP_LOCAL_FILES=true` when you want backups to bundle your top-level `.env` and `docker-compose.yml` alongside the database.
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
@@ -85,6 +87,7 @@ All application containers stream through a shared log sink that writes to `LOG_
 - The log includes ISO8601 timestamps, service name (`API`, `WEB`, `BACKUP`), and severity.
 - Files auto-rotate once they reach `LOG_MAX_MB` (default 10 MB). Historical files are timestamped and trimmed after `LOG_RETENTION_DAYS`.
 - Docker Compose binds the host `./logs` folder into every service; create it (or point `LOG_FILE_PATH` elsewhere) before deploying.
+- When `PUID`/`PGID` are set, the log writer ensures both the active log file and its lock are owned by that user, preventing root-owned artifacts on restart.
 - Host access is just a bind mount, so secure the `logs/` directory and include it in your backup policy if desired.
 
 ### 🔐Security Notes

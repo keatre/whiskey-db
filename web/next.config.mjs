@@ -18,6 +18,7 @@ const nextConfig = {
     NEXT_PUBLIC_COOKIE_DOMAIN: process.env.COOKIE_DOMAIN || '',
     NEXT_PUBLIC_COOKIE_SECURE: process.env.COOKIE_SECURE || '',
     NEXT_PUBLIC_COOKIE_SAMESITE: process.env.COOKIE_SAMESITE || '',
+    NEXT_PUBLIC_TZ: process.env.TZ || '',
   },
   async rewrites() {
     // Backend origin reachable from the web container or browser:

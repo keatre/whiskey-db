@@ -1,8 +1,30 @@
+
+## [1.3.5] - 2025-10-07
+
+### Added
+- Admin price management API with manual entry, provider sync, and history listing plus matching frontend workflow for uploading valuations (`api/app/models.py`, `api/app/routers/admin_prices.py`, `api/app/services/market_prices.py`, `web/src/api/marketPrices.ts`, `web/src/app/admin/prices/page.tsx`, `web/src/components/NavLinks.tsx`, `web/src/app/admin/page.tsx`).
+- Automated coverage for valuation lookups, manual uploads, and provider sync persistence (`api/tests/test_market_prices.py`).
+- Sample market price provider environment variables are now included in `.env.example` to speed up configuration (`.env.example`).
+- Admins can now edit recorded price entries via a dedicated PATCH endpoint and inline UI form (`api/app/routers/admin_prices.py`, `web/src/api/marketPrices.ts`, `web/src/app/admin/prices/page.tsx`).
+
+### Changed
+- Valuation endpoint now consults the database first, optionally backfilling via configured providers before falling back to legacy CSV files (`api/app/routers/valuation.py`, `api/app/settings.py`).
+- Frontend timestamps reuse the single `TZ` env setting (surfaced to the browser via Next config) so bottle valuations and admin price history align with the deployment locale (`web/next.config.mjs`, `web/src/lib/formatDate.ts`, `web/src/app/admin/users/page.tsx`, `web/src/app/admin/prices/page.tsx`, `web/src/app/bottles/[id]/page.tsx`).
+
+### Fixed
+- Log writer now reapplies `PUID`/`PGID` ownership when creating or rotating log files so fresh startups no longer leave root-owned logs (`ops/logging/log_writer.sh`, `README.md`).
+- Market price sync regression test now monkeypatches the admin router directly so CI consistently exercises provider persistence (`api/tests/test_market_prices.py`).
+- Admin price form constrains the currency input width so it stays inside the card at every breakpoint (`web/src/app/admin/prices/page.tsx`).
+
+---
+
 ## [1.3.2] - 2025-10-07
 
 ### Changed
 - `scripts/new_release_branch.py` now launches `ssh-agent` with a two-hour lifetime before performing git operations, automatically loading keys so release branch and tag pushes reuse cached credentials.
 - The Release Drafter workflow runs under a shared concurrency group to prevent parallel executions from creating duplicate draft releases (`.github/workflows/release-drafter.yml`).
+
+---
 
 ## [1.3.1] - 2025-10-02
 
