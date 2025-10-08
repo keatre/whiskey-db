@@ -11,6 +11,15 @@ import { formatDateTime } from '../../../lib/formatDate';
 
 const LATEST_KEY = ['/admin/prices', 'latest'];
 
+function toDateTimeLocal(value: string | null): string {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const tzOffset = date.getTimezoneOffset();
+  const local = new Date(date.getTime() - tzOffset * 60000);
+  return local.toISOString().slice(0, 16);
+}
+
 export default function AdminPricesPage() {
   return (
     <AdminOnly>
@@ -27,10 +36,16 @@ function PriceManager() {
   );
 
   const prices = data ?? [];
+  const [editing, setEditing] = useState<MarketPrice | null>(null);
 
   const refresh = useCallback(async () => {
     await mutate();
   }, [mutate]);
+
+  const handleEditSaved = useCallback(async () => {
+    await refresh();
+    setEditing(null);
+  }, [refresh]);
 
   return (
     <main>
@@ -40,6 +55,7 @@ function PriceManager() {
       <section style={{ marginBottom: 32, display: 'grid', gap: 24, maxWidth: 720 }}>
         <ManualPriceForm onCreated={refresh} />
         <ProviderSyncForm onSynced={refresh} />
+        {editing && <EditPriceForm price={editing} onCancel={() => setEditing(null)} onSaved={handleEditSaved} />}
       </section>
 
       <section>
@@ -58,7 +74,7 @@ function PriceManager() {
         {error && <p style={{ color: 'var(--danger, #b91c1c)' }}>Failed to load prices: {String(error)}</p>}
         {!isLoading && !error && prices.length === 0 && <p>No price records yet.</p>}
 
-        {prices.length > 0 && <PriceTable prices={prices} />}
+        {prices.length > 0 && <PriceTable prices={prices} onEdit={setEditing} />}
       </section>
     </main>
   );
@@ -292,7 +308,111 @@ function ProviderSyncForm({ onSynced }: { onSynced: () => Promise<unknown> | voi
   );
 }
 
-function PriceTable({ prices }: { prices: MarketPrice[] }) {
+function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCancel: () => void; onSaved: () => Promise<unknown> | void }) {
+  const [amount, setAmount] = useState(price.price != null ? String(price.price) : '');
+  const [currency, setCurrency] = useState(price.currency ?? 'USD');
+  const [source, setSource] = useState(price.source ?? '');
+  const [provider, setProvider] = useState(price.provider ?? '');
+  const [notes, setNotes] = useState(price.notes ?? '');
+  const [asOf, setAsOf] = useState(toDateTimeLocal(price.as_of));
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSubmit = async (evt: FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+    setSaving(true);
+    setMessage(null);
+    setError(null);
+
+    try {
+      const numericPrice = amount.trim() ? Number(amount) : null;
+      if (numericPrice !== null && Number.isNaN(numericPrice)) {
+        throw new Error('Price must be a number');
+      }
+
+      const isoDate = asOf ? new Date(asOf).toISOString() : null;
+
+      await MarketPricesApi.updatePrice(price.price_id, {
+        price: numericPrice,
+        currency: currency.trim() || undefined,
+        source: source.trim() || undefined,
+        provider: provider.trim() || undefined,
+        as_of: isoDate,
+        notes: notes.trim() || undefined,
+      });
+
+      setMessage('Price updated');
+      await onSaved();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update price');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="card" style={{ padding: 16, display: 'grid', gap: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+        <h2 style={{ fontSize: '1.1rem', margin: 0 }}>Edit latest record</h2>
+        <button type="button" onClick={onCancel} disabled={saving}>
+          Cancel
+        </button>
+      </div>
+      <div style={{ opacity: 0.7 }}>UPC {price.barcode_upc}</div>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>Price</span>
+        <input
+          type="number"
+          min={0}
+          step="0.01"
+          value={amount}
+          onChange={e => setAmount(e.target.value)}
+        />
+      </label>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>Currency</span>
+        <input
+          type="text"
+          value={currency}
+          onChange={e => setCurrency(e.target.value.toUpperCase())}
+          maxLength={6}
+        />
+      </label>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>Source (optional)</span>
+        <input type="text" value={source} onChange={e => setSource(e.target.value)} />
+      </label>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>Provider (optional)</span>
+        <input type="text" value={provider} onChange={e => setProvider(e.target.value)} />
+      </label>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>As of (optional)</span>
+        <input type="datetime-local" value={asOf} onChange={e => setAsOf(e.target.value)} />
+      </label>
+
+      <label style={{ display: 'grid', gap: 4 }}>
+        <span>Notes (optional)</span>
+        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+      </label>
+
+      <button type="submit" disabled={saving}>
+        {saving ? 'Saving…' : 'Save changes'}
+      </button>
+
+      {message && <p style={{ color: 'var(--success, #15803d)' }}>{message}</p>}
+      {error && <p style={{ color: 'var(--danger, #b91c1c)' }}>{error}</p>}
+    </form>
+  );
+}
+
+function PriceTable({ prices, onEdit }: { prices: MarketPrice[]; onEdit: (price: MarketPrice) => void }) {
   const rows = useMemo(
     () =>
       prices
@@ -309,7 +429,7 @@ function PriceTable({ prices }: { prices: MarketPrice[] }) {
 
   return (
     <div style={{ overflowX: 'auto', marginTop: 16 }}>
-      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 720 }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
         <thead>
           <tr>
             <th style={th}>Barcode</th>
@@ -321,6 +441,7 @@ function PriceTable({ prices }: { prices: MarketPrice[] }) {
             <th style={th}>Fetched</th>
             <th style={th}>Ingest</th>
             <th style={th}>Notes</th>
+            <th style={{ ...th, width: 80 }}></th>
           </tr>
         </thead>
         <tbody>
@@ -335,6 +456,11 @@ function PriceTable({ prices }: { prices: MarketPrice[] }) {
               <td style={td}>{formatDate(row.fetched_at)}</td>
               <td style={td}>{row.ingest_type}</td>
               <td style={td}>{row.notes ?? '—'}</td>
+              <td style={{ ...td, textAlign: 'right' }}>
+                <button type="button" onClick={() => onEdit(row)}>
+                  Edit
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>

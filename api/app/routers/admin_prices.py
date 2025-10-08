@@ -50,6 +50,22 @@ class MarketPriceCreate(MarketPriceBase):
     ingest_type: Literal["manual", "csv", "provider"] = "manual"
 
 
+class MarketPriceUpdate(BaseModel):
+    price: Optional[float] = Field(default=None, ge=0)
+    currency: Optional[str] = Field(default=None, min_length=3, max_length=6)
+    source: Optional[str] = Field(default=None, description="Human-readable source label")
+    provider: Optional[str] = Field(default=None, description="System/provider identifier")
+    as_of: Optional[datetime] = Field(default=None, description="ISO timestamp for the price")
+    notes: Optional[str] = Field(default=None, max_length=500)
+
+    @field_validator("currency")
+    @classmethod
+    def _normalize_currency(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        return value.strip().upper() or None
+
+
 class MarketPriceOut(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -158,4 +174,42 @@ def sync_price_from_provider(
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Unable to store quote: {exc}") from exc
 
+    return record
+
+
+@router.patch("/{price_id}", response_model=MarketPriceOut)
+def update_price(
+    price_id: int,
+    payload: MarketPriceUpdate,
+    session: Session = Depends(get_session),
+    admin=Depends(require_admin),
+):
+    record = session.get(MarketPrice, price_id)
+    if not record:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Price record not found")
+
+    data = payload.model_dump(exclude_unset=True)
+
+    if "price" in data:
+        record.price = data["price"]
+
+    if "currency" in data:
+        record.currency = data["currency"] or record.currency
+
+    if "source" in data:
+        record.source = data["source"]
+
+    if "provider" in data:
+        record.provider = data["provider"]
+
+    if "as_of" in data:
+        record.as_of = data["as_of"]
+
+    if "notes" in data:
+        record.notes = data["notes"]
+
+    record.created_by = admin["username"]
+    session.add(record)
+    session.commit()
+    session.refresh(record)
     return record

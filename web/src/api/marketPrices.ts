@@ -78,8 +78,29 @@ export async function syncPrice(input: { barcode_upc: string; notes?: string | n
   return handle<MarketPrice>(res);
 }
 
+export async function updatePrice(
+  id: number,
+  input: {
+    price?: number | null;
+    currency?: string | null;
+    source?: string | null;
+    provider?: string | null;
+    as_of?: string | null;
+    notes?: string | null;
+  }
+): Promise<MarketPrice> {
+  const res = await fetch(`${BROWSER_BASE}/admin/prices/${id}`, {
+    method: 'PATCH',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  return handle<MarketPrice>(res);
+}
+
 export const MarketPricesApi = {
   fetchPrices,
   createPrice,
   syncPrice,
+  updatePrice,
 };

@@ -167,3 +167,35 @@ def test_sync_price_persists_external_quote(monkeypatch):
     assert valuation.status_code == 200
     vdata = valuation.json()
     assert vdata["price"] == 88.0
+
+
+def test_admin_can_update_price_record():
+    init_db()
+    bootstrap_admin()
+    client = TestClient(app)
+    login(client)
+
+    payload = {
+        "barcode_upc": "777777777777",
+        "price": 120.0,
+        "currency": "usd",
+        "source": "Manual upload",
+        "provider": "manual",
+        "as_of": "2024-10-08T14:00:00Z",
+        "notes": "Initial record",
+    }
+    create = client.post("/admin/prices", json=payload)
+    assert create.status_code == 201, create.text
+    record = create.json()
+
+    update_payload = {
+        "price": 118.5,
+        "currency": "eur",
+        "notes": "Adjusted price",
+    }
+    update = client.patch(f"/admin/prices/{record['price_id']}", json=update_payload)
+    assert update.status_code == 200, update.text
+    updated = update.json()
+    assert updated["price"] == 118.5
+    assert updated["currency"] == "EUR"
+    assert updated["notes"] == "Adjusted price"
