@@ -68,8 +68,7 @@ Backups run from the `backup` service and push snapshots to your NAS over SMB/CI
    - `COOKIE_SECURE=true` locks cookies to HTTPS; leave `COOKIE_DOMAIN` unset unless you need cross-subdomain auth.
    - `BACKUP_REPOSITORY` (path inside the backup container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
    - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
-   - Set `TZ=America/Chicago` (or your preferred zone) so backup timestamps follow your local time.
-   - Set `NEXT_PUBLIC_TZ` to the same zone so browser-rendered timestamps (bottle valuations, admin price history, etc.) match your deployment’s locale.
+   - Set `TZ=America/Chicago` (or your preferred zone); the frontend reuses this value for localized timestamps (bottle valuations, admin price history, etc.).
    - Set `BACKUP_ENCRYPTED=false` for plaintext archives and optionally point `BACKUP_ARCHIVE_DIR` elsewhere.
    - Flip `BACKUP_LOCAL_FILES=true` when you want backups to bundle your top-level `.env` and `docker-compose.yml` alongside the database.
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.

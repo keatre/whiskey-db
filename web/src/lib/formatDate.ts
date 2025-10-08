@@ -1,7 +1,11 @@
-const DISPLAY_TIME_ZONE =
+const TZ_CANDIDATE =
   process.env.NEXT_PUBLIC_TZ && process.env.NEXT_PUBLIC_TZ.trim().length > 0
     ? process.env.NEXT_PUBLIC_TZ.trim()
-    : Intl.DateTimeFormat().resolvedOptions().timeZone;
+    : process.env.TZ && process.env.TZ.trim().length > 0
+    ? process.env.TZ.trim()
+    : undefined;
+
+const DISPLAY_TIME_ZONE = TZ_CANDIDATE || Intl.DateTimeFormat().resolvedOptions().timeZone;
 
 const DEFAULT_FORMAT: Intl.DateTimeFormatOptions = {
   dateStyle: 'medium',
