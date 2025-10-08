@@ -138,7 +138,14 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
           alignItems: 'flex-end',
         }}
       >
-        <label style={{ display: 'grid', gap: 4, flex: '1 1 220px', minWidth: 200 }}>
+        <label
+          style={{
+            display: 'grid',
+            gap: 4,
+            flex: '1 1 220px',
+            minWidth: 0,
+          }}
+        >
           <span>Price</span>
           <input
             type="number"
@@ -149,7 +156,15 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
             placeholder="99.95"
           />
         </label>
-        <label style={{ display: 'grid', gap: 4, flex: '0 0 140px', minWidth: 140 }}>
+        <label
+          style={{
+            display: 'grid',
+            gap: 4,
+            flex: '0 1 140px',
+            minWidth: 0,
+            maxWidth: 160,
+          }}
+        >
           <span>Currency</span>
           <input
             type="text"
