@@ -132,18 +132,19 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
 
       <div
         style={{
-          display: 'flex',
+          display: 'grid',
           gap: 12,
-          flexWrap: 'wrap',
-          alignItems: 'flex-end',
+          width: '100%',
+          gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 140px)',
+          alignItems: 'end',
         }}
       >
         <label
           style={{
             display: 'grid',
             gap: 4,
-            flex: '1 1 220px',
             minWidth: 0,
+            width: '100%',
           }}
         >
           <span>Price</span>
@@ -160,9 +161,10 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
           style={{
             display: 'grid',
             gap: 4,
-            flex: '0 1 140px',
             minWidth: 0,
+            width: '100%',
             maxWidth: 160,
+            justifySelf: 'end',
           }}
         >
           <span>Currency</span>
