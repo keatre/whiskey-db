@@ -39,6 +39,7 @@ Start the stack:
 docker compose up -d --build
 ```
 > The API container now bakes dependencies into its image; rerun `docker compose build api` whenever you update `api/requirements.txt`.
+> The web container is built from `./web`; run `docker compose build web` after changing frontend dependencies or build config. Rebuild the backup image (`docker compose build backup`) whenever scripts in `ops/backup/` change.
 
 Access:
 - Frontend: http://localhost:8080
@@ -109,6 +110,7 @@ uvicorn app.main:app --reload
 ./scripts/run_ci_checks.py
 ```
 Prefer `docker compose build api` (or `docker compose up --build api`) after changing backend dependencies so the baked image stays current; create a local `docker-compose.override.yml` if you need to bind-mount `./api` for hot reloads.
+Run `docker compose build web` to refresh the frontend image after modifying `web/package.json` or Next.js config, and `docker compose build backup` if you edit the backup scripts but rely on the containerized job.
 
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)

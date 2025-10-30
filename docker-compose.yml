@@ -1,28 +1,22 @@
 services:
   web:
-    image: node:20
+    build:
+      context: ./web
+    image: whiskey-db-web:dev
     working_dir: /app
     command:
       - /bin/bash
       - /logging/with-logging.sh
       - web
       - --
-      - bash
-      - -lc
-      - >-
-        echo "Running elevated privileges required for install (npm ci)" &&
-        npm ci --prefer-offline &&
-        npm run build &&
-        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /app/.next /npm-cache || true &&
-        exec npm start
+      - npm
+      - run
+      - start
     volumes:
-      - ./web:/app
-      - web_npm_cache:/npm-cache
       - ./ops/logging:/logging:ro
       - ./logs:/logs
     env_file: .env
     environment:
-      NPM_CONFIG_CACHE: /npm-cache
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
     ports:
@@ -67,6 +61,7 @@ services:
     build:
       context: ./ops/backup
       dockerfile: Dockerfile
+    image: whiskey-db-backup:dev
     container_name: whiskey-backup
     #profiles: ["backup"]
     working_dir: /app
@@ -101,7 +96,6 @@ services:
     stop_signal: SIGTERM       # send TERM first (entrypoint trap handles it)
     stop_grace_period: 60s     # allow time to end restic/crond/tail cleanly
     volumes:
-      - ./ops/backup:/app
       - ./data:/data:ro
       - ./dev-docs:/extra/dev-docs:ro
       - ./docker-compose.yml:/config/docker-compose.yml:ro
@@ -120,5 +114,3 @@ services:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
 
 #Local Cache Volumes - comment out if you want to use fresh installs every time
-volumes:
-  web_npm_cache:

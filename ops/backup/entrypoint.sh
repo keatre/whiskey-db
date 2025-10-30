@@ -22,13 +22,6 @@ case "$BACKUP_LOCAL_FILES" in
     ;;
 esac
 
-# Install runtime dependencies (idempotent; apk skips already-present packages)
-if [ "$BACKUP_ENCRYPTED" = "true" ]; then
-  apk add --no-cache restic tzdata ca-certificates
-else
-  apk add --no-cache tzdata ca-certificates
-fi
-
 : "${BACKUP_ENABLED:=true}"
 : "${BACKUP_CRON:=0 3 * * *}"                # 3:00 AM daily
 : "${BACKUP_SOURCE:=/data}"                  # where whiskey.db lives
