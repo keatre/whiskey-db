@@ -7,6 +7,10 @@
 ### Removed
 - Deleted unused maintenance, LAN helper, and size-limit middleware modules plus legacy auth context, cookie jar, TypeScript build cache, and accidental `__pycache__` artifacts to keep the tree lean (`api/app/maintenance.py`, `api/app/lan.py`, `api/app/middleware/size_limit.py`, `api/cookies.txt`, `web/src/auth/AuthContext.jsx`, `web/tsconfig.tsbuildinfo`, `api/app/routers/__pycache__/*`).
 
+---
+
+## [1.3.6] - 2025-10-30
+
 ### Fixed
 - Image uploads now accept valid JPEG files even when Pillow cannot parse them by falling back to signature detection, ensuring legitimate admin uploads no longer return 415 errors (`api/app/routers/uploads.py`, `api/tests/test_uploads.py`).
 
