@@ -164,11 +164,37 @@ async def upload_image(file: UploadFile = File(...)):
                 pass
         raise
 def _identify_image(path: str) -> str | None:
+    """Return a normalized image format name or None if unsupported."""
+    fmt: str | None = None
+
     try:
         with Image.open(path) as img:
-            fmt = (img.format or "").upper()
+            guessed = (img.format or "").upper()
+            # Some JPEG variants report as MPO; treat as JPEG for storage.
+            if guessed == "MPO":
+                fmt = "JPEG"
+            elif guessed:
+                fmt = guessed
     except (UnidentifiedImageError, OSError):
-        return None
+        fmt = None
+
     if fmt in ALLOWED_IMAGE_FORMATS:
         return fmt
+
+    # Fallback to signature checks in case Pillow lacks a decoder for a valid file.
+    try:
+        with open(path, "rb") as f:
+            header = f.read(32)
+    except OSError:
+        return None
+
+    if header.startswith(b"\xFF\xD8\xFF"):
+        return "JPEG"
+    if header.startswith(b"\x89PNG\r\n\x1a\n"):
+        return "PNG"
+    if header.startswith(b"GIF87a") or header.startswith(b"GIF89a"):
+        return "GIF"
+    if header[:4] == b"RIFF" and header[8:12] == b"WEBP":
+        return "WEBP"
+
     return None
