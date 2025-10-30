@@ -1,4 +1,11 @@
 
+## [1.3.6] - 2025-10-30
+
+### Fixed
+- Image uploads now accept valid JPEG files even when Pillow cannot parse them by falling back to signature detection, ensuring legitimate admin uploads no longer return 415 errors (`api/app/routers/uploads.py`, `api/tests/test_uploads.py`).
+
+---
+
 ## [1.3.5] - 2025-10-07
 
 ### Added
