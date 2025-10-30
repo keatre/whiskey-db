@@ -38,6 +38,8 @@ Start the stack:
 ```bash
 docker compose up -d --build
 ```
+> The API container now bakes dependencies into its image; rerun `docker compose build api` whenever you update `api/requirements.txt`.
+
 Access:
 - Frontend: http://localhost:8080
 - API: http://localhost:8000/docs
@@ -106,6 +108,8 @@ uvicorn app.main:app --reload
 # Run combined lint/tests (creates .venv, installs deps, logs to logs/whiskey_db.log)
 ./scripts/run_ci_checks.py
 ```
+Prefer `docker compose build api` (or `docker compose up --build api`) after changing backend dependencies so the baked image stays current; create a local `docker-compose.override.yml` if you need to bind-mount `./api` for hot reloads.
+
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)
 

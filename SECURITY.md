@@ -32,6 +32,7 @@ This project is designed for **self-hosting**. To reduce your attack surface:
 - Always run behind a **TLS-terminating reverse proxy** (Caddy, Nginx, Traefik).
 - Expose only the **web frontend (Next.js)** to your LAN/WAN.  
   The FastAPI backend should remain internal to the Docker network.
+- Build the API container image with the included `api/Dockerfile` so dependencies are installed during the image build and the runtime process runs as the non-root `appuser` (avoids repeated privileged `pip install` runs on each boot).
 - Use strong, unique secrets in your `.env` file.
 - Never commit your real `.env` or SQLite database files to version control.
 - Manage application accounts through the Admin → User management console. New passwords are hashed with Argon2 server-side, usernames are unique, and the UI now exposes an explicit logout control for shared workstations.

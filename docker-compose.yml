@@ -34,7 +34,9 @@ services:
     stop_grace_period: 10s
 
   api:
-    image: python:3.12
+    build:
+      context: ./api
+    image: whiskey-db-api:dev
     working_dir: /app
     command:
       - /bin/bash
@@ -44,20 +46,14 @@ services:
       - bash
       - -lc
       - >-
-        echo "Running elevated privileges required for install (pip install)" &&
-        pip install --cache-dir /pip-cache -r requirements.txt &&
-        chown -R ${PUID:-1000}:${PGID:-1000} /pip-cache || true &&
         exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --log-level ${API_LOG_LEVEL:-info}
     volumes:
-      - ./api:/app
       - ./data:/data
       - ./api/static:/app/static
-      - api_pip_cache:/pip-cache
       - ./ops/logging:/logging:ro
       - ./logs:/logs
     env_file: .env
     environment:
-      PIP_CACHE_DIR: /pip-cache
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/whiskey.db}
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -126,4 +122,3 @@ services:
 #Local Cache Volumes - comment out if you want to use fresh installs every time
 volumes:
   web_npm_cache:
-  api_pip_cache:

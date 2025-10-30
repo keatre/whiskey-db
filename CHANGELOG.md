@@ -1,5 +1,8 @@
 
-## [1.3.6] - 2025-10-30
+## [1.4.0] - 2025-10-30
+
+### Changed
+- API service now builds a slim image with dependencies baked in, so container restarts skip privileged `pip install` runs and avoid root warnings (`docker-compose.yml`, `api/Dockerfile`, `README.md`, `SECURITY.md`).
 
 ### Fixed
 - Image uploads now accept valid JPEG files even when Pillow cannot parse them by falling back to signature detection, ensuring legitimate admin uploads no longer return 415 errors (`api/app/routers/uploads.py`, `api/tests/test_uploads.py`).
