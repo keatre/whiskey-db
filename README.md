@@ -103,6 +103,90 @@ All application containers stream through a shared log sink that writes to `LOG_
 - When `PUID`/`PGID` are set, the log writer ensures both the active log file and its lock are owned by that user, preventing root-owned artifacts on restart.
 - Host access is just a bind mount, so secure the `logs/` directory and include it in your backup policy if desired.
 
+## 🧰 Environment Variables
+
+### Core Service Parameters
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `APP_NAME` | Application name surfaced on the backend (emails, logs). | `Whiskey DB` |
+| `NEXT_PUBLIC_APP_NAME` | Frontend-visible app name, injected into the bundle. | `Whiskey DB` |
+| `API_HOST` | Address FastAPI listens on inside the container. | `0.0.0.0` |
+| `API_PORT` | Port FastAPI binds to. | `8000` |
+| `API_BASE` | Backend origin the Next.js proxy forwards to. | `http://api:8000` |
+| `NEXT_PUBLIC_API_BASE` | Browser base path used by the frontend when calling the API (served via the `/api` proxy). | `/api` |
+| `NEXT_BACKEND_ORIGIN` | Origin baked into the web image for server rewrites (set before `docker compose build web`). | `http://api:8000` |
+| `TZ` | IANA timezone applied to API timestamps and the backup scheduler. | `America/Chicago` |
+| `DATABASE_URL` | SQLModel database connection string. | `sqlite:////data/whiskey.db` |
+| `SECRET_KEY` | JWT signing key for auth tokens (replace in production). | `change-me-please` |
+| `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime in minutes. | `20` |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh-token lifetime in days. | `30` |
+| `JWT_COOKIE_NAME` | Name of the access-token cookie. | `access_token` |
+| `JWT_REFRESH_COOKIE_NAME` | Name of the refresh-token cookie. | `refresh_token` |
+| `COOKIE_SECURE` | `auto`, `true`, or `false`; controls whether cookies carry the Secure flag. | `auto` |
+| `COOKIE_SAMESITE` | SameSite policy for auth cookies. | `lax` |
+| `COOKIE_DOMAIN` | Optional domain scope for cookies (leave unset for host-only). | *(unset)* |
+| `CF_TUNNEL_TOKEN` | Cloudflare Tunnel token (if using the bundled `cloudflared` service). | *(unset)* |
+
+### Access Control / Networking
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `ALLOW_LAN_GUEST` | Permit read-only access from trusted LAN addresses when unauthenticated. | `true` |
+| `TRUSTED_PROXIES` | Comma-separated CIDRs whose `X-Forwarded-For` headers are honored. | `127.0.0.1,10.0.0.0/8,172.16.0.0/12,192.168.0.0/16` |
+| `LAN_GUEST_HOSTS` | Hostnames that still receive LAN guest access (even behind tunnels). | `localhost,127.0.0.1` |
+| `LOGIN_WINDOW_SECONDS` | Sliding window for login attempt tracking. | `60` |
+| `LOGIN_MAX_ATTEMPTS` | Failed attempts allowed per window before lockout. | `10` |
+| `LOGIN_LOCKOUT_SECONDS` | Lockout duration once attempts are exceeded. | `180` |
+| `ALLOWED_ORIGINS` | CORS whitelist for the API. | `http://localhost:8080,http://127.0.0.1:8080` |
+
+### Uploads & Media
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `UPLOAD_MAX_MB` | Maximum image upload size (MB). | `100` |
+| `UPLOAD_DIR` | Directory where uploaded assets are stored. | `/data/uploads` |
+| `IMAGE_URL_MIGRATE_ON_START` | Run legacy URL normalization on startup when true. | `true` |
+
+### Logging & Runtime User
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `LOG_LEVEL` | Granularity captured by the shared log writer (`none`, `error`, `info`, `debug`). | `info` |
+| `LOG_FILE_PATH` | Location of the aggregated log file (mounted from host). | `/logs/whiskey_db.log` |
+| `LOG_MAX_MB` | Rotate log file after this many megabytes. | `10` |
+| `LOG_RETENTION_DAYS` | Retain rotated logs for this many days. | `14` |
+| `PUID` / `PGID` | Host user/group IDs applied to generated files (optional). | *(unset)* |
+
+### Backups (Restic / Plain Tar)
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `BACKUP_ENABLED` | Toggle scheduled backups. | `true` |
+| `BACKUP_SOURCE` | Path mounted into the backup container for snapshotting. | `/data` |
+| `BACKUP_REPOSITORY` | Destination path for restic repos or plaintext archives. | `/remote/restic-whiskey-db` |
+| `BACKUP_ENCRYPTED` | Choose encrypted restic (`true`) or plaintext tar archives (`false`). | `true` |
+| `BACKUP_ARCHIVE_DIR` | Target directory for plaintext archives when encryption is disabled. | `/remote/whiskey-db-plain` |
+| `RESTIC_PASSWORD` | Restic repository password (required when encrypted). | *(unset)* |
+| `RESTIC_KEEP_DAILY` | Daily snapshots retained by restic. | `7` |
+| `RESTIC_KEEP_WEEKLY` | Weekly snapshots retained. | `4` |
+| `RESTIC_KEEP_MONTHLY` | Monthly snapshots retained. | `12` |
+| `PLAINTEXT_RETENTION_DAYS` | Days to keep plaintext archives. | `30` |
+| `BACKUP_CRON` | Cron schedule for recurring backups. | `0 3 * * *` |
+| `BACKUP_TAG` | Optional label applied to snapshots. | `whiskey-db` |
+| `BACKUP_LOCAL_FILES` | Include `.env` and `docker-compose.yml` in snapshots when mounted. | `false` |
+| `BACKUP_ON_START` | Run an immediate backup when the container boots. | `false` |
+
+### Optional Integrations
+
+| Environment Variable | Purpose | Default |
+| --- | --- | --- |
+| `MARKET_PRICE_PROVIDER_URL` | External API endpoint for bottle valuations (`{upc}` templated). | *(unset)* |
+| `MARKET_PRICE_PROVIDER_API_KEY` | API key for the valuation provider. | *(unset)* |
+| `MARKET_PRICE_PROVIDER_NAME` | Friendly provider label shown in the UI. | *(unset)* |
+| `MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS` | Timeout for valuation HTTP requests. | `8` |
+
+
 ### 🔐Security Notes
 - Default DB is SQLite (local file under /data/)
 - For production, configure Postgres + TLS reverse proxy
@@ -122,8 +206,9 @@ uvicorn app.main:app --reload
 Prefer `docker compose build api` (or `docker compose up --build api`) after changing backend dependencies so the baked image stays current; create a local `docker-compose.override.yml` if you need to bind-mount `./api` for hot reloads.
 Run `docker compose build web` to refresh the frontend image after modifying `web/package.json` or Next.js config, and `docker compose build backup` if you edit the backup scripts but rely on the containerized job.
 
+
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)
 
-- Current stable: v1.0.0
+- Current stable: v1.3.6
 - Future dev: feature branches → PR → ```main```
