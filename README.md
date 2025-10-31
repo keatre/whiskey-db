@@ -40,6 +40,7 @@ docker compose up -d --build
 ```
 > The API container now bakes dependencies into its image; rerun `docker compose build api` whenever you update `api/requirements.txt`.
 > The web container is built from `./web`; run `docker compose build web` after changing frontend dependencies or build config. Rebuild the backup image (`docker compose build backup`) whenever scripts in `ops/backup/` change.
+> Alpine images only provide `/bin/sh`; the compose command now uses that shell to launch the logging wrapper. If you customise the startup command, stick with `/bin/sh` unless you add Bash yourself.
 
 Access:
 - Frontend: http://localhost:8080
