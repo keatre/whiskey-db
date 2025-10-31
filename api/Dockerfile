@@ -15,7 +15,9 @@ RUN pip install --no-cache-dir --upgrade pip \
 
 # Copy app code
 COPY app ./app
-COPY static ./static
+
+# Ensure static dir exists even if empty in source
+RUN mkdir -p /app/static
 
 # Prepare runtime directories
 RUN mkdir -p /app/static/uploads
