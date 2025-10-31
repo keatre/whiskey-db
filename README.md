@@ -50,6 +50,7 @@ Access:
 - Keep `COOKIE_SECURE=auto` (default) to emit Secure cookies only when requests arrive over HTTPS; local-only installs can override to `false` for plain HTTP.
 - Ensure `TRUSTED_PROXIES` in `.env` includes the IP ranges that present requests (the defaults cover 127.0.0.1 and common private ranges used by the tunnel client).
 - To lock down admin access for remote users, layer Cloudflare Access or another identity-aware proxy in front of `/admin` routes while leaving LAN guests untouched.
+- Requests that pass through Cloudflare no longer qualify for LAN-guest viewing; they now require authentication even if `ALLOW_LAN_GUEST=true`, while direct LAN access keeps the guest experience.
 
 ### 📚Usage
 - Navigate to Bottles to browse by style

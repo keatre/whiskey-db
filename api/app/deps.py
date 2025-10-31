@@ -83,6 +83,19 @@ def _ip_from_request(request: Request) -> str:
     return peer
 
 
+def _is_cloudflare_request(request: Request) -> bool:
+    hdr = request.headers
+    return any(
+        hdr.get(name)
+        for name in (
+            "cf-ray",
+            "cf-visitor",
+            "cf-connecting-ip",
+            "cf-ew-via",
+        )
+    )
+
+
 def _is_private_ip(s: str) -> bool:
     try:
         ip = ipaddress.ip_address(s)
@@ -115,6 +128,7 @@ async def get_current_user_role(request: Request):
     - 'anonymous' otherwise.
     """
     ip = _ip_from_request(request)
+    via_cloudflare = _is_cloudflare_request(request)
 
     # Parse JWT from cookie (auth)
     cookies = request.cookies or {}
@@ -139,7 +153,7 @@ async def get_current_user_role(request: Request):
     allow_lan_guest = _to_bool(settings.ALLOW_LAN_GUEST)
     lan_guest = False
     if role in ("anonymous",):
-        if allow_lan_guest and _is_private_ip(ip):
+        if allow_lan_guest and _is_private_ip(ip) and not via_cloudflare:
             role = "guest"
             lan_guest = True
 
@@ -149,6 +163,7 @@ async def get_current_user_role(request: Request):
         "email": email,
         "lan_guest": lan_guest,
         "ip": ip,
+        "via_cloudflare": via_cloudflare,
     }
 
 
