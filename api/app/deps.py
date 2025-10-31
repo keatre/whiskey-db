@@ -85,15 +85,9 @@ def _ip_from_request(request: Request) -> str:
 
 def _is_cloudflare_request(request: Request) -> bool:
     hdr = request.headers
-    return any(
-        hdr.get(name)
-        for name in (
-            "cf-ray",
-            "cf-visitor",
-            "cf-connecting-ip",
-            "cf-ew-via",
-        )
-    )
+    if hdr.get("x-whiskey-via", "").lower() == "cloudflare":
+        return True
+    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-connecting-ip", "cf-ew-via"))
 
 
 def _is_private_ip(s: str) -> bool:

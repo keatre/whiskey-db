@@ -51,6 +51,7 @@ Access:
 - Ensure `TRUSTED_PROXIES` in `.env` includes the IP ranges that present requests (the defaults cover 127.0.0.1 and common private ranges used by the tunnel client).
 - To lock down admin access for remote users, layer Cloudflare Access or another identity-aware proxy in front of `/admin` routes while leaving LAN guests untouched.
 - Requests that pass through Cloudflare no longer qualify for LAN-guest viewing; they now require authentication even if `ALLOW_LAN_GUEST=true`, while direct LAN access keeps the guest experience.
+- The proxy route adds `x-whiskey-via=cloudflare` when Cloudflare headers are present so the API can enforce the remote-only auth path; no extra configuration is required.
 
 ### 📚Usage
 - Navigate to Bottles to browse by style

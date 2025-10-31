@@ -47,6 +47,13 @@ async function handler(req: NextRequest, ctx: { params: { all?: string[] } }) {
   }
 
   const headers = copyReqHeaders(req.headers);
+  const sawCloudflare =
+    ['cf-connecting-ip', 'cf-ray', 'cf-visitor', 'cf-ew-via'].some((h) =>
+      req.headers.has(h)
+    );
+  if (sawCloudflare) {
+    headers.set('x-whiskey-via', 'cloudflare');
+  }
   const ac = new AbortController();
   const t = setTimeout(() => ac.abort("upstream_timeout"), 15000);
 
