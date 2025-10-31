@@ -2,6 +2,9 @@ services:
   web:
     build:
       context: ./web
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-/api}
+        NEXT_BACKEND_ORIGIN: ${NEXT_BACKEND_ORIGIN:-http://api:8000}
     image: whiskey-db-web:dev
     working_dir: /app
     command:
