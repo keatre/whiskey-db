@@ -122,6 +122,25 @@ def _is_secure_request(request: Request) -> bool:
             return True
         if proto in {"http", "ws"}:
             return False
+
+    # RFC 7239 Forwarded: proto=https
+    forwarded_header = request.headers.get("forwarded")
+    if forwarded_header:
+        # forwarded can be comma-separated entries; inspect first
+        first_part = forwarded_header.split(",")[0].lower()
+        if "proto=https" in first_part:
+            return True
+        if "proto=http" in first_part:
+            return False
+
+    # Cloudflare Tunnel / proxies expose cf-visitor='{"scheme":"https"}'
+    cf_visitor = request.headers.get("cf-visitor")
+    if cf_visitor:
+        visitor_lower = cf_visitor.lower()
+        if '"scheme":"https"' in visitor_lower:
+            return True
+        if '"scheme":"http"' in visitor_lower:
+            return False
     scheme = (request.url.scheme or "").lower()
     return scheme in {"https", "wss"}
 
