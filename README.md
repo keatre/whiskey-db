@@ -52,6 +52,7 @@ Access:
 - To lock down admin access for remote users, layer Cloudflare Access or another identity-aware proxy in front of `/admin` routes while leaving LAN guests untouched.
 - Requests that pass through Cloudflare no longer qualify for LAN-guest viewing; they now require authentication even if `ALLOW_LAN_GUEST=true`, while direct LAN access keeps the guest experience.
 - The proxy route adds `x-whiskey-via=cloudflare` when Cloudflare headers are present so the API can enforce the remote-only auth path; no extra configuration is required.
+- Configure `LAN_GUEST_HOSTS` (comma-separated hostnames) to list the origins that should keep LAN guest access; leave the defaults for localhost-only development or add your LAN hostname/IP as needed.
 
 ### 📚Usage
 - Navigate to Bottles to browse by style
