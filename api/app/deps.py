@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException, Request, status
 import ipaddress
+import os
 from typing import Optional
 
 from .settings import settings
@@ -52,6 +53,18 @@ def _trusted_nets():
 _TRUSTED_NETS = _trusted_nets()
 
 
+def _lan_guest_hosts():
+    hosts = []
+    for entry in (os.getenv("LAN_GUEST_HOSTS") or "localhost,127.0.0.1").split(","):
+        entry = entry.strip().lower()
+        if entry:
+            hosts.append(entry)
+    return hosts
+
+
+_LAN_GUEST_HOSTS = _lan_guest_hosts()
+
+
 def _is_from_trusted(ip_str: str) -> bool:
     try:
         ip_obj = ipaddress.ip_address(ip_str)
@@ -81,6 +94,20 @@ def _ip_from_request(request: Request) -> str:
             if first:
                 return first
     return peer
+
+
+def _is_cloudflare_request(request: Request) -> bool:
+    hdr = request.headers
+    if hdr.get("x-whiskey-via", "").lower() == "cloudflare":
+        return True
+    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-connecting-ip", "cf-ew-via"))
+
+
+def _host_allows_lan(host: str) -> bool:
+    if not host:
+        return False
+    host_only = host.split(":", 1)[0].lower()
+    return any(host_only == allowed or host_only.endswith(f".{allowed.lstrip('.')}") for allowed in _LAN_GUEST_HOSTS)
 
 
 def _is_private_ip(s: str) -> bool:
@@ -115,6 +142,8 @@ async def get_current_user_role(request: Request):
     - 'anonymous' otherwise.
     """
     ip = _ip_from_request(request)
+    via_cloudflare = _is_cloudflare_request(request)
+    request_host = request.headers.get("x-whiskey-host") or request.headers.get("host") or ""
 
     # Parse JWT from cookie (auth)
     cookies = request.cookies or {}
@@ -139,7 +168,7 @@ async def get_current_user_role(request: Request):
     allow_lan_guest = _to_bool(settings.ALLOW_LAN_GUEST)
     lan_guest = False
     if role in ("anonymous",):
-        if allow_lan_guest and _is_private_ip(ip):
+        if allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
             role = "guest"
             lan_guest = True
 
@@ -149,6 +178,8 @@ async def get_current_user_role(request: Request):
         "email": email,
         "lan_guest": lan_guest,
         "ip": ip,
+        "via_cloudflare": via_cloudflare,
+        "host": request_host,
     }
 
 

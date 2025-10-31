@@ -16,8 +16,15 @@ RUN pip install --no-cache-dir --upgrade pip \
 # Copy app code
 COPY app ./app
 
+# Ensure static dir exists even if empty in source
+RUN mkdir -p /app/static
+
+# Prepare runtime directories
+RUN mkdir -p /app/static/uploads
+
 # Non-root user (optional)
-RUN useradd -m -u 1000 appuser
+RUN useradd -m -u 1000 appuser \
+ && chown -R appuser:appuser /app
 USER 1000
 
 EXPOSE 8000

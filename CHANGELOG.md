@@ -1,4 +1,19 @@
 
+## [1.4.0] - 2025-10-30
+
+### Changed
+- API service now builds a slim image with dependencies baked in, so container restarts skip privileged `pip install` runs and avoid root warnings (`docker-compose.yml`, `api/Dockerfile`, `README.md`, `SECURITY.md`).
+- Web and backup services now run from their prebuilt images, moving `npm ci`/Restic installs into Docker build layers and eliminating source bind mounts in production (`docker-compose.yml`, `web/Dockerfile`, `ops/backup/Dockerfile`, `ops/backup/entrypoint.sh`, `README.md`, `SECURITY.md`).
+- HTTPS detection now recognises Cloudflare Tunnel headers so auth cookies stay secure when the tunnel terminates TLS, and documentation covers using the new `COOKIE_SECURE=auto` default with remote or local deployments (`api/app/routers/auth.py`, `.env.example`, `README.md`, `SECURITY.md`).
+- Installed Bash in the web runtime image and reverted the compose command to use it, ensuring the logging wrapper runs without syntax errors (`web/Dockerfile`, `docker-compose.yml`, `README.md`, `SECURITY.md`).
+- Cloudflare tunnel requests are now excluded from LAN-guest privileges so remote visitors must authenticate even when `ALLOW_LAN_GUEST=true`; configure `LAN_GUEST_HOSTS` to define which hostnames keep guest access (`api/app/deps.py`, `web/src/app/api/[...all]/route.ts`, `.env.example`, `README.md`, `SECURITY.md`).
+- Web image builds now receive `NEXT_PUBLIC_API_BASE`/`NEXT_BACKEND_ORIGIN` build args so client fetches target the proxy instead of `http://localhost:8000` in production (`web/Dockerfile`, `docker-compose.yml`, `.env.example`, `README.md`, `SECURITY.md`).
+
+### Removed
+- Deleted unused maintenance, LAN helper, and size-limit middleware modules plus legacy auth context, cookie jar, TypeScript build cache, and accidental `__pycache__` artifacts to keep the tree lean (`api/app/maintenance.py`, `api/app/lan.py`, `api/app/middleware/size_limit.py`, `api/cookies.txt`, `web/src/auth/AuthContext.jsx`, `web/tsconfig.tsbuildinfo`, `api/app/routers/__pycache__/*`).
+
+---
+
 ## [1.3.6] - 2025-10-30
 
 ### Fixed

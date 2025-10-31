@@ -1,28 +1,25 @@
 services:
   web:
-    image: node:20
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-/api}
+        NEXT_BACKEND_ORIGIN: ${NEXT_BACKEND_ORIGIN:-http://api:8000}
+    image: whiskey-db-web:dev
     working_dir: /app
     command:
       - /bin/bash
       - /logging/with-logging.sh
       - web
       - --
-      - bash
-      - -lc
-      - >-
-        echo "Running elevated privileges required for install (npm ci)" &&
-        npm ci --prefer-offline &&
-        npm run build &&
-        chown -R ${PUID:-1000}:${PGID:-1000} /app/node_modules /app/.next /npm-cache || true &&
-        exec npm start
+      - npm
+      - run
+      - start
     volumes:
-      - ./web:/app
-      - web_npm_cache:/npm-cache
       - ./ops/logging:/logging:ro
       - ./logs:/logs
     env_file: .env
     environment:
-      NPM_CONFIG_CACHE: /npm-cache
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
     ports:
@@ -34,7 +31,9 @@ services:
     stop_grace_period: 10s
 
   api:
-    image: python:3.12
+    build:
+      context: ./api
+    image: whiskey-db-api:dev
     working_dir: /app
     command:
       - /bin/bash
@@ -44,20 +43,14 @@ services:
       - bash
       - -lc
       - >-
-        echo "Running elevated privileges required for install (pip install)" &&
-        pip install --cache-dir /pip-cache -r requirements.txt &&
-        chown -R ${PUID:-1000}:${PGID:-1000} /pip-cache || true &&
         exec uvicorn app.main:app --host ${API_HOST:-0.0.0.0} --port ${API_PORT:-8000} --log-level ${API_LOG_LEVEL:-info}
     volumes:
-      - ./api:/app
       - ./data:/data
       - ./api/static:/app/static
-      - api_pip_cache:/pip-cache
       - ./ops/logging:/logging:ro
       - ./logs:/logs
     env_file: .env
     environment:
-      PIP_CACHE_DIR: /pip-cache
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/whiskey.db}
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -71,6 +64,7 @@ services:
     build:
       context: ./ops/backup
       dockerfile: Dockerfile
+    image: whiskey-db-backup:dev
     container_name: whiskey-backup
     #profiles: ["backup"]
     working_dir: /app
@@ -105,7 +99,6 @@ services:
     stop_signal: SIGTERM       # send TERM first (entrypoint trap handles it)
     stop_grace_period: 60s     # allow time to end restic/crond/tail cleanly
     volumes:
-      - ./ops/backup:/app
       - ./data:/data:ro
       - ./dev-docs:/extra/dev-docs:ro
       - ./docker-compose.yml:/config/docker-compose.yml:ro
@@ -124,6 +117,3 @@ services:
       - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}
 
 #Local Cache Volumes - comment out if you want to use fresh installs every time
-volumes:
-  web_npm_cache:
-  api_pip_cache:
