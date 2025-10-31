@@ -33,7 +33,7 @@ This project is designed for **self-hosting**. To reduce your attack surface:
 - Expose only the **web frontend (Next.js)** to your LAN/WAN.  
   The FastAPI backend should remain internal to the Docker network.
 - Build the API container image with the included `api/Dockerfile` so dependencies are installed during the image build and the runtime process runs as the non-root `appuser` (avoids repeated privileged `pip install` runs on each boot).
-- Build the web container from `web/Dockerfile` so Next.js dependencies are preinstalled and the runtime executes as the non-root `node` user; the backup image likewise carries its Restic tooling at build time so production jobs do not run package managers as root. Remember Alpine images ship `/bin/sh` only—update compose commands accordingly if you customise entrypoints.
+- Build the web container from `web/Dockerfile` so Next.js dependencies are preinstalled and the runtime executes as the non-root `node` user; the backup image likewise carries its Restic tooling at build time so production jobs do not run package managers as root. The runtime image now installs Bash so compose commands can safely invoke the shared logging wrapper.
 - When exposing the app globally, terminate TLS upstream (e.g., Cloudflare Tunnel) and retain `COOKIE_SECURE=auto`; consider Cloudflare Access or another identity-aware proxy on `/admin` while keeping LAN-only installs on plain HTTP when desired.
 - Use strong, unique secrets in your `.env` file.
 - Never commit your real `.env` or SQLite database files to version control.

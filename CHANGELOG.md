@@ -5,7 +5,7 @@
 - API service now builds a slim image with dependencies baked in, so container restarts skip privileged `pip install` runs and avoid root warnings (`docker-compose.yml`, `api/Dockerfile`, `README.md`, `SECURITY.md`).
 - Web and backup services now run from their prebuilt images, moving `npm ci`/Restic installs into Docker build layers and eliminating source bind mounts in production (`docker-compose.yml`, `web/Dockerfile`, `ops/backup/Dockerfile`, `ops/backup/entrypoint.sh`, `README.md`, `SECURITY.md`).
 - HTTPS detection now recognises Cloudflare Tunnel headers so auth cookies stay secure when the tunnel terminates TLS, and documentation covers using the new `COOKIE_SECURE=auto` default with remote or local deployments (`api/app/routers/auth.py`, `.env.example`, `README.md`, `SECURITY.md`).
-- Fixed the web container startup command to use `/bin/sh` (Alpine images lack Bash), restoring logging and availability after switching to prebuilt images (`docker-compose.yml`, `README.md`, `SECURITY.md`).
+- Installed Bash in the web runtime image and reverted the compose command to use it, ensuring the logging wrapper runs without syntax errors (`web/Dockerfile`, `docker-compose.yml`, `README.md`, `SECURITY.md`).
 
 ### Removed
 - Deleted unused maintenance, LAN helper, and size-limit middleware modules plus legacy auth context, cookie jar, TypeScript build cache, and accidental `__pycache__` artifacts to keep the tree lean (`api/app/maintenance.py`, `api/app/lan.py`, `api/app/middleware/size_limit.py`, `api/cookies.txt`, `web/src/auth/AuthContext.jsx`, `web/tsconfig.tsbuildinfo`, `api/app/routers/__pycache__/*`).
