@@ -105,7 +105,10 @@ def _is_cloudflare_request(request: Request) -> bool:
     hdr = request.headers
     if hdr.get("x-whiskey-via", "").lower() == "cloudflare":
         return True
-    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-connecting-ip", "cf-ew-via"))
+    cf_ip = hdr.get("cf-connecting-ip")
+    if cf_ip and not _is_private_ip(cf_ip.split(",", 1)[0].strip()):
+        return True
+    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-ew-via"))
 
 
 def _host_allows_lan(host: str) -> bool:
