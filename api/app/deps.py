@@ -53,9 +53,13 @@ def _trusted_nets():
 _TRUSTED_NETS = _trusted_nets()
 
 
+_LAN_GUEST_HOSTS_RAW = os.getenv("LAN_GUEST_HOSTS")
+
+
 def _lan_guest_hosts():
+    default_hosts = "localhost,127.0.0.1"
     hosts = []
-    for entry in (os.getenv("LAN_GUEST_HOSTS") or "localhost,127.0.0.1").split(","):
+    for entry in (_LAN_GUEST_HOSTS_RAW or default_hosts).split(","):
         entry = entry.strip().lower()
         if entry:
             hosts.append(entry)
@@ -63,6 +67,7 @@ def _lan_guest_hosts():
 
 
 _LAN_GUEST_HOSTS = _lan_guest_hosts()
+_LAN_GUEST_HOSTS_IS_DEFAULT = _LAN_GUEST_HOSTS_RAW is None
 
 
 def _is_from_trusted(ip_str: str) -> bool:
@@ -106,7 +111,12 @@ def _is_cloudflare_request(request: Request) -> bool:
 def _host_allows_lan(host: str) -> bool:
     if not host:
         return False
-    host_only = host.split(":", 1)[0].lower()
+    host_only = host.split(":", 1)[0].lower().strip("[]")
+    if _LAN_GUEST_HOSTS_IS_DEFAULT:
+        return True
+    # When custom hosts are configured, still allow literal private/loopback IPs.
+    if _is_private_ip(host_only):
+        return True
     return any(host_only == allowed or host_only.endswith(f".{allowed.lstrip('.')}") for allowed in _LAN_GUEST_HOSTS)
 
 
