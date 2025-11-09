@@ -189,7 +189,8 @@ async def get_current_user_role(request: Request):
     """
     ip = _ip_from_request(request)
     via_cloudflare = _is_cloudflare_request(request)
-    request_host = request.headers.get("x-whiskey-host") or request.headers.get("host") or ""
+    forwarded_host = request.headers.get("x-whiskey-host")
+    request_host = forwarded_host or request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
 
     # Parse JWT from cookie (auth)
     cookies = request.cookies or {}
@@ -224,7 +225,7 @@ async def get_current_user_role(request: Request):
             decision_reason = "ip_not_private"
         elif via_cloudflare:
             decision_reason = "cloudflare_forced_auth"
-        elif not _host_allows_lan(request_host):
+        elif forwarded_host and not _host_allows_lan(request_host):
             decision_reason = "host_not_allowed"
         elif allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
             role = "guest"
