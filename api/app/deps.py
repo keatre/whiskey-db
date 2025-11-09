@@ -12,7 +12,7 @@ from .security import decode_token
 
 # --- module instrumentation -------------------------------------------------
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("uvicorn.error")
 
 _LAN_DECISION_METRICS: Counter = Counter()
 _LAN_DECISION_LOCK = Lock()
@@ -23,6 +23,7 @@ _LOGGABLE_REASONS = {
     "host_not_allowed",
     "lan_guest_granted",
 }
+LAN_DECISION_HEADER = "X-Whiskey-Lan-Decision"
 
 
 def _record_lan_guest_metric(reason: str) -> None:
@@ -254,6 +255,7 @@ async def get_current_user_role(request: Request):
         "ip": ip,
         "via_cloudflare": via_cloudflare,
         "host": request_host,
+        "decision_reason": decision_reason,
     }
 
 
@@ -276,4 +278,8 @@ async def require_view_access(user=Depends(get_current_user_role)):
         return user
     if user["role"] == "guest" and _to_bool(settings.ALLOW_LAN_GUEST):
         return user
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required")
+    headers = None
+    decision = user.get("decision_reason")
+    if decision:
+        headers = {LAN_DECISION_HEADER: decision}
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required", headers=headers)

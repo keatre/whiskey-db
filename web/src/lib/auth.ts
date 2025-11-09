@@ -9,6 +9,7 @@ export type MeResponse = {
   role: 'guest' | 'admin' | string;
   authenticated: boolean;
   lan_guest: boolean;
+  lan_guest_reason?: string | null;
 };
 
 async function parseJsonSafe(res: Response) {
@@ -42,6 +43,7 @@ export async function login(username: string, password: string): Promise<MeRespo
       role: 'admin',
       authenticated: true,
       lan_guest: false,
+      lan_guest_reason: null,
     }
   );
 }
@@ -53,11 +55,11 @@ export async function me(): Promise<MeResponse> {
   });
 
   if (!res.ok) {
-    return { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false };
+    return { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false, lan_guest_reason: null };
   }
   const data = (await parseJsonSafe(res)) as MeResponse | null;
   return (
-    data ?? { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false }
+    data ?? { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false, lan_guest_reason: null }
   );
 }
 
@@ -68,11 +70,11 @@ export async function refresh(): Promise<MeResponse> {
     cache: 'no-store',
   });
   if (!res.ok) {
-    return { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false };
+    return { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false, lan_guest_reason: null };
   }
   const data = (await parseJsonSafe(res)) as MeResponse | null;
   return (
-    data ?? { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false }
+    data ?? { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false, lan_guest_reason: null }
   );
 }
 

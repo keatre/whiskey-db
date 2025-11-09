@@ -61,6 +61,7 @@ Access:
   print(lan_guest_metrics_snapshot())
   PY
   ```
+- 401 responses now include `X-Whiskey-Lan-Decision` and `/auth/me` exposes a `lan_guest_reason` field so you can see exactly why a browser was treated as “remote” (e.g., `host_not_allowed`, `cloudflare_forced_auth`).
 - When building the web image, the compose file now forwards `NEXT_PUBLIC_API_BASE` and `NEXT_BACKEND_ORIGIN` build args so client-side fetches will target the proxy (`/api`). Update those values in `.env` before running `docker compose build web` if your deployment uses different URLs.
 
 ### 📚Usage
