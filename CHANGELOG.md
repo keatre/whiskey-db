@@ -1,3 +1,10 @@
+## [1.4.1] - 2025-11-09
+
+### Added
+- LAN guest decision instrumentation now records an INFO log (`lan_guest_decision`), stamps `X-Whiskey-Lan-Decision` on 401s, surfaces `lan_guest_reason` from `/auth/me`, and exposes in-memory counters so you can see exactly why a request was granted or denied guest access; documentation explains how to tail the logs and dump the counters (`api/app/deps.py`, `api/app/auth_schemas.py`, `api/app/routers/auth.py`, `README.md`, `SECURITY.md`, `web/src/**/*auth*`).
+
+---
+
 
 ## [1.4.0] - 2025-10-30
 

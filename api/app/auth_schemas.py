@@ -14,3 +14,4 @@ class MeResponse(BaseModel):
     role: str
     authenticated: bool
     lan_guest: bool
+    lan_guest_reason: Optional[str] = None

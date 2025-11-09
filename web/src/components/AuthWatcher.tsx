@@ -11,6 +11,7 @@ type Me = {
   role: 'guest' | 'admin';
   authenticated: boolean;
   lan_guest: boolean;
+  lan_guest_reason?: string | null;
 };
 
 export default function AuthWatcher() {
@@ -42,7 +43,7 @@ export default function AuthWatcher() {
     } catch {
       // ignore, we'll treat as guest
     }
-    const guest: Me = { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false };
+    const guest: Me = { username: null, email: null, role: 'guest', authenticated: false, lan_guest: false, lan_guest_reason: null };
     setMe(guest);
     return false;
   };

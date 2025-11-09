@@ -5,6 +5,7 @@ export type MeResponse = {
   role: string;
   authenticated: boolean;
   lan_guest: boolean;
+  lan_guest_reason?: string | null;
 };
 
 const BROWSER_BASE =
@@ -23,6 +24,7 @@ export async function me(): Promise<MeResponse> {
       role: "guest",
       authenticated: false,
       lan_guest: false,
+      lan_guest_reason: null,
     };
   }
   return res.json() as Promise<MeResponse>;

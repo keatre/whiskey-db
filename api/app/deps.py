@@ -1,10 +1,43 @@
 from fastapi import Depends, HTTPException, Request, status
 import ipaddress
+import logging
 import os
+from collections import Counter
+from threading import Lock
 from typing import Optional
 
 from .settings import settings
 from .security import decode_token
+
+
+# --- module instrumentation -------------------------------------------------
+
+logger = logging.getLogger("uvicorn.error")
+
+_LAN_DECISION_METRICS: Counter = Counter()
+_LAN_DECISION_LOCK = Lock()
+_LOGGABLE_REASONS = {
+    "lan_guest_disabled",
+    "ip_not_private",
+    "cloudflare_forced_auth",
+    "host_not_allowed",
+    "lan_guest_granted",
+}
+LAN_DECISION_HEADER = "X-Whiskey-Lan-Decision"
+
+
+def _record_lan_guest_metric(reason: str) -> None:
+    with _LAN_DECISION_LOCK:
+        _LAN_DECISION_METRICS[reason] += 1
+
+
+def lan_guest_metrics_snapshot() -> dict[str, int]:
+    """
+    Shallow copy of the LAN guest decision counters.
+    Useful when attaching to a running container for troubleshooting.
+    """
+    with _LAN_DECISION_LOCK:
+        return dict(_LAN_DECISION_METRICS)
 
 
 # --- helpers ---------------------------------------------------------------
@@ -53,9 +86,13 @@ def _trusted_nets():
 _TRUSTED_NETS = _trusted_nets()
 
 
+_LAN_GUEST_HOSTS_RAW = os.getenv("LAN_GUEST_HOSTS")
+
+
 def _lan_guest_hosts():
+    default_hosts = "localhost,127.0.0.1"
     hosts = []
-    for entry in (os.getenv("LAN_GUEST_HOSTS") or "localhost,127.0.0.1").split(","):
+    for entry in (_LAN_GUEST_HOSTS_RAW or default_hosts).split(","):
         entry = entry.strip().lower()
         if entry:
             hosts.append(entry)
@@ -63,6 +100,7 @@ def _lan_guest_hosts():
 
 
 _LAN_GUEST_HOSTS = _lan_guest_hosts()
+_LAN_GUEST_HOSTS_IS_DEFAULT = _LAN_GUEST_HOSTS_RAW is None
 
 
 def _is_from_trusted(ip_str: str) -> bool:
@@ -100,13 +138,21 @@ def _is_cloudflare_request(request: Request) -> bool:
     hdr = request.headers
     if hdr.get("x-whiskey-via", "").lower() == "cloudflare":
         return True
-    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-connecting-ip", "cf-ew-via"))
+    cf_ip = hdr.get("cf-connecting-ip")
+    if cf_ip and not _is_private_ip(cf_ip.split(",", 1)[0].strip()):
+        return True
+    return any(hdr.get(name) for name in ("cf-ray", "cf-visitor", "cf-ew-via"))
 
 
 def _host_allows_lan(host: str) -> bool:
     if not host:
         return False
-    host_only = host.split(":", 1)[0].lower()
+    host_only = host.split(":", 1)[0].lower().strip("[]")
+    if _LAN_GUEST_HOSTS_IS_DEFAULT:
+        return True
+    # When custom hosts are configured, still allow literal private/loopback IPs.
+    if _is_private_ip(host_only):
+        return True
     return any(host_only == allowed or host_only.endswith(f".{allowed.lstrip('.')}") for allowed in _LAN_GUEST_HOSTS)
 
 
@@ -143,7 +189,8 @@ async def get_current_user_role(request: Request):
     """
     ip = _ip_from_request(request)
     via_cloudflare = _is_cloudflare_request(request)
-    request_host = request.headers.get("x-whiskey-host") or request.headers.get("host") or ""
+    forwarded_host = request.headers.get("x-whiskey-host")
+    request_host = forwarded_host or request.headers.get("x-forwarded-host") or request.headers.get("host") or ""
 
     # Parse JWT from cookie (auth)
     cookies = request.cookies or {}
@@ -153,6 +200,8 @@ async def get_current_user_role(request: Request):
     username: Optional[str] = None
     email: Optional[str] = None
 
+    decision_reason = "no_token"
+
     if token:
         try:
             payload = decode_token(token)
@@ -160,17 +209,44 @@ async def get_current_user_role(request: Request):
             role = payload.get("role") or "user"
             username = payload.get("sub") or payload.get("username")
             email = payload.get("email")
+            decision_reason = "authenticated_token"
         except Exception:
             # invalid token → treat as anonymous (do not grant guest unless LAN+flag)
             role = "anonymous"
+            decision_reason = "token_invalid"
 
     # LAN guest allowance (only if unauthenticated)
     allow_lan_guest = _to_bool(settings.ALLOW_LAN_GUEST)
     lan_guest = False
     if role in ("anonymous",):
-        if allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
+        if not allow_lan_guest:
+            decision_reason = "lan_guest_disabled"
+        elif not _is_private_ip(ip):
+            decision_reason = "ip_not_private"
+        elif via_cloudflare:
+            decision_reason = "cloudflare_forced_auth"
+        elif forwarded_host and not _host_allows_lan(request_host):
+            decision_reason = "host_not_allowed"
+        elif allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
             role = "guest"
             lan_guest = True
+            decision_reason = "lan_guest_granted"
+        else:
+            decision_reason = "anonymous"
+
+    _record_lan_guest_metric(decision_reason)
+    if decision_reason in _LOGGABLE_REASONS:
+        logger.info(
+            "lan_guest_decision reason=%s role=%s lan_guest=%s ip=%s host=%s via_cloudflare=%s allow_lan_flag=%s token_present=%s",
+            decision_reason,
+            role,
+            lan_guest,
+            ip,
+            request_host or "<empty>",
+            via_cloudflare,
+            allow_lan_guest,
+            bool(token),
+        )
 
     return {
         "role": role,
@@ -180,6 +256,7 @@ async def get_current_user_role(request: Request):
         "ip": ip,
         "via_cloudflare": via_cloudflare,
         "host": request_host,
+        "decision_reason": decision_reason,
     }
 
 
@@ -202,4 +279,8 @@ async def require_view_access(user=Depends(get_current_user_role)):
         return user
     if user["role"] == "guest" and _to_bool(settings.ALLOW_LAN_GUEST):
         return user
-    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required")
+    headers = None
+    decision = user.get("decision_reason")
+    if decision:
+        headers = {LAN_DECISION_HEADER: decision}
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required", headers=headers)

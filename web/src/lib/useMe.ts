@@ -10,6 +10,7 @@ export type Me = {
   role: 'guest' | 'admin' | string;
   authenticated: boolean;
   lan_guest: boolean;
+  lan_guest_reason: string | null;
 };
 
 export const GUEST: Me = {
@@ -18,6 +19,7 @@ export const GUEST: Me = {
   role: 'guest',
   authenticated: false,
   lan_guest: false,
+  lan_guest_reason: null,
 };
 
 // Single global SWR key for the current user
@@ -31,6 +33,7 @@ function normalize(resp: MeResponse | null | undefined): Me {
     role: (resp.role ?? 'guest') as Me['role'],
     authenticated: !!resp.authenticated,
     lan_guest: !!resp.lan_guest,
+    lan_guest_reason: resp.lan_guest_reason ?? null,
   };
 }
 

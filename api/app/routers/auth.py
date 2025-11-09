@@ -226,6 +226,7 @@ def login(
         role=user.role,
         authenticated=True,            # logged in -> authenticated
         lan_guest=False,
+        lan_guest_reason=None,
     )
 
 
@@ -247,6 +248,7 @@ def me(user=Depends(get_current_user_role)):
         role=user["role"],
         authenticated=is_auth,
         lan_guest=user["lan_guest"],
+        lan_guest_reason=user.get("decision_reason"),
     )
 
 
@@ -281,4 +283,5 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
         role=role,
         authenticated=True,            # still authenticated
         lan_guest=False,
+        lan_guest_reason=None,
     )

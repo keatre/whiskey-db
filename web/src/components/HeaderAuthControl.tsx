@@ -14,6 +14,7 @@ const GUEST: Me = {
   role: 'guest',
   authenticated: false,
   lan_guest: false,
+  lan_guest_reason: null,
 };
 
 export default function HeaderAuthControl() {
