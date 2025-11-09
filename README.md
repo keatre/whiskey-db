@@ -53,6 +53,14 @@ Access:
 - Requests that pass through Cloudflare no longer qualify for LAN-guest viewing; they now require authentication even if `ALLOW_LAN_GUEST=true`, while direct LAN access keeps the guest experience.
 - The proxy route adds `x-whiskey-via=cloudflare` when Cloudflare headers are present so the API can enforce the remote-only auth path; no extra configuration is required.
 - Configure `LAN_GUEST_HOSTS` (comma-separated hostnames) to list the origins that should keep LAN guest access; leave the defaults for localhost-only development or add your LAN hostname/IP as needed.
+- FastAPI now emits a `lan_guest_decision` log (INFO) whenever LAN guest access is granted or denied, including the host/IP/reason. Tail `docker compose logs -f api | grep lan_guest_decision` while testing, or snapshot counters with:
+
+  ```bash
+  docker compose exec api python - <<'PY'
+  from app.deps import lan_guest_metrics_snapshot
+  print(lan_guest_metrics_snapshot())
+  PY
+  ```
 - When building the web image, the compose file now forwards `NEXT_PUBLIC_API_BASE` and `NEXT_BACKEND_ORIGIN` build args so client-side fetches will target the proxy (`/api`). Update those values in `.env` before running `docker compose build web` if your deployment uses different URLs.
 
 ### 📚Usage

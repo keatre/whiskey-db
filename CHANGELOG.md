@@ -1,3 +1,10 @@
+## [Unreleased]
+
+### Added
+- LAN guest decision instrumentation now records an INFO log (`lan_guest_decision`) plus in-memory counters so you can see why a request was granted or denied guest access; documentation explains how to tail the logs and dump the counters (`api/app/deps.py`, `README.md`, `SECURITY.md`).
+
+---
+
 
 ## [1.4.0] - 2025-10-30
 

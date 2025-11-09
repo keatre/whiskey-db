@@ -1,10 +1,42 @@
 from fastapi import Depends, HTTPException, Request, status
 import ipaddress
+import logging
 import os
+from collections import Counter
+from threading import Lock
 from typing import Optional
 
 from .settings import settings
 from .security import decode_token
+
+
+# --- module instrumentation -------------------------------------------------
+
+logger = logging.getLogger(__name__)
+
+_LAN_DECISION_METRICS: Counter = Counter()
+_LAN_DECISION_LOCK = Lock()
+_LOGGABLE_REASONS = {
+    "lan_guest_disabled",
+    "ip_not_private",
+    "cloudflare_forced_auth",
+    "host_not_allowed",
+    "lan_guest_granted",
+}
+
+
+def _record_lan_guest_metric(reason: str) -> None:
+    with _LAN_DECISION_LOCK:
+        _LAN_DECISION_METRICS[reason] += 1
+
+
+def lan_guest_metrics_snapshot() -> dict[str, int]:
+    """
+    Shallow copy of the LAN guest decision counters.
+    Useful when attaching to a running container for troubleshooting.
+    """
+    with _LAN_DECISION_LOCK:
+        return dict(_LAN_DECISION_METRICS)
 
 
 # --- helpers ---------------------------------------------------------------
@@ -166,6 +198,8 @@ async def get_current_user_role(request: Request):
     username: Optional[str] = None
     email: Optional[str] = None
 
+    decision_reason = "no_token"
+
     if token:
         try:
             payload = decode_token(token)
@@ -173,17 +207,44 @@ async def get_current_user_role(request: Request):
             role = payload.get("role") or "user"
             username = payload.get("sub") or payload.get("username")
             email = payload.get("email")
+            decision_reason = "authenticated_token"
         except Exception:
             # invalid token → treat as anonymous (do not grant guest unless LAN+flag)
             role = "anonymous"
+            decision_reason = "token_invalid"
 
     # LAN guest allowance (only if unauthenticated)
     allow_lan_guest = _to_bool(settings.ALLOW_LAN_GUEST)
     lan_guest = False
     if role in ("anonymous",):
-        if allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
+        if not allow_lan_guest:
+            decision_reason = "lan_guest_disabled"
+        elif not _is_private_ip(ip):
+            decision_reason = "ip_not_private"
+        elif via_cloudflare:
+            decision_reason = "cloudflare_forced_auth"
+        elif not _host_allows_lan(request_host):
+            decision_reason = "host_not_allowed"
+        elif allow_lan_guest and _is_private_ip(ip) and not via_cloudflare and _host_allows_lan(request_host):
             role = "guest"
             lan_guest = True
+            decision_reason = "lan_guest_granted"
+        else:
+            decision_reason = "anonymous"
+
+    _record_lan_guest_metric(decision_reason)
+    if decision_reason in _LOGGABLE_REASONS:
+        logger.info(
+            "lan_guest_decision reason=%s role=%s lan_guest=%s ip=%s host=%s via_cloudflare=%s allow_lan_flag=%s token_present=%s",
+            decision_reason,
+            role,
+            lan_guest,
+            ip,
+            request_host or "<empty>",
+            via_cloudflare,
+            allow_lan_guest,
+            bool(token),
+        )
 
     return {
         "role": role,
