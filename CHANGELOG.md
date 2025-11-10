@@ -1,3 +1,11 @@
+## [Unreleased]
+
+### Changed
+- Replaced the multi-container stack with a single `whiskey` image that runs the Next.js frontend, FastAPI API, and Restic backup scheduler under one entrypoint so downstream installs only add one service to their compose files; the new root `Dockerfile`, runtime supervisor, updated backup entrypoint, compose definition, and helper scripts/documentation all reflect the unified build (`Dockerfile`, `.dockerignore`, `docker-compose.yml`, `ops/runtime/start-services.sh`, `ops/backup/entrypoint.sh`, `.env.example`, `scripts/db-normalize-image-urls.sh`, `api/app/bootstrap_admin.py`, `README.md`, `SECURITY.md`).
+
+---
+
+
 ## [1.4.3] - 2025-11-09
 
 ### Added

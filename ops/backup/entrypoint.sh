@@ -1,6 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+BACKUP_SCRIPT=${BACKUP_SCRIPT:-"$SCRIPT_DIR/backup.sh"}
+if [ ! -x "$BACKUP_SCRIPT" ]; then
+  echo "[backup] ERROR: backup script missing at $BACKUP_SCRIPT."
+  exit 1
+fi
+
 # --- Config with sane defaults ---
 : "${BACKUP_ENCRYPTED:=true}"
 BACKUP_ENCRYPTED=$(printf %s "$BACKUP_ENCRYPTED" | tr '[:upper:]' '[:lower:]')
@@ -72,7 +79,7 @@ if [ "$BACKUP_ENCRYPTED" = "true" ] && ! command -v restic >/dev/null 2>&1; then
 fi
 
 # Ensure scripts are executable
-chmod +x /app/*.sh 2>/dev/null || true
+chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
 
 if [ "$BACKUP_ENABLED" != "true" ]; then
   echo "[backup] BACKUP_ENABLED=false → container idle." | tee -a "$LOG_FILE"
@@ -110,8 +117,8 @@ fi
 
 # Install crontab: run backup.sh via /bin/sh; log to file with timestamps
 # (busybox crond uses /etc/crontabs/root)
-echo "${BACKUP_CRON} /bin/sh /app/backup.sh >> ${LOG_FILE} 2>&1" > /etc/crontabs/root
-echo "[backup] Cron installed: ${BACKUP_CRON} /app/backup.sh"
+echo "${BACKUP_CRON} /bin/sh ${BACKUP_SCRIPT} >> ${LOG_FILE} 2>&1" > /etc/crontabs/root
+echo "[backup] Cron installed: ${BACKUP_CRON} ${BACKUP_SCRIPT}"
 
 # --- Signal-aware cleanup (PID 1) ---
 cleanup() {
@@ -143,7 +150,7 @@ trap cleanup INT TERM
 if [ "${BACKUP_ON_START}" = "true" ]; then
   echo "[backup] Running first backup now..."
   # Run in background so trap can terminate it if needed
-  timeout "${BACKUP_TIMEOUT}" /bin/sh /app/backup.sh >> "${LOG_FILE}" 2>&1 &
+  timeout "${BACKUP_TIMEOUT}" /bin/sh "${BACKUP_SCRIPT}" >> "${LOG_FILE}" 2>&1 &
   BACKUP_PID=$!
   wait "${BACKUP_PID}" 2>/dev/null || true
   BACKUP_PID=""
