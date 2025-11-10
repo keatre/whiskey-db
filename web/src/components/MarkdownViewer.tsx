@@ -53,10 +53,26 @@ export default function MarkdownViewer({ children, className }: Props) {
           ul: (props) => <ul style={{ paddingLeft: '1.1rem', margin: '6px 0' }} {...props} />,
           ol: (props) => <ol style={{ paddingLeft: '1.2rem', margin: '6px 0' }} {...props} />,
           p:  (props) => <p style={{ margin: '6px 0' }} {...props} />,
-          h1: (props) => <h1 style={{ margin: '10px 0 6px' }} {...props} />,
-          h2: (props) => <h2 style={{ margin: '10px 0 6px' }} {...props} />,
-          h3: (props) => <h3 style={{ margin: '10px 0 6px' }} {...props} />,
-          a:  (props) => <a style={{ textDecoration: 'underline' }} {...props} />,
+          h1: ({ children, ...rest }) => (
+            <h1 style={{ margin: '10px 0 6px' }} {...rest}>
+              {children}
+            </h1>
+          ),
+          h2: ({ children, ...rest }) => (
+            <h2 style={{ margin: '10px 0 6px' }} {...rest}>
+              {children}
+            </h2>
+          ),
+          h3: ({ children, ...rest }) => (
+            <h3 style={{ margin: '10px 0 6px' }} {...rest}>
+              {children}
+            </h3>
+          ),
+          a: ({ children, ...rest }) => (
+            <a style={{ textDecoration: 'underline' }} {...rest}>
+              {children && React.Children.count(children) > 0 ? children : rest['aria-label'] || rest.href || 'link'}
+            </a>
+          ),
           code: (props) => (
             <code
               style={{

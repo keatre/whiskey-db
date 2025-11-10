@@ -227,7 +227,7 @@ export default function SessionKeepAlive() {
       );
       document.removeEventListener('visibilitychange', onVisibility);
     };
-  }, [me.authenticated, runRefresh]);
+  }, [me.authenticated, runRefresh, expired, handleSessionExpired]);
 
   useEffect(() => {
     if (!me.authenticated) {

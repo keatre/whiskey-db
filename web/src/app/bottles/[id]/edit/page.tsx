@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
@@ -405,7 +406,14 @@ export default function EditBottlePage() {
               {uploading && <div>Uploading…</div>}
               {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
               {previewUrl && (
-                <img src={previewUrl} alt="preview" style={{ maxWidth: 360, borderRadius: 8 }} />
+                <Image
+                  src={previewUrl}
+                  alt="Bottle preview"
+                  width={360}
+                  height={360}
+                  style={{ maxWidth: 360, borderRadius: 8, height: 'auto' }}
+                  unoptimized
+                />
               )}
             </div>
           </div>
