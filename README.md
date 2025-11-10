@@ -156,7 +156,6 @@ All core processes stream through a shared log sink that writes to `LOG_FILE_PAT
 | --- | --- | --- |
 | `UPLOAD_MAX_MB` | Maximum image upload size (MB). | `100` |
 | `UPLOAD_DIR` | Directory where uploaded assets are stored. | `/data/uploads` |
-| `IMAGE_URL_MIGRATE_ON_START` | Run legacy URL normalization on startup when true. | `true` |
 
 ### Logging & Runtime User
 

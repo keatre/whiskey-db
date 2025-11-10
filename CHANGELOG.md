@@ -6,6 +6,7 @@
 ### Fixed
 - Unified entrypoint now rewrites legacy `API_BASE`/`NEXT_BACKEND_ORIGIN` values that still point to `http://api:8000` so single-container installs keep working even if `.env` wasn’t updated, preventing `getaddrinfo ENOTFOUND api` failures during proxying (`ops/runtime/start-services.sh`, `README.md`).
 - Added a safety alias (`api → 127.0.0.1`) inside the container’s `/etc/hosts` so even truly legacy builds that still reference `http://api:8000` continue to resolve to the bundled API service (`ops/runtime/start-services.sh`, `README.md`).
+- Deleted the unused `IMAGE_URL_MIGRATE_ON_START` env knob from `.env`/README so config no longer advertises a no-op flag.
 - Chrome now reports zero unlabeled/unnamed form controls: every admin/bottle/purchase/retailer form wires labels to inputs via the new `useFormFieldIds` helper, login fields ship explicit names/aria-labels, and docs explain how to keep future forms compliant (`web/src/lib/useFormFieldIds.ts`, `web/src/app/**/page.tsx`, `web/src/components/HeaderAuthControl.tsx`, `web/src/app/signin/_LoginClient.tsx`, `README.md`).
 
 ---
