@@ -152,6 +152,44 @@ export default function SessionKeepAlive() {
     return exec;
   }, [mutate]);
 
+  const handleSessionExpired = useCallback(() => {
+    if (expired) return;
+
+    setExpired(true);
+    setWarningSeconds(0);
+    lastActivityRef.current = Date.now();
+    lastRefreshRef.current = Date.now();
+
+    expireCookie(ACCESS_COOKIE_NAME);
+    expireCookie(REFRESH_COOKIE_NAME);
+    void apiLogout();
+
+    void mutate(ME_KEY, GUEST, { revalidate: false });
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('auth:changed'));
+      try {
+        localStorage.setItem('auth:changed', String(Date.now()));
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // Navigate back to landing page so user can sign in again easily.
+    try {
+      router.replace('/');
+    } catch {
+      /* ignore navigation failures */
+    }
+
+    setTimeout(() => {
+      try {
+        window.location.replace('/');
+      } catch {
+        /* ignore */
+      }
+    }, 500);
+  }, [expired, mutate, router]);
+
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     if (!me.authenticated) {
@@ -235,44 +273,6 @@ export default function SessionKeepAlive() {
       setExpired(false);
     }
   }, [me.authenticated]);
-
-  const handleSessionExpired = useCallback(() => {
-    if (expired) return;
-
-    setExpired(true);
-    setWarningSeconds(0);
-    lastActivityRef.current = Date.now();
-    lastRefreshRef.current = Date.now();
-
-    expireCookie(ACCESS_COOKIE_NAME);
-    expireCookie(REFRESH_COOKIE_NAME);
-    void apiLogout();
-
-    void mutate(ME_KEY, GUEST, { revalidate: false });
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new Event('auth:changed'));
-      try {
-        localStorage.setItem('auth:changed', String(Date.now()));
-      } catch {
-        /* ignore */
-      }
-    }
-
-    // Navigate back to landing page so user can sign in again easily.
-    try {
-      router.replace('/');
-    } catch {
-      /* ignore navigation failures */
-    }
-
-    setTimeout(() => {
-      try {
-        window.location.replace('/');
-      } catch {
-        /* ignore */
-      }
-    }, 500);
-  }, [expired, mutate, router]);
 
   const handleStaySignedIn = useCallback(() => {
     if (typeof window === 'undefined') return;

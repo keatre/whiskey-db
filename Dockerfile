@@ -7,15 +7,15 @@ ARG NEXT_PUBLIC_API_BASE=/api
 ARG NEXT_BACKEND_ORIGIN=http://127.0.0.1:8000
 ENV NEXT_PUBLIC_API_BASE=$NEXT_PUBLIC_API_BASE \
     NEXT_BACKEND_ORIGIN=$NEXT_BACKEND_ORIGIN \
-    NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1
 
 WORKDIR /src/web
 
 COPY web/package*.json ./
-RUN npm ci
+RUN npm ci --include=dev
 
 COPY web/ ./
+ENV NODE_ENV=production
 RUN npm run build
 
 ########################################
