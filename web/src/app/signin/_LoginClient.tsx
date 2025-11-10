@@ -38,6 +38,7 @@ export default function LoginClient() {
           name="username"
           type="text"
           autoComplete="username"
+          aria-label="Username"
           className="w-full mb-3 rounded px-3 py-2 text-black"
           placeholder="Username"
           value={username}
@@ -50,6 +51,7 @@ export default function LoginClient() {
           name="password"
           type="password"
           autoComplete="current-password"
+          aria-label="Password"
           className="w-full mb-3 rounded px-3 py-2 text-black"
           placeholder="Password"
           value={password}

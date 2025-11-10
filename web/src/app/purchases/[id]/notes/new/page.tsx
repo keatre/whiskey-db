@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useState } from 'react';
 import AdminOnly from '../../../../../components/AdminOnly';
+import { useFormFieldIds } from '../../../../../lib/useFormFieldIds';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -19,6 +20,14 @@ export default function NewNotePage() {
     rating_100: ''
   });
   const [saving, setSaving] = useState(false);
+  const field = useFormFieldIds('note-new');
+  const fields = {
+    tasted_dt: field('tasted_dt'),
+    rating_100: field('rating_100'),
+    nose: field('nose'),
+    palate: field('palate'),
+    finish: field('finish'),
+  };
 
   function set<K extends keyof typeof form>(k: K, v: string) {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -60,39 +69,44 @@ export default function NewNotePage() {
             maxWidth: '720px',
           }}
         >
-          <label>tasted_dt</label>
+          <label htmlFor={fields.tasted_dt.id}>tasted_dt</label>
           <input
+            {...fields.tasted_dt}
             type="datetime-local"
             value={form.tasted_dt}
             onChange={(e) => set('tasted_dt', e.target.value)}
             style={{ padding: 8 }}
           />
 
-          <label>rating_100</label>
+          <label htmlFor={fields.rating_100.id}>rating_100</label>
           <input
+            {...fields.rating_100}
             value={form.rating_100}
             onChange={(e) => set('rating_100', e.target.value)}
             style={{ padding: 8 }}
           />
 
-          <label>nose</label>
+          <label htmlFor={fields.nose.id}>nose</label>
           <textarea
+            {...fields.nose}
             value={form.nose}
             onChange={(e) => set('nose', e.target.value)}
             rows={2}
             style={{ padding: 8 }}
           />
 
-          <label>palate</label>
+          <label htmlFor={fields.palate.id}>palate</label>
           <textarea
+            {...fields.palate}
             value={form.palate}
             onChange={(e) => set('palate', e.target.value)}
             rows={2}
             style={{ padding: 8 }}
           />
 
-          <label>finish</label>
+          <label htmlFor={fields.finish.id}>finish</label>
           <textarea
+            {...fields.finish}
             value={form.finish}
             onChange={(e) => set('finish', e.target.value)}
             rows={2}

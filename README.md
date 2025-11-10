@@ -215,6 +215,16 @@ uvicorn app.main:app --reload
 ```
 Prefer `docker compose build whiskey` (or `docker compose up --build whiskey`) after changing backend requirements, frontend dependencies, or the backup scripts so the unified image stays current; create a local `docker-compose.override.yml` if you need to bind-mount the source directories for hot reloads.
 
+#### Form accessibility helper
+- Use `useFormFieldIds` (`web/src/lib/useFormFieldIds.ts`) inside any client form to generate stable `id`/`name` pairs and pair them with `label htmlFor` attributes. Example:
+  ```tsx
+  const field = useFormFieldIds('bottle-new');
+  const brand = field('brand');
+  <label htmlFor={brand.id}>Brand</label>
+  <input {...brand} value={form.brand} onChange={…} />
+  ```
+- This keeps Chrome’s autofill and accessibility checks happy and avoids hand-managing unique IDs.
+
 
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)

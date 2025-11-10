@@ -8,6 +8,7 @@ import AdminOnly from '../../../components/AdminOnly';
 import type { MarketPrice } from '../../../api/marketPrices';
 import { MarketPricesApi } from '../../../api/marketPrices';
 import { formatDateTime } from '../../../lib/formatDate';
+import { useFormFieldIds } from '../../../lib/useFormFieldIds';
 
 const LATEST_KEY = ['/admin/prices', 'latest'];
 
@@ -99,6 +100,16 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const field = useFormFieldIds('manual-price');
+  const fields = {
+    barcode: field('barcode'),
+    price: field('price'),
+    currency: field('currency'),
+    source: field('source'),
+    provider: field('provider'),
+    asOf: field('as_of'),
+    notes: field('notes'),
+  };
 
   const handleSubmit = async (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -146,6 +157,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Barcode / UPC</span>
         <input
+          {...fields.barcode}
           type="text"
           required
           minLength={3}
@@ -174,6 +186,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
         >
           <span>Price</span>
           <input
+            {...fields.price}
             type="number"
             min={0}
             step="0.01"
@@ -192,6 +205,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
         >
           <span>Currency</span>
           <input
+            {...fields.currency}
             type="text"
             value={currency}
             onChange={e => setCurrency(e.target.value.toUpperCase())}
@@ -205,6 +219,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Source (optional)</span>
         <input
+          {...fields.source}
           type="text"
           value={source}
           onChange={e => setSource(e.target.value)}
@@ -215,6 +230,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Provider override (optional)</span>
         <input
+          {...fields.provider}
           type="text"
           value={provider}
           onChange={e => setProvider(e.target.value)}
@@ -225,6 +241,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
       <label style={{ display: 'grid', gap: 4 }}>
         <span>As of (optional)</span>
         <input
+          {...fields.asOf}
           type="datetime-local"
           value={asOf}
           onChange={e => setAsOf(e.target.value)}
@@ -234,6 +251,7 @@ function ManualPriceForm({ onCreated }: { onCreated: () => Promise<unknown> | vo
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Notes (optional)</span>
         <textarea
+          {...fields.notes}
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="File name, comments, etc."
@@ -257,6 +275,11 @@ function ProviderSyncForm({ onSynced }: { onSynced: () => Promise<unknown> | voi
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const field = useFormFieldIds('provider-sync');
+  const fields = {
+    barcode: field('barcode'),
+    notes: field('notes'),
+  };
 
   const handleSync = async (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -290,6 +313,7 @@ function ProviderSyncForm({ onSynced }: { onSynced: () => Promise<unknown> | voi
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Barcode / UPC</span>
         <input
+          {...fields.barcode}
           type="text"
           required
           minLength={3}
@@ -301,6 +325,7 @@ function ProviderSyncForm({ onSynced }: { onSynced: () => Promise<unknown> | voi
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Notes (optional)</span>
         <input
+          {...fields.notes}
           type="text"
           value={notes}
           onChange={e => setNotes(e.target.value)}
@@ -326,6 +351,15 @@ function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCan
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const field = useFormFieldIds('price-edit');
+  const fields = {
+    amount: field('price'),
+    currency: field('currency'),
+    source: field('source'),
+    provider: field('provider'),
+    asOf: field('as_of'),
+    notes: field('notes'),
+  };
 
   const handleSubmit = async (evt: FormEvent<HTMLFormElement>) => {
     evt.preventDefault();
@@ -372,6 +406,7 @@ function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCan
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Price</span>
         <input
+          {...fields.amount}
           type="number"
           min={0}
           step="0.01"
@@ -383,6 +418,7 @@ function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCan
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Currency</span>
         <input
+          {...fields.currency}
           type="text"
           value={currency}
           onChange={e => setCurrency(e.target.value.toUpperCase())}
@@ -392,22 +428,22 @@ function EditPriceForm({ price, onCancel, onSaved }: { price: MarketPrice; onCan
 
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Source (optional)</span>
-        <input type="text" value={source} onChange={e => setSource(e.target.value)} />
+        <input {...fields.source} type="text" value={source} onChange={e => setSource(e.target.value)} />
       </label>
 
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Provider (optional)</span>
-        <input type="text" value={provider} onChange={e => setProvider(e.target.value)} />
+        <input {...fields.provider} type="text" value={provider} onChange={e => setProvider(e.target.value)} />
       </label>
 
       <label style={{ display: 'grid', gap: 4 }}>
         <span>As of (optional)</span>
-        <input type="datetime-local" value={asOf} onChange={e => setAsOf(e.target.value)} />
+        <input {...fields.asOf} type="datetime-local" value={asOf} onChange={e => setAsOf(e.target.value)} />
       </label>
 
       <label style={{ display: 'grid', gap: 4 }}>
         <span>Notes (optional)</span>
-        <textarea value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
+        <textarea {...fields.notes} value={notes} onChange={e => setNotes(e.target.value)} rows={3} />
       </label>
 
       <button type="submit" disabled={saving}>
