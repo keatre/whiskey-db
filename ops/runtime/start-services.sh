@@ -9,6 +9,26 @@ WEB_PORT=${WEB_PORT:-3000}
 API_HOST=${API_HOST:-0.0.0.0}
 API_PORT=${API_PORT:-8000}
 API_LOG_LEVEL=${API_LOG_LEVEL:-info}
+DEFAULT_LOOPBACK_API=${DEFAULT_LOOPBACK_API:-http://127.0.0.1:8000}
+
+normalize_loopback() {
+  local value="$1"
+  local var_name="$2"
+  local lowered="${value,,}"
+  case "$lowered" in
+    ""|http://api|http://api/*|http://api:8000|http://api:8000/*)
+      echo "[entrypoint] ${var_name:-API_BASE}: fell back to ${DEFAULT_LOOPBACK_API} for single-container routing."
+      printf '%s' "$DEFAULT_LOOPBACK_API"
+      return
+      ;;
+  esac
+  printf '%s' "$value"
+}
+
+API_BASE=$(normalize_loopback "${API_BASE:-}" "API_BASE")
+NEXT_BACKEND_ORIGIN=$(normalize_loopback "${NEXT_BACKEND_ORIGIN:-}" "NEXT_BACKEND_ORIGIN")
+export API_BASE
+export NEXT_BACKEND_ORIGIN
 
 if [ ! -x "$LOG_WRAPPER" ]; then
   echo "[entrypoint] log wrapper missing at $LOG_WRAPPER" >&2
