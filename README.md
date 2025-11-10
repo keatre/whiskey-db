@@ -39,7 +39,7 @@ Start the stack:
 docker compose up -d --build
 ```
 > The single `whiskey` service now bundles the FastAPI API, Next.js frontend, and scheduled backups. Rebuild it with `docker compose build whiskey` whenever you change backend requirements (`api/requirements.txt`), frontend dependencies (`web/package*.json`), or the backup scripts under `ops/backup/`.
-> Legacy `.env` files that still set `API_BASE=http://api:8000` or `NEXT_BACKEND_ORIGIN=http://api:8000` are automatically rewritten to `http://127.0.0.1:8000` inside the container so existing deployments keep working, but update your `.env` to avoid the compatibility shim.
+> Legacy `.env` files that still set `API_BASE=http://api:8000` or `NEXT_BACKEND_ORIGIN=http://api:8000` are automatically rewritten to `http://127.0.0.1:8000`, and the container injects `/etc/hosts` with `api → 127.0.0.1` so existing deployments keep working. Update your `.env` (and rebuild) when convenient to drop the compatibility shim.
 
 Access:
 - Frontend: http://localhost:8080

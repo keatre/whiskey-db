@@ -5,6 +5,7 @@
 
 ### Fixed
 - Unified entrypoint now rewrites legacy `API_BASE`/`NEXT_BACKEND_ORIGIN` values that still point to `http://api:8000` so single-container installs keep working even if `.env` wasn’t updated, preventing `getaddrinfo ENOTFOUND api` failures during proxying (`ops/runtime/start-services.sh`, `README.md`).
+- Added a safety alias (`api → 127.0.0.1`) inside the container’s `/etc/hosts` so even truly legacy builds that still reference `http://api:8000` continue to resolve to the bundled API service (`ops/runtime/start-services.sh`, `README.md`).
 
 ---
 

@@ -10,6 +10,7 @@ API_HOST=${API_HOST:-0.0.0.0}
 API_PORT=${API_PORT:-8000}
 API_LOG_LEVEL=${API_LOG_LEVEL:-info}
 DEFAULT_LOOPBACK_API=${DEFAULT_LOOPBACK_API:-http://127.0.0.1:8000}
+LEGACY_API_HOST=${LEGACY_API_HOST:-api}
 
 normalize_loopback() {
   local value="$1"
@@ -29,6 +30,18 @@ API_BASE=$(normalize_loopback "${API_BASE:-}" "API_BASE")
 NEXT_BACKEND_ORIGIN=$(normalize_loopback "${NEXT_BACKEND_ORIGIN:-}" "NEXT_BACKEND_ORIGIN")
 export API_BASE
 export NEXT_BACKEND_ORIGIN
+
+ensure_host_alias() {
+  local ip="$1"
+  local host="$2"
+  if grep -Eq "^[[:space:]]*${ip//./\\.}[[:space:]]+${host}([[:space:]]|\$)" /etc/hosts; then
+    return
+  fi
+  echo "[entrypoint] Adding legacy host alias ${host} -> ${ip}."
+  printf '%s %s\n' "$ip" "$host" >> /etc/hosts
+}
+
+ensure_host_alias "127.0.0.1" "$LEGACY_API_HOST"
 
 if [ ! -x "$LOG_WRAPPER" ]; then
   echo "[entrypoint] log wrapper missing at $LOG_WRAPPER" >&2
