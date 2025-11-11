@@ -1,3 +1,10 @@
+## [v1.5.4] - 2025-11-11
+
+### Changed
+- GHCR publishing workflow now fires only when a GitHub Release is published, tagging the built image with both the release tag and `latest` so `ghcr.io/keatre/whiskey-db:latest` always matches the newest published release (`.github/workflows/publish-image.yml`).
+
+---
+
 ## [v1.5.3] - 2025-11-11
 
 ### Changed
