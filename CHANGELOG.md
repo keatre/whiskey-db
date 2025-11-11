@@ -7,7 +7,7 @@
 
 
 ### Fixed
-- New and Edit Bottle screens now use the exact v1.3/v1.4 era markup—two fixed-width columns with inline labels—so the layout matches long-standing deployments without the newer stacked field styling (`web/src/app/bottles/new/page.tsx`, `web/src/app/bottles/[id]/edit/page.tsx`).
+- New and Edit Bottle screens now recreate the v1.3/v1.4 styling (fixed-width columns, inline labels) while keeping the newer accessible `label/htmlFor` wiring so linted builds succeed without regressing the layout (`web/src/app/bottles/new/page.tsx`, `web/src/app/bottles/[id]/edit/page.tsx`).
 
 ---
 
