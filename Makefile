@@ -20,8 +20,7 @@ help:
 	@echo "Available targets:"
 	@echo "  make web-dev        # Run Next.js dev server (port 3000)"
 	@echo "  make api-dev        # Run FastAPI dev server (port 8000)"
-	@echo "  make web-build      # Docker build web image"
-	@echo "  make api-build      # Docker build api image"
+	@echo "  make image-build    # Build the unified whiskey image (root Dockerfile)"
 	@echo "  make up             # Start stack via docker-compose"
 	@echo "  make down           # Stop stack"
 	@echo "  make api-test       # Run backend pytest suite"
@@ -42,11 +41,10 @@ api-dev:
 	cd api && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # --- DOCKER BUILDS ---
-web-build:
-	$(DOCKER) build -t whiskey-web:dev ./web
+image-build:
+	$(DOCKER) build -t whiskey-db:dev .
 
-api-build:
-	$(DOCKER) build -t whiskey-api:dev ./api
+.PHONY: image-build
 
 # --- STACK ---
 up:
