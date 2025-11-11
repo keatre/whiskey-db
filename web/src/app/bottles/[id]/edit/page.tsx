@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
-import { useFormFieldIds } from '../../../../lib/useFormFieldIds';
 
 /**
  * We keep using NEXT_PUBLIC_API_BASE (expected to be "/api")
@@ -57,26 +56,6 @@ export default function EditBottlePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  const field = useFormFieldIds('bottle-edit');
-  const fields = {
-    brand: field('brand'),
-    expression: field('expression'),
-    distillery: field('distillery'),
-    stylePicker: field('style'),
-    styleCustom: field('styleCustom'),
-    region: field('region'),
-    age: field('age'),
-    proof: field('proof'),
-    abv: field('abv'),
-    size_ml: field('size_ml'),
-    release_year: field('release_year'),
-    barcode_upc: field('barcode_upc'),
-    is_rare: field('is_rare'),
-    image_upload: field('image_upload'),
-    mashbill_markdown: field('mashbill_markdown'),
-    notes_markdown: field('notes_markdown'),
-  };
 
   // Controlled form state
   const [form, setForm] = useState({
@@ -281,31 +260,18 @@ export default function EditBottlePage() {
             maxWidth: '980px',
           }}
         >
-          <label htmlFor={fields.brand.id}>Brand</label>
-          <input
-            {...fields.brand}
-            value={form.brand}
-            onChange={(e) => set('brand', e.target.value)}
-          />
+          <label>Brand</label>
+          <input value={form.brand} onChange={(e) => set('brand', e.target.value)} />
 
-          <label htmlFor={fields.expression.id}>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
-          <input
-            {...fields.expression}
-            value={form.expression}
-            onChange={(e) => set('expression', e.target.value)}
-          />
+          <label>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
+          <input value={form.expression} onChange={(e) => set('expression', e.target.value)} />
 
-          <label htmlFor={fields.distillery.id}>Distillery (optional)</label>
-          <input
-            {...fields.distillery}
-            value={form.distillery}
-            onChange={(e) => set('distillery', e.target.value)}
-          />
+          <label>Distillery (optional)</label>
+          <input value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
 
-          <label htmlFor={fields.stylePicker.id}>Style</label>
+          <label>Style</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select
-              {...fields.stylePicker}
               value={form.stylePicker}
               onChange={(e) => set('stylePicker', e.target.value)}
               style={{ flex: 1 }}
@@ -319,7 +285,6 @@ export default function EditBottlePage() {
             </select>
             {form.stylePicker === 'Custom…' && (
               <input
-                {...fields.styleCustom}
                 placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
                 value={form.styleCustom}
                 onChange={(e) => set('styleCustom', e.target.value)}
@@ -328,16 +293,11 @@ export default function EditBottlePage() {
             )}
           </div>
 
-          <label htmlFor={fields.region.id}>Region (optional)</label>
-          <input
-            {...fields.region}
-            value={form.region}
-            onChange={(e) => set('region', e.target.value)}
-          />
+          <label>Region (optional)</label>
+          <input value={form.region} onChange={(e) => set('region', e.target.value)} />
 
-          <label htmlFor={fields.age.id}>Age (years)</label>
+          <label>Age (years)</label>
           <input
-            {...fields.age}
             type="number"
             inputMode="numeric"
             min="0"
@@ -346,9 +306,8 @@ export default function EditBottlePage() {
             onChange={(e) => set('age', e.target.value)}
           />
 
-          <label htmlFor={fields.proof.id}>Proof</label>
+          <label>Proof</label>
           <input
-            {...fields.proof}
             type="number"
             inputMode="decimal"
             min="0"
@@ -357,9 +316,8 @@ export default function EditBottlePage() {
             onChange={(e) => set('proof', e.target.value)}
           />
 
-          <label htmlFor={fields.abv.id}>ABV (%)</label>
+          <label>ABV (%)</label>
           <input
-            {...fields.abv}
             type="number"
             inputMode="decimal"
             min="0"
@@ -368,9 +326,8 @@ export default function EditBottlePage() {
             onChange={(e) => set('abv', e.target.value)}
           />
 
-          <label htmlFor={fields.size_ml.id}>Size (ml)</label>
+          <label>Size (ml)</label>
           <input
-            {...fields.size_ml}
             type="number"
             inputMode="numeric"
             min="0"
@@ -379,9 +336,8 @@ export default function EditBottlePage() {
             onChange={(e) => set('size_ml', e.target.value)}
           />
 
-          <label htmlFor={fields.release_year.id}>Release year</label>
+          <label>Release year</label>
           <input
-            {...fields.release_year}
             type="number"
             inputMode="numeric"
             min="1900"
@@ -391,17 +347,15 @@ export default function EditBottlePage() {
             onChange={(e) => set('release_year', e.target.value)}
           />
 
-          <label htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
+          <label>Barcode / UPC (optional)</label>
           <input
-            {...fields.barcode_upc}
             value={form.barcode_upc}
             onChange={(e) => set('barcode_upc', e.target.value)}
           />
 
-          <label htmlFor={fields.is_rare.id}>Mark as Rare</label>
+          <label>Mark as Rare</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
-              {...fields.is_rare}
               type="checkbox"
               checked={form.is_rare}
               onChange={(e) => set('is_rare', e.target.checked)}
@@ -410,10 +364,9 @@ export default function EditBottlePage() {
             <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
           </div>
 
-          <label htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
+          <label>Bottle Image (replace)</label>
           <div>
             <input
-              {...fields.image_upload}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
               onChange={handleFile}
@@ -427,17 +380,15 @@ export default function EditBottlePage() {
             </div>
           </div>
 
-          <label htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
+          <label>Mash Bill (Markdown)</label>
           <textarea
-            {...fields.mashbill_markdown}
             rows={8}
             value={form.mashbill_markdown}
             onChange={(e) => set('mashbill_markdown', e.target.value)}
           />
 
-          <label htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
+          <label>Notes (Markdown)</label>
           <textarea
-            {...fields.notes_markdown}
             rows={8}
             value={form.notes_markdown}
             onChange={(e) => set('notes_markdown', e.target.value)}
