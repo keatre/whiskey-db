@@ -5,6 +5,9 @@
 - Every release now also retags `ghcr.io/keatre/whiskey-db:latest`, and the README documents how to pull either the `latest` stream or a pinned tag from GHCR (`.github/workflows/publish-image.yml`, `README.md`).
 - Repository ownership and automation are now tracked via `CODEOWNERS` plus Dependabot configuration for npm, pip, Docker, and GitHub Actions updates (`.github/codeowners`, `.github/dependabot.yml`).
 
+### Changed
+- CI and publishing workflows now run on the latest GitHub Actions (`actions/checkout@v5`, `actions/setup-node@v6`, `actions/setup-python@v6`) to keep runners up to date (`.github/workflows/*.yml`).
+
 
 ### Fixed
 - New and Edit Bottle screens now recreate the v1.3/v1.4 styling (fixed-width columns, inline labels) while keeping the newer accessible `label/htmlFor` wiring so linted builds succeed without regressing the layout (`web/src/app/bottles/new/page.tsx`, `web/src/app/bottles/[id]/edit/page.tsx`).
