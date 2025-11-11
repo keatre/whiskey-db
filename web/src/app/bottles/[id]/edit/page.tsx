@@ -1,8 +1,10 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
+import { useFormFieldIds } from '../../../../lib/useFormFieldIds';
 
 /**
  * We keep using NEXT_PUBLIC_API_BASE (expected to be "/api")
@@ -56,6 +58,40 @@ export default function EditBottlePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const field = useFormFieldIds('bottle-edit');
+  const fields = {
+    brand: field('brand'),
+    expression: field('expression'),
+    distillery: field('distillery'),
+    stylePicker: field('style'),
+    styleCustom: field('styleCustom'),
+    region: field('region'),
+    age: field('age'),
+    proof: field('proof'),
+    abv: field('abv'),
+    size_ml: field('size_ml'),
+    release_year: field('release_year'),
+    barcode_upc: field('barcode_upc'),
+    is_rare: field('is_rare'),
+    image_upload: field('image_upload'),
+    mashbill_markdown: field('mashbill_markdown'),
+    notes_markdown: field('notes_markdown'),
+  };
+
+  const formGridStyle = {
+    display: 'grid',
+    gridTemplateColumns: '220px 480px',
+    gap: 10,
+    alignItems: 'center',
+    maxWidth: '980px',
+  } as const;
+  const labelStyle = {
+    fontSize: 12,
+    fontWeight: 600,
+    color: 'var(--muted)',
+    paddingInlineEnd: 8,
+    textAlign: 'right',
+  } as const;
 
   // Controlled form state
   const [form, setForm] = useState({
@@ -250,28 +286,22 @@ export default function EditBottlePage() {
       <main>
         <h1>Edit Bottle</h1>
 
-        <form
-          onSubmit={submit}
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '220px 480px',
-            gap: 10,
-            alignItems: 'center',
-            maxWidth: '980px',
-          }}
-        >
-          <label>Brand</label>
-          <input value={form.brand} onChange={(e) => set('brand', e.target.value)} />
+        <form onSubmit={submit} style={formGridStyle}>
+          <label style={labelStyle} htmlFor={fields.brand.id}>Brand</label>
+          <input {...fields.brand} value={form.brand} onChange={(e) => set('brand', e.target.value)} />
 
-          <label>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
-          <input value={form.expression} onChange={(e) => set('expression', e.target.value)} />
+          <label style={labelStyle} htmlFor={fields.expression.id}>
+            Expression (e.g. 12 Year, Cask Strength, Port Finish)
+          </label>
+          <input {...fields.expression} value={form.expression} onChange={(e) => set('expression', e.target.value)} />
 
-          <label>Distillery (optional)</label>
-          <input value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
+          <label style={labelStyle} htmlFor={fields.distillery.id}>Distillery (optional)</label>
+          <input {...fields.distillery} value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
 
-          <label>Style</label>
+          <label style={labelStyle} htmlFor={fields.stylePicker.id}>Style</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select
+              {...fields.stylePicker}
               value={form.stylePicker}
               onChange={(e) => set('stylePicker', e.target.value)}
               style={{ flex: 1 }}
@@ -285,6 +315,7 @@ export default function EditBottlePage() {
             </select>
             {form.stylePicker === 'Custom…' && (
               <input
+                {...fields.styleCustom}
                 placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
                 value={form.styleCustom}
                 onChange={(e) => set('styleCustom', e.target.value)}
@@ -293,11 +324,12 @@ export default function EditBottlePage() {
             )}
           </div>
 
-          <label>Region (optional)</label>
-          <input value={form.region} onChange={(e) => set('region', e.target.value)} />
+          <label style={labelStyle} htmlFor={fields.region.id}>Region (optional)</label>
+          <input {...fields.region} value={form.region} onChange={(e) => set('region', e.target.value)} />
 
-          <label>Age (years)</label>
+          <label style={labelStyle} htmlFor={fields.age.id}>Age (years)</label>
           <input
+            {...fields.age}
             type="number"
             inputMode="numeric"
             min="0"
@@ -306,8 +338,9 @@ export default function EditBottlePage() {
             onChange={(e) => set('age', e.target.value)}
           />
 
-          <label>Proof</label>
+          <label style={labelStyle} htmlFor={fields.proof.id}>Proof</label>
           <input
+            {...fields.proof}
             type="number"
             inputMode="decimal"
             min="0"
@@ -316,8 +349,9 @@ export default function EditBottlePage() {
             onChange={(e) => set('proof', e.target.value)}
           />
 
-          <label>ABV (%)</label>
+          <label style={labelStyle} htmlFor={fields.abv.id}>ABV (%)</label>
           <input
+            {...fields.abv}
             type="number"
             inputMode="decimal"
             min="0"
@@ -326,8 +360,9 @@ export default function EditBottlePage() {
             onChange={(e) => set('abv', e.target.value)}
           />
 
-          <label>Size (ml)</label>
+          <label style={labelStyle} htmlFor={fields.size_ml.id}>Size (ml)</label>
           <input
+            {...fields.size_ml}
             type="number"
             inputMode="numeric"
             min="0"
@@ -336,8 +371,9 @@ export default function EditBottlePage() {
             onChange={(e) => set('size_ml', e.target.value)}
           />
 
-          <label>Release year</label>
+          <label style={labelStyle} htmlFor={fields.release_year.id}>Release year</label>
           <input
+            {...fields.release_year}
             type="number"
             inputMode="numeric"
             min="1900"
@@ -347,12 +383,17 @@ export default function EditBottlePage() {
             onChange={(e) => set('release_year', e.target.value)}
           />
 
-          <label>Barcode / UPC (optional)</label>
-          <input value={form.barcode_upc} onChange={(e) => set('barcode_upc', e.target.value)} />
+          <label style={labelStyle} htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
+          <input
+            {...fields.barcode_upc}
+            value={form.barcode_upc}
+            onChange={(e) => set('barcode_upc', e.target.value)}
+          />
 
-          <label>Mark as Rare</label>
+          <label style={labelStyle} htmlFor={fields.is_rare.id}>Mark as Rare</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
+              {...fields.is_rare}
               type="checkbox"
               checked={form.is_rare}
               onChange={(e) => set('is_rare', e.target.checked)}
@@ -361,9 +402,10 @@ export default function EditBottlePage() {
             <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
           </div>
 
-          <label>Bottle Image (replace)</label>
+          <label style={labelStyle} htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
           <div>
             <input
+              {...fields.image_upload}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
               onChange={handleFile}
@@ -372,20 +414,29 @@ export default function EditBottlePage() {
               {uploading && <div>Uploading…</div>}
               {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
               {previewUrl && (
-                <img src={previewUrl} alt="Bottle preview" style={{ maxWidth: 360, borderRadius: 8 }} />
+                <Image
+                  src={previewUrl}
+                  alt="Bottle preview"
+                  width={360}
+                  height={360}
+                  style={{ maxWidth: 360, borderRadius: 8, height: 'auto' }}
+                  unoptimized
+                />
               )}
             </div>
           </div>
 
-          <label>Mash Bill (Markdown)</label>
+          <label style={labelStyle} htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
           <textarea
+            {...fields.mashbill_markdown}
             rows={8}
             value={form.mashbill_markdown}
             onChange={(e) => set('mashbill_markdown', e.target.value)}
           />
 
-          <label>Notes (Markdown)</label>
+          <label style={labelStyle} htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
           <textarea
+            {...fields.notes_markdown}
             rows={8}
             value={form.notes_markdown}
             onChange={(e) => set('notes_markdown', e.target.value)}
