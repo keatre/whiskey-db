@@ -266,9 +266,6 @@ export default function EditBottlePage() {
     </main>
   );
 
-  const fieldStack = { display: 'flex', flexDirection: 'column', gap: 4 } as const;
-  const fullWidthField = { ...fieldStack, gridColumn: '1 / -1' } as const;
-
   return (
     <AdminOnly>
       <main>
@@ -278,159 +275,127 @@ export default function EditBottlePage() {
           onSubmit={submit}
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: 16,
-            alignItems: 'start',
-            maxWidth: 980,
+            gridTemplateColumns: '220px 480px',
+            gap: 10,
+            alignItems: 'center',
+            maxWidth: '980px',
           }}
         >
-          <div style={fieldStack}>
-            <label htmlFor={fields.brand.id}>Brand</label>
-            <input {...fields.brand} value={form.brand} onChange={(e) => set('brand', e.target.value)} />
-          </div>
+          <label htmlFor={fields.brand.id}>Brand</label>
+          <input {...fields.brand} value={form.brand} onChange={(e) => set('brand', e.target.value)} />
 
-          <div style={fieldStack}>
-            <label htmlFor={fields.expression.id}>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
-            <input
-              {...fields.expression}
-              value={form.expression}
-              onChange={(e) => set('expression', e.target.value)}
-            />
-          </div>
+          <label htmlFor={fields.expression.id}>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
+          <input {...fields.expression} value={form.expression} onChange={(e) => set('expression', e.target.value)} />
 
-          <div style={fieldStack}>
-            <label htmlFor={fields.distillery.id}>Distillery (optional)</label>
-            <input
-              {...fields.distillery}
-              value={form.distillery}
-              onChange={(e) => set('distillery', e.target.value)}
-            />
-          </div>
+          <label htmlFor={fields.distillery.id}>Distillery (optional)</label>
+          <input {...fields.distillery} value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
 
-          <div style={fullWidthField}>
-            <label htmlFor={fields.stylePicker.id}>Style</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              <select
-                {...fields.stylePicker}
-                value={form.stylePicker}
-                onChange={(e) => set('stylePicker', e.target.value)}
-                style={{ flex: 1, minWidth: 220 }}
-              >
-                <option value="">— Select style —</option>
-                {STYLE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              {form.stylePicker === 'Custom…' && (
-                <input
-                  {...fields.styleCustom}
-                  placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
-                  value={form.styleCustom}
-                  onChange={(e) => set('styleCustom', e.target.value)}
-                  style={{ flex: 1, minWidth: 220 }}
-                />
-              )}
-            </div>
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.region.id}>Region (optional)</label>
-            <input {...fields.region} value={form.region} onChange={(e) => set('region', e.target.value)} />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.age.id}>Age (years)</label>
-            <input
-              {...fields.age}
-              type="number"
-              inputMode="numeric"
-              min="0"
-              step="1"
-              value={form.age}
-              onChange={(e) => set('age', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.proof.id}>Proof</label>
-            <input
-              {...fields.proof}
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              value={form.proof}
-              onChange={(e) => set('proof', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.abv.id}>ABV (%)</label>
-            <input
-              {...fields.abv}
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.1"
-              value={form.abv}
-              onChange={(e) => set('abv', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.size_ml.id}>Size (ml)</label>
-            <input
-              {...fields.size_ml}
-              type="number"
-              inputMode="numeric"
-              min="0"
-              step="50"
-              value={form.size_ml}
-              onChange={(e) => set('size_ml', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.release_year.id}>Release year</label>
-            <input
-              {...fields.release_year}
-              type="number"
-              inputMode="numeric"
-              min="1900"
-              max="2100"
-              step="1"
-              value={form.release_year}
-              onChange={(e) => set('release_year', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
-            <input
-              {...fields.barcode_upc}
-              value={form.barcode_upc}
-              onChange={(e) => set('barcode_upc', e.target.value)}
-            />
-          </div>
-
-          <div style={fieldStack}>
-            <label htmlFor={fields.is_rare.id}>Mark as Rare</label>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <label htmlFor={fields.stylePicker.id}>Style</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select
+              {...fields.stylePicker}
+              value={form.stylePicker}
+              onChange={(e) => set('stylePicker', e.target.value)}
+              style={{ flex: 1 }}
+            >
+              <option value="">— Select style —</option>
+              {STYLE_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            {form.stylePicker === 'Custom…' && (
               <input
-                {...fields.is_rare}
-                type="checkbox"
-                checked={form.is_rare}
-                onChange={(e) => set('is_rare', e.target.checked)}
-                style={{ width: 18, height: 18 }}
+                {...fields.styleCustom}
+                placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
+                value={form.styleCustom}
+                onChange={(e) => set('styleCustom', e.target.value)}
+                style={{ flex: 1 }}
               />
-              <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
-            </div>
+            )}
           </div>
 
-          <div style={fullWidthField}>
-            <label htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
+          <label htmlFor={fields.region.id}>Region (optional)</label>
+          <input {...fields.region} value={form.region} onChange={(e) => set('region', e.target.value)} />
+
+          <label htmlFor={fields.age.id}>Age (years)</label>
+          <input
+            {...fields.age}
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={form.age}
+            onChange={(e) => set('age', e.target.value)}
+          />
+
+          <label htmlFor={fields.proof.id}>Proof</label>
+          <input
+            {...fields.proof}
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            value={form.proof}
+            onChange={(e) => set('proof', e.target.value)}
+          />
+
+          <label htmlFor={fields.abv.id}>ABV (%)</label>
+          <input
+            {...fields.abv}
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.1"
+            value={form.abv}
+            onChange={(e) => set('abv', e.target.value)}
+          />
+
+          <label htmlFor={fields.size_ml.id}>Size (ml)</label>
+          <input
+            {...fields.size_ml}
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="50"
+            value={form.size_ml}
+            onChange={(e) => set('size_ml', e.target.value)}
+          />
+
+          <label htmlFor={fields.release_year.id}>Release year</label>
+          <input
+            {...fields.release_year}
+            type="number"
+            inputMode="numeric"
+            min="1900"
+            max="2100"
+            step="1"
+            value={form.release_year}
+            onChange={(e) => set('release_year', e.target.value)}
+          />
+
+          <label htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
+          <input
+            {...fields.barcode_upc}
+            value={form.barcode_upc}
+            onChange={(e) => set('barcode_upc', e.target.value)}
+          />
+
+          <label htmlFor={fields.is_rare.id}>Mark as Rare</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              {...fields.is_rare}
+              type="checkbox"
+              checked={form.is_rare}
+              onChange={(e) => set('is_rare', e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
+          </div>
+
+          <label htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
+          <div>
             <input
               {...fields.image_upload}
               type="file"
@@ -453,27 +418,25 @@ export default function EditBottlePage() {
             </div>
           </div>
 
-          <div style={fullWidthField}>
-            <label htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
-            <textarea
-              {...fields.mashbill_markdown}
-              rows={6}
-              value={form.mashbill_markdown}
-              onChange={(e) => set('mashbill_markdown', e.target.value)}
-            />
-          </div>
+          <label htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
+          <textarea
+            {...fields.mashbill_markdown}
+            rows={8}
+            value={form.mashbill_markdown}
+            onChange={(e) => set('mashbill_markdown', e.target.value)}
+          />
 
-          <div style={fullWidthField}>
-            <label htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
-            <textarea
-              {...fields.notes_markdown}
-              rows={6}
-              value={form.notes_markdown}
-              onChange={(e) => set('notes_markdown', e.target.value)}
-            />
-          </div>
+          <label htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
+          <textarea
+            {...fields.notes_markdown}
+            rows={8}
+            value={form.notes_markdown}
+            onChange={(e) => set('notes_markdown', e.target.value)}
+          />
 
-          <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Actions row */}
+          <div></div>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button type="submit" disabled={saving || uploading}>
               {saving ? 'Saving…' : 'Save Changes'}
             </button>

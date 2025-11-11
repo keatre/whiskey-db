@@ -164,7 +164,7 @@ export default function NewBottlePage() {
           onSubmit={submit}
           style={{
             display: 'grid',
-            gridTemplateColumns: '220px 420px',
+            gridTemplateColumns: '220px 480px',
             gap: 10,
             alignItems: 'center',
             maxWidth: '980px',
