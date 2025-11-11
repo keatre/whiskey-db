@@ -1,7 +1,7 @@
 ########################################
 # Stage 1: Build the Next.js frontend  #
 ########################################
-FROM node:20-bullseye AS web-builder
+FROM node:25-bullseye AS web-builder
 
 ARG NEXT_PUBLIC_API_BASE=/api
 ARG NEXT_BACKEND_ORIGIN=http://127.0.0.1:8000
