@@ -100,6 +100,7 @@ function CreateUserForm({ onCreated }: { onCreated: () => Promise<unknown> | voi
           <span>Username</span>
           <input
             type="text"
+            name="admin-create-username"
             required
             minLength={3}
             value={username}
@@ -112,6 +113,7 @@ function CreateUserForm({ onCreated }: { onCreated: () => Promise<unknown> | voi
           <span>Email (optional)</span>
           <input
             type="email"
+            name="admin-create-email"
             value={email}
             onChange={e => setEmail(e.target.value)}
             placeholder="jane@example.com"
@@ -122,6 +124,7 @@ function CreateUserForm({ onCreated }: { onCreated: () => Promise<unknown> | voi
           <span>Temporary password</span>
           <input
             type="password"
+            name="admin-create-password"
             required
             minLength={8}
             value={password}
@@ -132,7 +135,11 @@ function CreateUserForm({ onCreated }: { onCreated: () => Promise<unknown> | voi
 
         <label style={{ display: 'grid', gap: 4 }}>
           <span>Role</span>
-          <select value={role} onChange={e => setRole(e.target.value as 'admin' | 'user')}>
+          <select
+            name="admin-create-role"
+            value={role}
+            onChange={e => setRole(e.target.value as 'admin' | 'user')}
+          >
             <option value="user">User</option>
             <option value="admin">Admin</option>
           </select>
@@ -141,6 +148,7 @@ function CreateUserForm({ onCreated }: { onCreated: () => Promise<unknown> | voi
         <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <input
             type="checkbox"
+            name="admin-create-active"
             checked={isActive}
             onChange={e => setIsActive(e.target.checked)}
           />
@@ -223,13 +231,24 @@ function UserRow({ user, refresh }: { user: AdminUser; refresh: () => Promise<un
         <div style={{ display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
             <span>Role</span>
-            <select value={user.role} onChange={e => handleRoleChange(e.target.value as 'admin' | 'user')} disabled={saving}>
+            <select
+              name={`user-${user.id}-role`}
+              value={user.role}
+              onChange={e => handleRoleChange(e.target.value as 'admin' | 'user')}
+              disabled={saving}
+            >
               <option value="user">User</option>
               <option value="admin">Admin</option>
             </select>
           </label>
           <label style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-            <input type="checkbox" checked={user.is_active} onChange={handleActiveToggle} disabled={saving} />
+            <input
+              type="checkbox"
+              name={`user-${user.id}-active`}
+              checked={user.is_active}
+              onChange={handleActiveToggle}
+              disabled={saving}
+            />
             <span>Active</span>
           </label>
         </div>
@@ -237,6 +256,7 @@ function UserRow({ user, refresh }: { user: AdminUser; refresh: () => Promise<un
 
       <form onSubmit={handlePasswordReset} style={{ marginTop: 12, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         <input
+          name={`user-${user.id}-password`}
           type="password"
           placeholder="New password"
           value={password}

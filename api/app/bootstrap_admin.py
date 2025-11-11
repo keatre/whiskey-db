@@ -9,7 +9,7 @@ Optional:
   ADMIN_EMAIL=john.doe@gmail.com
 
 Usage:
-  - Inside Docker:  docker compose exec api python -m app.bootstrap_admin
+  - Inside Docker:  docker compose exec whiskey python -m app.bootstrap_admin
   - Host machine:   cd api && python -m app.bootstrap_admin
 """
 

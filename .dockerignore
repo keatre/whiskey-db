@@ -1,0 +1,30 @@
+# Ignore git + local metadata
+.git/
+.gitmodules
+.github/
+.worktrees/
+.vscode/
+.DS_Store
+
+# Local environments & caches
+.env
+.env.local
+.env.*.local
+.venv/
+.pytest_cache/
+.ruff_cache/
+tmp.db
+/logs/
+/data/
+
+# Node / Next artifacts (prevent overriding build output)
+web/node_modules/
+web/.next/
+
+# Python caches
+**/__pycache__/
+**/*.pyc
+
+# Misc
+docker-compose.override.yml
+*.log

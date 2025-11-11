@@ -91,15 +91,21 @@ export default function HeaderAuthControl() {
       {open && !isAuthenticated && (
         <form onSubmit={doLogin} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
           <input
+            id="header-auth-username"
+            name="username"
             placeholder="Username"
+            aria-label="Username"
             value={form.username}
             onChange={(e) => setForm((f) => ({ ...f, username: e.target.value }))}
             required
             autoComplete="username"
           />
           <input
+            id="header-auth-password"
+            name="password"
             type="password"
             placeholder="Password"
+            aria-label="Password"
             value={form.password}
             onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
             required

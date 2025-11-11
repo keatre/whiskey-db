@@ -22,8 +22,8 @@ const nextConfig = {
   },
   async rewrites() {
     // Backend origin reachable from the web container or browser:
-    // e.g. NEXT_BACKEND_ORIGIN=http://api:8000  (Docker)
-    const origin = process.env.NEXT_BACKEND_ORIGIN || 'http://api:8000';
+    // e.g. NEXT_BACKEND_ORIGIN=http://127.0.0.1:8000 (single-container default)
+    const origin = process.env.NEXT_BACKEND_ORIGIN || 'http://127.0.0.1:8000';
 
     // Normalize to avoid double slashes
     const stripTrailing = (s) => s.replace(/\/+$/, '');

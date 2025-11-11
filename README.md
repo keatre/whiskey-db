@@ -38,31 +38,31 @@ Start the stack:
 ```bash
 docker compose up -d --build
 ```
-> The API container now bakes dependencies into its image; rerun `docker compose build api` whenever you update `api/requirements.txt`.
-> The web container is built from `./web`; run `docker compose build web` after changing frontend dependencies or build config. Rebuild the backup image (`docker compose build backup`) whenever scripts in `ops/backup/` change.
+> The single `whiskey` service now bundles the FastAPI API, Next.js frontend, and scheduled backups. Rebuild it with `docker compose build whiskey` whenever you change backend requirements (`api/requirements.txt`), frontend dependencies (`web/package*.json`), or the backup scripts under `ops/backup/`.
+> Legacy `.env` files that still set `API_BASE=http://api:8000` or `NEXT_BACKEND_ORIGIN=http://api:8000` are automatically rewritten to `http://127.0.0.1:8000`, and the container injects `/etc/hosts` with `api → 127.0.0.1` so existing deployments keep working. Update your `.env` (and rebuild) when convenient to drop the compatibility shim.
 
 Access:
 - Frontend: http://localhost:8080
 - API: http://localhost:8000/docs
 
 ### 🌐 Cloudflare Tunnel (Optional)
-- Deploy the Cloudflare Tunnel agent alongside this stack and point it at the web container (`http://web:3000`) so TLS terminates at Cloudflare.
+- Deploy the Cloudflare Tunnel agent alongside this stack and point it at the `whiskey` service (`http://whiskey:3000`) so TLS terminates at Cloudflare.
 - Keep `COOKIE_SECURE=auto` (default) to emit Secure cookies only when requests arrive over HTTPS; local-only installs can override to `false` for plain HTTP.
 - Ensure `TRUSTED_PROXIES` in `.env` includes the IP ranges that present requests (the defaults cover 127.0.0.1 and common private ranges used by the tunnel client).
 - To lock down admin access for remote users, layer Cloudflare Access or another identity-aware proxy in front of `/admin` routes while leaving LAN guests untouched.
 - Requests that pass through Cloudflare no longer qualify for LAN-guest viewing; they now require authentication even if `ALLOW_LAN_GUEST=true`, while direct LAN access keeps the guest experience.
 - The proxy route adds `x-whiskey-via=cloudflare` when Cloudflare headers are present so the API can enforce the remote-only auth path; no extra configuration is required.
 - Configure `LAN_GUEST_HOSTS` (comma-separated hostnames) to list the origins that should keep LAN guest access; leave the defaults for localhost-only development or add your LAN hostname/IP as needed.
-- FastAPI now emits a `lan_guest_decision` log (INFO) whenever LAN guest access is granted or denied, including the host/IP/reason. Tail `docker compose logs -f api | grep lan_guest_decision` while testing, or snapshot counters with:
+- FastAPI now emits a `lan_guest_decision` log (INFO) whenever LAN guest access is granted or denied, including the host/IP/reason. Tail `docker compose logs -f whiskey | grep lan_guest_decision` while testing, or snapshot counters with:
 
   ```bash
-  docker compose exec api python - <<'PY'
+  docker compose exec whiskey python - <<'PY'
   from app.deps import lan_guest_metrics_snapshot
   print(lan_guest_metrics_snapshot())
   PY
   ```
 - 401 responses now include `X-Whiskey-Lan-Decision` and `/auth/me` exposes a `lan_guest_reason` field so you can see exactly why a browser was treated as “remote” (e.g., `host_not_allowed`, `cloudflare_forced_auth`).
-- When building the web image, the compose file now forwards `NEXT_PUBLIC_API_BASE` and `NEXT_BACKEND_ORIGIN` build args so client-side fetches will target the proxy (`/api`). Update those values in `.env` before running `docker compose build web` if your deployment uses different URLs.
+- When building the unified image, the compose file forwards `NEXT_PUBLIC_API_BASE` and `NEXT_BACKEND_ORIGIN` build args so client-side fetches target the proxy (`/api`). Update those values in `.env` before running `docker compose build whiskey` if your deployment uses different URLs.
 
 ### 📚Usage
 - Navigate to Bottles to browse by style
@@ -81,29 +81,30 @@ Access:
 
 ## 🛡️ Disaster Recovery to NAS (v1.1.2)
 
-Backups run from the `backup` service and push snapshots to your NAS over SMB/CIFS. By default they are encrypted with Restic, but you can opt into plaintext `.tar.gz` archives by flipping `BACKUP_ENCRYPTED=false` in your `.env`.
+Backups now run inside the primary `whiskey` service and push snapshots to your NAS over SMB/CIFS. By default they are encrypted with Restic, but you can opt into plaintext `.tar.gz` archives by flipping `BACKUP_ENCRYPTED=false` in your `.env`.
 
 ### Setup
 1. Copy `.env.example` → `.env` and fill:
    - `APP_NAME` / `NEXT_PUBLIC_APP_NAME` to control the app/browser title (defaults to “Whiskey DB”).
    - `ACCESS_TOKEN_EXPIRE_MINUTES` sets the admin session lifetime for both backend and frontend (override via `NEXT_PUBLIC_SESSION_IDLE_MINUTES` only when testing shorter windows).
    - `COOKIE_SECURE=true` locks cookies to HTTPS; leave `COOKIE_DOMAIN` unset unless you need cross-subdomain auth.
-   - `BACKUP_REPOSITORY` (path inside the backup container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
+   - `BACKUP_REPOSITORY` (path inside the container where your NAS is mounted, e.g. `/remote/restic-whiskey-db`)
    - `RESTIC_PASSWORD` (when `BACKUP_ENCRYPTED=true`, keep it safe)
    - Set `TZ=America/Chicago` (or your preferred zone); the frontend reuses this value for localized timestamps (bottle valuations, admin price history, etc.).
    - Set `BACKUP_ENCRYPTED=false` for plaintext archives and optionally point `BACKUP_ARCHIVE_DIR` elsewhere.
    - Flip `BACKUP_LOCAL_FILES=true` when you want backups to bundle your top-level `.env` and `docker-compose.yml` alongside the database.
    - Optionally tune `BACKUP_CRON`, retention, or enable `BACKUP_ON_START=true` for an immediate smoke-test run.
-   - Mount your NAS share on the Docker host (e.g. `/mnt/restic-whiskey-db`) and ensure `docker-compose.yml` binds it into the backup container at `/remote`.
+   - Mount your NAS share on the Docker host (e.g. `/mnt/restic-whiskey-db`) and ensure `docker-compose.yml` binds it into the container at `/remote`.
    - Configure logging with `LOG_LEVEL` (`none`, `error`, `info`, `debug`), `LOG_FILE_PATH` (default `/logs/whiskey_db.log`), `LOG_MAX_MB`, and `LOG_RETENTION_DAYS`.
    - (Optional) Set `PUID`/`PGID` so the install steps can reset ownership on generated files after running with elevated privileges.
 2. Bring the stack up:
    ```bash
    docker compose up -d
+   ```
 
 ## 📜 Logging
 
-All application containers stream through a shared log sink that writes to `LOG_FILE_PATH` (defaults to `/logs/whiskey_db.log`, mounted from the host `./logs` directory).
+All core processes stream through a shared log sink that writes to `LOG_FILE_PATH` (defaults to `/logs/whiskey_db.log`, mounted from the host `./logs` directory).
 
 - `LOG_LEVEL` controls what gets persisted: `none` keeps Docker-only logs, `error` records stderr only, `info` (default) captures normal activity, and `debug` keeps everything.
 - The log includes ISO8601 timestamps, service name (`API`, `WEB`, `BACKUP`), and severity.
@@ -122,9 +123,9 @@ All application containers stream through a shared log sink that writes to `LOG_
 | `NEXT_PUBLIC_APP_NAME` | Frontend-visible app name, injected into the bundle. | `Whiskey DB` |
 | `API_HOST` | Address FastAPI listens on inside the container. | `0.0.0.0` |
 | `API_PORT` | Port FastAPI binds to. | `8000` |
-| `API_BASE` | Backend origin the Next.js proxy forwards to. | `http://api:8000` |
+| `API_BASE` | Backend origin the Next.js proxy forwards to. | `http://127.0.0.1:8000` |
 | `NEXT_PUBLIC_API_BASE` | Browser base path used by the frontend when calling the API (served via the `/api` proxy). | `/api` |
-| `NEXT_BACKEND_ORIGIN` | Origin baked into the web image for server rewrites (set before `docker compose build web`). | `http://api:8000` |
+| `NEXT_BACKEND_ORIGIN` | Origin baked into the unified image for server rewrites (set before `docker compose build whiskey`). | `http://127.0.0.1:8000` |
 | `TZ` | IANA timezone applied to API timestamps and the backup scheduler. | `America/Chicago` |
 | `DATABASE_URL` | SQLModel database connection string. | `sqlite:////data/whiskey.db` |
 | `SECRET_KEY` | JWT signing key for auth tokens (replace in production). | `change-me-please` |
@@ -155,7 +156,6 @@ All application containers stream through a shared log sink that writes to `LOG_
 | --- | --- | --- |
 | `UPLOAD_MAX_MB` | Maximum image upload size (MB). | `100` |
 | `UPLOAD_DIR` | Directory where uploaded assets are stored. | `/data/uploads` |
-| `IMAGE_URL_MIGRATE_ON_START` | Run legacy URL normalization on startup when true. | `true` |
 
 ### Logging & Runtime User
 
@@ -172,7 +172,7 @@ All application containers stream through a shared log sink that writes to `LOG_
 | Environment Variable | Purpose | Default |
 | --- | --- | --- |
 | `BACKUP_ENABLED` | Toggle scheduled backups. | `true` |
-| `BACKUP_SOURCE` | Path mounted into the backup container for snapshotting. | `/data` |
+| `BACKUP_SOURCE` | Path mounted into the container for snapshotting. | `/data` |
 | `BACKUP_REPOSITORY` | Destination path for restic repos or plaintext archives. | `/remote/restic-whiskey-db` |
 | `BACKUP_ENCRYPTED` | Choose encrypted restic (`true`) or plaintext tar archives (`false`). | `true` |
 | `BACKUP_ARCHIVE_DIR` | Target directory for plaintext archives when encryption is disabled. | `/remote/whiskey-db-plain` |
@@ -212,8 +212,17 @@ uvicorn app.main:app --reload
 # Run combined lint/tests (creates .venv, installs deps, logs to logs/whiskey_db.log)
 ./scripts/run_ci_checks.py
 ```
-Prefer `docker compose build api` (or `docker compose up --build api`) after changing backend dependencies so the baked image stays current; create a local `docker-compose.override.yml` if you need to bind-mount `./api` for hot reloads.
-Run `docker compose build web` to refresh the frontend image after modifying `web/package.json` or Next.js config, and `docker compose build backup` if you edit the backup scripts but rely on the containerized job.
+Prefer `docker compose build whiskey` (or `docker compose up --build whiskey`) after changing backend requirements, frontend dependencies, or the backup scripts so the unified image stays current; create a local `docker-compose.override.yml` if you need to bind-mount the source directories for hot reloads.
+
+#### Form accessibility helper
+- Use `useFormFieldIds` (`web/src/lib/useFormFieldIds.ts`) inside any client form to generate stable `id`/`name` pairs and pair them with `label htmlFor` attributes. Example:
+  ```tsx
+  const field = useFormFieldIds('bottle-new');
+  const brand = field('brand');
+  <label htmlFor={brand.id}>Brand</label>
+  <input {...brand} value={form.brand} onChange={…} />
+  ```
+- This keeps Chrome’s autofill and accessibility checks happy and avoids hand-managing unique IDs.
 
 
 ### 📦 Versioning

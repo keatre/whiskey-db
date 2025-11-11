@@ -3,6 +3,7 @@
 import { useRouter, useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import AdminOnly from '../../../../../components/AdminOnly';
+import { useFormFieldIds } from '../../../../../lib/useFormFieldIds';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -42,6 +43,17 @@ export default function NewPurchasePage() {
     retailer_id: ''
   });
   const [saving, setSaving] = useState(false);
+  const field = useFormFieldIds('purchase-new');
+  const fields = {
+    purchase_date: field('purchase_date'),
+    price_paid: field('price_paid'),
+    tax_paid: field('tax_paid'),
+    quantity: field('quantity'),
+    status: field('status'),
+    storage_location: field('storage_location'),
+    location: field('location'),
+    retailer_id: field('retailer_id'),
+  };
 
   function set<K extends keyof typeof form>(k: K, v: string) {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -88,33 +100,69 @@ export default function NewPurchasePage() {
             maxWidth: '760px'
           }}
         >
-          <label>purchase_date</label>
-          <input type="date" value={form.purchase_date} onChange={e => set('purchase_date', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.purchase_date.id}>purchase_date</label>
+          <input
+            {...fields.purchase_date}
+            type="date"
+            value={form.purchase_date}
+            onChange={e => set('purchase_date', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>price_paid</label>
-          <input value={form.price_paid} onChange={e => set('price_paid', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.price_paid.id}>price_paid</label>
+          <input
+            {...fields.price_paid}
+            value={form.price_paid}
+            onChange={e => set('price_paid', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>tax_paid</label>
-          <input value={form.tax_paid} onChange={e => set('tax_paid', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.tax_paid.id}>tax_paid</label>
+          <input
+            {...fields.tax_paid}
+            value={form.tax_paid}
+            onChange={e => set('tax_paid', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>quantity</label>
-          <input value={form.quantity} onChange={e => set('quantity', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.quantity.id}>quantity</label>
+          <input
+            {...fields.quantity}
+            value={form.quantity}
+            onChange={e => set('quantity', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>status</label>
-          <select value={form.status} onChange={e => set('status', e.target.value)}>
+          <label htmlFor={fields.status.id}>status</label>
+          <select {...fields.status} value={form.status} onChange={e => set('status', e.target.value)}>
             <option value="sealed">sealed</option>
             <option value="open">open</option>
             <option value="finished">finished</option>
           </select>
 
-          <label>storage_location</label>
-          <input value={form.storage_location} onChange={e => set('storage_location', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.storage_location.id}>storage_location</label>
+          <input
+            {...fields.storage_location}
+            value={form.storage_location}
+            onChange={e => set('storage_location', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>location</label>
-          <input value={form.location} onChange={e => set('location', e.target.value)} style={{ padding: 8 }} />
+          <label htmlFor={fields.location.id}>location</label>
+          <input
+            {...fields.location}
+            value={form.location}
+            onChange={e => set('location', e.target.value)}
+            style={{ padding: 8 }}
+          />
 
-          <label>retailer</label>
-          <select value={form.retailer_id} onChange={e => set('retailer_id', e.target.value)} style={{ padding: 8 }}>
+          <label htmlFor={fields.retailer_id.id}>retailer</label>
+          <select
+            {...fields.retailer_id}
+            value={form.retailer_id}
+            onChange={e => set('retailer_id', e.target.value)}
+            style={{ padding: 8 }}
+          >
             <option value="">— none —</option>
             {retailers.map(ret => (
               <option key={ret.retailer_id} value={ret.retailer_id}>

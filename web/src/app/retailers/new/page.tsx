@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminOnly from '../../../components/AdminOnly';
+import { useFormFieldIds } from '../../../lib/useFormFieldIds';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -18,6 +19,8 @@ export default function NewRetailerPage() {
     notes: ''
   });
   const [saving, setSaving] = useState(false);
+  const field = useFormFieldIds('retailer-new');
+  const noteField = field('notes');
 
   function set<K extends keyof typeof form>(k: K, v: string) {
     setForm(prev => ({ ...prev, [k]: v }));
@@ -57,14 +60,17 @@ export default function NewRetailerPage() {
             maxWidth: '720px'
           }}
         >
-          {(['name','type','website','city','state','country'] as const).map((k) => (
-            <div key={k} style={{ display: 'contents' }}>
-              <label style={{ textTransform: 'capitalize' }}>{k}</label>
-              <input value={form[k]} onChange={e => set(k, e.target.value)} style={{ padding: 8 }} />
-            </div>
-          ))}
-          <label>notes</label>
-          <textarea value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} style={{ padding: 8 }} />
+          {(['name','type','website','city','state','country'] as const).map((k) => {
+            const info = field(k);
+            return (
+              <div key={k} style={{ display: 'contents' }}>
+                <label htmlFor={info.id} style={{ textTransform: 'capitalize' }}>{k}</label>
+                <input {...info} value={form[k]} onChange={e => set(k, e.target.value)} style={{ padding: 8 }} />
+              </div>
+            );
+          })}
+          <label htmlFor={noteField.id}>notes</label>
+          <textarea {...noteField} value={form.notes} onChange={e => set('notes', e.target.value)} rows={3} style={{ padding: 8 }} />
           <div></div>
           <button type="submit" disabled={saving} style={{ padding: '8px 12px' }}>
             {saving ? 'Saving…' : 'Save'}

@@ -1,3 +1,17 @@
+## [v1.5.0] - 2025-11-10
+
+### Changed
+- Replaced the multi-container stack with a single `whiskey` image that runs the Next.js frontend, FastAPI API, and Restic backup scheduler under one entrypoint so downstream installs only add one service to their compose files; the new root `Dockerfile`, runtime supervisor, updated backup entrypoint, compose definition, and helper scripts/documentation all reflect the unified build (`Dockerfile`, `.dockerignore`, `docker-compose.yml`, `ops/runtime/start-services.sh`, `ops/backup/entrypoint.sh`, `.env.example`, `scripts/db-normalize-image-urls.sh`, `api/app/bootstrap_admin.py`, `README.md`, `SECURITY.md`).
+
+### Fixed
+- Unified entrypoint now rewrites legacy `API_BASE`/`NEXT_BACKEND_ORIGIN` values that still point to `http://api:8000` so single-container installs keep working even if `.env` wasn’t updated, preventing `getaddrinfo ENOTFOUND api` failures during proxying (`ops/runtime/start-services.sh`, `README.md`).
+- Added a safety alias (`api → 127.0.0.1`) inside the container’s `/etc/hosts` so even truly legacy builds that still reference `http://api:8000` continue to resolve to the bundled API service (`ops/runtime/start-services.sh`, `README.md`).
+- Deleted the unused `IMAGE_URL_MIGRATE_ON_START` env knob from `.env`/README so config no longer advertises a no-op flag.
+- Chrome now reports zero unlabeled/unnamed form controls: every admin/bottle/purchase/retailer form wires labels to inputs via the new `useFormFieldIds` helper, login fields ship explicit names/aria-labels, and docs explain how to keep future forms compliant (`web/src/lib/useFormFieldIds.ts`, `web/src/app/**/page.tsx`, `web/src/components/HeaderAuthControl.tsx`, `web/src/app/signin/_LoginClient.tsx`, `README.md`).
+
+---
+
+
 ## [1.4.3] - 2025-11-09
 
 ### Added

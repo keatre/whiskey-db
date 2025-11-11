@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
+import { useFormFieldIds } from '../../../../lib/useFormFieldIds';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -23,6 +24,8 @@ export default function EditRetailerPage() {
     country: '',
     notes: ''
   });
+  const field = useFormFieldIds('retailer-edit');
+  const noteField = field('notes');
 
   useEffect(() => {
     let mounted = true;
@@ -91,15 +94,18 @@ export default function EditRetailerPage() {
           onSubmit={submit}
           style={{ display: 'grid', gridTemplateColumns: '200px 320px', gap: 8, alignItems: 'center', maxWidth: '760px' }}
         >
-          {(['name','type','website','city','state','country'] as const).map((k) => (
-            <div key={k} style={{ display: 'contents' }}>
-              <label style={{ textTransform: 'capitalize' }}>{k}</label>
-              <input value={form[k]} onChange={e => set(k, e.target.value)} />
-            </div>
-          ))}
+          {(['name','type','website','city','state','country'] as const).map((k) => {
+            const info = field(k);
+            return (
+              <div key={k} style={{ display: 'contents' }}>
+                <label htmlFor={info.id} style={{ textTransform: 'capitalize' }}>{k}</label>
+                <input {...info} value={form[k]} onChange={e => set(k, e.target.value)} />
+              </div>
+            );
+          })}
 
-          <label>notes</label>
-          <textarea rows={3} value={form.notes} onChange={e => set('notes', e.target.value)} />
+          <label htmlFor={noteField.id}>notes</label>
+          <textarea {...noteField} rows={3} value={form.notes} onChange={e => set('notes', e.target.value)} />
 
           <div></div>
           <div style={{ display: 'flex', gap: 8 }}>

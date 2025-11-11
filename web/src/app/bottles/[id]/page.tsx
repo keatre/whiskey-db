@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -87,9 +88,14 @@ export default function BottleDetailPage() {
   const [purchases, setPurchases] = useState<Purchase[]>([]);
   const [valuation, setValuation] = useState<Valuation | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageErrored, setImageErrored] = useState(false);
 
   // ⬇️ read live auth/role from shared SWR cache
   const { isAdmin } = useMe();
+
+  useEffect(() => {
+    setImageErrored(false);
+  }, [bottle?.image_url]);
 
   useEffect(() => {
     let mounted = true;
@@ -194,15 +200,18 @@ export default function BottleDetailPage() {
       {/* Image */}
       {bottle.image_url && (
         <div style={{ margin: '12px 0' }}>
-          <img
-            src={apiPath(bottle.image_url)}
+          <Image
+            src={
+              imageErrored
+                ? PLACEHOLDER_SVG
+                : apiPath(bottle.image_url)
+            }
             alt={`${bottle.brand} ${bottle.expression ?? ''}`}
-            style={{ maxWidth: 420, borderRadius: 8 }}
-            onError={(e) => {
-              const img = e.currentTarget as HTMLImageElement;
-              img.onerror = null;
-              img.src = PLACEHOLDER_SVG;
-            }}
+            width={420}
+            height={420}
+            style={{ maxWidth: 420, borderRadius: 8, height: 'auto' }}
+            unoptimized
+            onError={() => setImageErrored(true)}
           />
         </div>
       )}

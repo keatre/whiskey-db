@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const API_BASE = process.env.API_BASE || "http://api:8000";
+const API_BASE = process.env.API_BASE || "http://127.0.0.1:8000";
 
 const HOP = new Set([
   "connection",
