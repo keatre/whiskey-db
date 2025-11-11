@@ -3,6 +3,7 @@
 ### Added
 - Automated GHCR publishing workflow builds and pushes `ghcr.io/keatre/whiskey-db:<tag>` whenever a `v*` tag lands, so releases are `docker run` ready out of the box (`.github/workflows/publish-image.yml`).
 - Repository ownership and automation are now tracked via `CODEOWNERS` plus Dependabot configuration for npm, pip, Docker, and GitHub Actions updates (`.github/codeowners`, `.github/dependabot.yml`).
+- Every release now also retags `ghcr.io/keatre/whiskey-db:latest`, and the README documents how to pull either the `latest` stream or a pinned tag from GHCR (`.github/workflows/publish-image.yml`, `README.md`).
 
 ### Fixed
 - Edit Bottle form now stacks each label directly above its input and keeps the image/markdown editors full-width, restoring the expected layout on wide displays (`web/src/app/bottles/[id]/edit/page.tsx`).
