@@ -1,3 +1,11 @@
+## [v1.5.2] - 2025-11-11
+
+### Added
+- Automated GHCR publishing workflow builds and pushes `ghcr.io/keatre/whiskey-db:<tag>` whenever a `v*` tag lands, so releases are `docker run` ready out of the box (`.github/workflows/publish-image.yml`).
+- Repository ownership and automation are now tracked via `CODEOWNERS` plus Dependabot configuration for npm, pip, Docker, and GitHub Actions updates (`.github/codeowners`, `.github/dependabot.yml`).
+
+---
+
 ## [v1.5.1] - 2025-11-11
 
 ### Changed

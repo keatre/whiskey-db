@@ -1,0 +1,6 @@
+# everything owned by
+*   @keatre
+
+# (example) folder ownership rules
+/api/**   @keatre
+/web/**   @keatre
