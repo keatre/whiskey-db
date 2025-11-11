@@ -17,6 +17,7 @@ cookies.txt
 *.sqlite3
 logs/
 *.log
+*.csv
 
 # Python cache
 __pycache__/
@@ -28,6 +29,7 @@ __pycache__/
 /api/.venv
 /api/whiskey.db
 /api/static/uploads/
+/api/data/
 
 # Web build/cache
 /web/node_modules/

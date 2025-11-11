@@ -1,3 +1,11 @@
+## [v1.5.1] - 2025-11-11
+
+### Changed
+- Retired the legacy per-service Dockerfiles since the stack now builds exclusively from the root `Dockerfile`; CI and local Make targets were updated accordingly so builds no longer reference the removed files (`api/Dockerfile`, `web/Dockerfile`, `ops/backup/Dockerfile`, `.github/workflows/ci.yml`, `Makefile`).
+- `.env.example` now includes `BACKUP_EXTRA_PATHS` and `BACKUP_TIMEOUT` to document every backup variable consumed by the compose stack; all sample values remain anonymized placeholders.
+
+---
+
 ## [v1.5.0] - 2025-11-10
 
 ### Changed
