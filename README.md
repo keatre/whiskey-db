@@ -25,7 +25,16 @@ Self-hosted database for cataloging and valuing your whiskey collection.
 - Python 3.12 (if building outside Docker)
 
 ### Setup
-Clone the repo:
+
+Prefer using the published image:
+```bash
+docker pull ghcr.io/keatre/whiskey-db:latest    # always the newest release
+# or pin to a known tag, e.g.
+# docker pull ghcr.io/keatre/whiskey-db:v1.5.2
+```
+`ghcr.io/keatre/whiskey-db:latest` is retagged on every release, so you only need to specify a version tag when you want to stay on a specific build.
+
+Or Clone the repo:
 ```bash
 git clone https://github.com/keatre/whiskey-db.git
 cd whiskey-db
@@ -40,6 +49,7 @@ docker compose up -d --build
 ```
 > The single `whiskey` service now bundles the FastAPI API, Next.js frontend, and scheduled backups. Rebuild it with `docker compose build whiskey` whenever you change backend requirements (`api/requirements.txt`), frontend dependencies (`web/package*.json`), or the backup scripts under `ops/backup/`.
 > Legacy `.env` files that still set `API_BASE=http://api:8000` or `NEXT_BACKEND_ORIGIN=http://api:8000` are automatically rewritten to `http://127.0.0.1:8000`, and the container injects `/etc/hosts` with `api → 127.0.0.1` so existing deployments keep working. Update your `.env` (and rebuild) when convenient to drop the compatibility shim.
+
 
 Access:
 - Frontend: http://localhost:8080
