@@ -1,9 +1,8 @@
 name: Publish Image
 
 on:
-  push:
-    tags:
-      - 'v*'
+  release:
+    types: [published]
 
 permissions:
   contents: read
@@ -27,14 +26,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract image metadata
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Build and push image
+        uses: docker/build-push-action@v6
         with:
-          images: ghcr.io/keatre/whiskey-db
+          context: .
+          file: ./Dockerfile
+          push: true
           tags: |
-            type=ref,event=tag
-            type=raw,value=latest
+            ghcr.io/keatre/whiskey-db:${{ github.event.release.tag_name }}
+            ghcr.io/keatre/whiskey-db:latest
 
       - name: Build and push image
         uses: docker/build-push-action@v6
