@@ -77,20 +77,6 @@ export default function EditBottlePage() {
     mashbill_markdown: field('mashbill_markdown'),
     notes_markdown: field('notes_markdown'),
   };
-  const formGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: 'minmax(180px, 220px) minmax(360px, 1fr)',
-    columnGap: 12,
-    rowGap: 8,
-    alignItems: 'center',
-    maxWidth: 980,
-  } as const;
-  const labelStyle = {
-    fontSize: 13,
-    fontWeight: 600,
-    color: 'var(--muted)',
-    lineHeight: 1.2,
-  } as const;
 
   // Controlled form state
   const [form, setForm] = useState({
@@ -285,17 +271,26 @@ export default function EditBottlePage() {
       <main>
         <h1>Edit Bottle</h1>
 
-        <form onSubmit={submit} style={formGridStyle}>
-          <label style={labelStyle} htmlFor={fields.brand.id}>Brand</label>
+        <form
+          onSubmit={submit}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '220px 480px',
+            gap: 10,
+            alignItems: 'center',
+            maxWidth: '980px',
+          }}
+        >
+          <label htmlFor={fields.brand.id}>Brand</label>
           <input {...fields.brand} value={form.brand} onChange={(e) => set('brand', e.target.value)} />
 
-          <label style={labelStyle} htmlFor={fields.expression.id}>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
+          <label htmlFor={fields.expression.id}>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
           <input {...fields.expression} value={form.expression} onChange={(e) => set('expression', e.target.value)} />
 
-          <label style={labelStyle} htmlFor={fields.distillery.id}>Distillery (optional)</label>
+          <label htmlFor={fields.distillery.id}>Distillery (optional)</label>
           <input {...fields.distillery} value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
 
-          <label style={labelStyle} htmlFor={fields.stylePicker.id}>Style</label>
+          <label htmlFor={fields.stylePicker.id}>Style</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select
               {...fields.stylePicker}
@@ -321,10 +316,10 @@ export default function EditBottlePage() {
             )}
           </div>
 
-          <label style={labelStyle} htmlFor={fields.region.id}>Region (optional)</label>
+          <label htmlFor={fields.region.id}>Region (optional)</label>
           <input {...fields.region} value={form.region} onChange={(e) => set('region', e.target.value)} />
 
-          <label style={labelStyle} htmlFor={fields.age.id}>Age (years)</label>
+          <label htmlFor={fields.age.id}>Age (years)</label>
           <input
             {...fields.age}
             type="number"
@@ -335,7 +330,7 @@ export default function EditBottlePage() {
             onChange={(e) => set('age', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.proof.id}>Proof</label>
+          <label htmlFor={fields.proof.id}>Proof</label>
           <input
             {...fields.proof}
             type="number"
@@ -346,7 +341,7 @@ export default function EditBottlePage() {
             onChange={(e) => set('proof', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.abv.id}>ABV (%)</label>
+          <label htmlFor={fields.abv.id}>ABV (%)</label>
           <input
             {...fields.abv}
             type="number"
@@ -357,7 +352,7 @@ export default function EditBottlePage() {
             onChange={(e) => set('abv', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.size_ml.id}>Size (ml)</label>
+          <label htmlFor={fields.size_ml.id}>Size (ml)</label>
           <input
             {...fields.size_ml}
             type="number"
@@ -368,7 +363,7 @@ export default function EditBottlePage() {
             onChange={(e) => set('size_ml', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.release_year.id}>Release year</label>
+          <label htmlFor={fields.release_year.id}>Release year</label>
           <input
             {...fields.release_year}
             type="number"
@@ -380,14 +375,14 @@ export default function EditBottlePage() {
             onChange={(e) => set('release_year', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
+          <label htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
           <input
             {...fields.barcode_upc}
             value={form.barcode_upc}
             onChange={(e) => set('barcode_upc', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.is_rare.id}>Mark as Rare</label>
+          <label htmlFor={fields.is_rare.id}>Mark as Rare</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
               {...fields.is_rare}
@@ -399,7 +394,7 @@ export default function EditBottlePage() {
             <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
           </div>
 
-          <label style={labelStyle} htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
+          <label htmlFor={fields.image_upload.id}>Bottle Image (replace)</label>
           <div>
             <input
               {...fields.image_upload}
@@ -423,7 +418,7 @@ export default function EditBottlePage() {
             </div>
           </div>
 
-          <label style={labelStyle} htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
+          <label htmlFor={fields.mashbill_markdown.id}>Mash Bill (Markdown)</label>
           <textarea
             {...fields.mashbill_markdown}
             rows={8}
@@ -431,7 +426,7 @@ export default function EditBottlePage() {
             onChange={(e) => set('mashbill_markdown', e.target.value)}
           />
 
-          <label style={labelStyle} htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
+          <label htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
           <textarea
             {...fields.notes_markdown}
             rows={8}
