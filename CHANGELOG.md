@@ -7,7 +7,7 @@
 
 
 ### Fixed
-- New and Edit Bottle forms return to the compact two-column layout, keeping labels aligned with their inputs just like earlier releases (`web/src/app/bottles/new/page.tsx`, `web/src/app/bottles/[id]/edit/page.tsx`).
+- New and Edit Bottle screens now use the exact v1.3/v1.4 era markup—two fixed-width columns with inline labels—so the layout matches long-standing deployments without the newer stacked field styling (`web/src/app/bottles/new/page.tsx`, `web/src/app/bottles/[id]/edit/page.tsx`).
 
 ---
 

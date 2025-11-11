@@ -1,10 +1,8 @@
 'use client';
 
-import Image from 'next/image';
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import AdminOnly from '../../../components/AdminOnly';
-import { useFormFieldIds } from '../../../lib/useFormFieldIds';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
@@ -52,25 +50,6 @@ export default function NewBottlePage() {
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const field = useFormFieldIds('bottle-new');
-  const fields = {
-    brand: field('brand'),
-    expression: field('expression'),
-    distillery: field('distillery'),
-    stylePicker: field('style'),
-    styleCustom: field('styleCustom'),
-    region: field('region'),
-    age: field('age'),
-    proof: field('proof'),
-    abv: field('abv'),
-    size_ml: field('size_ml'),
-    release_year: field('release_year'),
-    barcode_upc: field('barcode_upc'),
-    is_rare: field('is_rare'),
-    image_upload: field('image_upload'),
-    mashbill_markdown: field('mashbill_markdown'),
-    notes_markdown: field('notes_markdown'),
-  };
 
   function set<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
     setForm((prev) => ({ ...prev, [k]: v }));
@@ -164,42 +143,38 @@ export default function NewBottlePage() {
           onSubmit={submit}
           style={{
             display: 'grid',
-            gridTemplateColumns: '220px 480px',
+            gridTemplateColumns: '220px 420px',
             gap: 10,
             alignItems: 'center',
             maxWidth: '980px',
           }}
         >
-          <label htmlFor={fields.brand.id}>Brand</label>
+          <label>Brand</label>
           <input
-            {...fields.brand}
             placeholder="e.g., Ardbeg, Maker's Mark, Gordon & MacPhail"
             value={form.brand}
             onChange={(e) => set('brand', e.target.value)}
           />
 
-          <label htmlFor={fields.expression.id}>
+          <label>
             Expression (e.g. 12 Year, Cask Strength, Port Finish)
           </label>
           <input
-            {...fields.expression}
             placeholder="e.g., 10 Year, Cask Strength, Port Cask Finish, Local Barley 2022"
             value={form.expression}
             onChange={(e) => set('expression', e.target.value)}
           />
 
-          <label htmlFor={fields.distillery.id}>Distillery (optional)</label>
+          <label>Distillery (optional)</label>
           <input
-            {...fields.distillery}
             placeholder="e.g., Ardbeg Distillery, Buffalo Trace, Yoichi"
             value={form.distillery}
             onChange={(e) => set('distillery', e.target.value)}
           />
 
-          <label htmlFor={fields.stylePicker.id}>Style</label>
+          <label>Style</label>
           <div style={{ display: 'flex', gap: 8 }}>
             <select
-              {...fields.stylePicker}
               value={form.stylePicker}
               onChange={(e) => set('stylePicker', e.target.value)}
               style={{ flex: 1 }}
@@ -213,7 +188,6 @@ export default function NewBottlePage() {
             </select>
             {form.stylePicker === 'Custom…' && (
               <input
-                {...fields.styleCustom}
                 placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
                 value={form.styleCustom}
                 onChange={(e) => set('styleCustom', e.target.value)}
@@ -222,17 +196,15 @@ export default function NewBottlePage() {
             )}
           </div>
 
-          <label htmlFor={fields.region.id}>Region (optional)</label>
+          <label>Region (optional)</label>
           <input
-            {...fields.region}
             placeholder="e.g., Islay, Speyside, Kentucky, Hokkaido"
             value={form.region}
             onChange={(e) => set('region', e.target.value)}
           />
 
-          <label htmlFor={fields.age.id}>Age (years)</label>
+          <label>Age (years)</label>
           <input
-            {...fields.age}
             type="number"
             inputMode="numeric"
             min="0"
@@ -242,9 +214,8 @@ export default function NewBottlePage() {
             onChange={(e) => set('age', e.target.value)}
           />
 
-          <label htmlFor={fields.proof.id}>Proof</label>
+          <label>Proof</label>
           <input
-            {...fields.proof}
             type="number"
             inputMode="decimal"
             min="0"
@@ -254,9 +225,8 @@ export default function NewBottlePage() {
             onChange={(e) => set('proof', e.target.value)}
           />
 
-          <label htmlFor={fields.abv.id}>ABV (%)</label>
+          <label>ABV (%)</label>
           <input
-            {...fields.abv}
             type="number"
             inputMode="decimal"
             min="0"
@@ -266,9 +236,8 @@ export default function NewBottlePage() {
             onChange={(e) => set('abv', e.target.value)}
           />
 
-          <label htmlFor={fields.size_ml.id}>Size (ml)</label>
+          <label>Size (ml)</label>
           <input
-            {...fields.size_ml}
             type="number"
             inputMode="numeric"
             min="0"
@@ -278,9 +247,8 @@ export default function NewBottlePage() {
             onChange={(e) => set('size_ml', e.target.value)}
           />
 
-          <label htmlFor={fields.release_year.id}>Release year</label>
+          <label>Release year</label>
           <input
-            {...fields.release_year}
             type="number"
             inputMode="numeric"
             min="1900"
@@ -291,18 +259,16 @@ export default function NewBottlePage() {
             onChange={(e) => set('release_year', e.target.value)}
           />
 
-          <label htmlFor={fields.barcode_upc.id}>Barcode / UPC (optional)</label>
+          <label>Barcode / UPC (optional)</label>
           <input
-            {...fields.barcode_upc}
             placeholder="e.g., 088004012345"
             value={form.barcode_upc}
             onChange={(e) => set('barcode_upc', e.target.value)}
           />
 
-          <label htmlFor={fields.is_rare.id}>Mark as Rare</label>
+          <label>Mark as Rare</label>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <input
-              {...fields.is_rare}
               type="checkbox"
               checked={form.is_rare}
               onChange={(e) => set('is_rare', e.target.checked)}
@@ -311,10 +277,9 @@ export default function NewBottlePage() {
             <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
           </div>
 
-          <label htmlFor={fields.image_upload.id}>Bottle Image (upload)</label>
+          <label>Bottle Image (upload)</label>
           <div>
             <input
-              {...fields.image_upload}
               type="file"
               accept="image/png,image/jpeg,image/webp,image/gif"
               onChange={handleFile}
@@ -323,14 +288,7 @@ export default function NewBottlePage() {
               {uploading && <div>Uploading…</div>}
               {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
               {previewUrl && (
-                <Image
-                  src={previewUrl}
-                  alt="Bottle preview"
-                  width={360}
-                  height={360}
-                  style={{ maxWidth: 360, borderRadius: 8, height: 'auto' }}
-                  unoptimized
-                />
+                <img src={previewUrl} alt="preview" style={{ maxWidth: 360, borderRadius: 8 }} />
               )}
               {!previewUrl && !uploading && (
                 <div style={{ fontSize: 12, opacity: 0.7 }}>You can leave this blank for now.</div>
@@ -338,9 +296,8 @@ export default function NewBottlePage() {
             </div>
           </div>
 
-          <label htmlFor={fields.mashbill_markdown.id}>Mash Bill / Barrel Info (Markdown)</label>
+          <label>Mash Bill / Barrel Info (Markdown)</label>
           <textarea
-            {...fields.mashbill_markdown}
             placeholder={
               "## Mash Bill:\n- 65% Corn | 25% Wheat | 10% Malted Barley\n\n- Barrel 1:\nAged in #3, wood-fired, toasted & charred new American Oak barrels\n\n- Barrel 2:\nOloroso Cask\n\nAge:\nBarrel 1: 4+ Yrs / Barrel 2: 4 Mos"
             }
@@ -349,9 +306,8 @@ export default function NewBottlePage() {
             onChange={(e) => set('mashbill_markdown', e.target.value)}
           />
 
-          <label htmlFor={fields.notes_markdown.id}>Notes (Markdown)</label>
+          <label>Notes (Markdown)</label>
           <textarea
-            {...fields.notes_markdown}
             placeholder={'## Tasting\n- Nose: …\n- Palate: …\n- Finish: …\n\n**Verdict:** …'}
             rows={8}
             value={form.notes_markdown}
