@@ -1,9 +1,19 @@
+## [v1.5.3] - 2025-11-11
+
+### Changed
+- Disabled Dependabot version updates (keeping alerts only) and upgraded all GitHub Actions workflows to the latest `checkout`, `setup-node`, and `setup-python` majors to keep CI consistent (`.github/dependabot.yml`, `.github/workflows/*.yml`).
+
+---
+
 ## [v1.5.2] - 2025-11-11
 
 ### Added
 - Automated GHCR publishing workflow builds and pushes `ghcr.io/keatre/whiskey-db:<tag>` whenever a `v*` tag lands, so releases are `docker run` ready out of the box (`.github/workflows/publish-image.yml`).
 - Every release now also retags `ghcr.io/keatre/whiskey-db:latest`, and the README documents how to pull either the `latest` stream or a pinned tag from GHCR (`.github/workflows/publish-image.yml`, `README.md`).
 - Repository ownership and automation are now tracked via `CODEOWNERS` plus Dependabot configuration for npm, pip, Docker, and GitHub Actions updates (`.github/codeowners`, `.github/dependabot.yml`).
+
+### Changed
+- CI and publishing workflows now run on the latest GitHub Actions (`actions/checkout@v5`, `actions/setup-node@v6`, `actions/setup-python@v6`) to keep runners up to date (`.github/workflows/*.yml`).
 
 
 ### Fixed
