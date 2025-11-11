@@ -96,17 +96,7 @@ export default function EditBottlePage() {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
-  } as const;
-  const srOnly = {
-    position: 'absolute',
-    width: 1,
-    height: 1,
-    padding: 0,
-    margin: -1,
-    overflow: 'hidden',
-    clip: 'rect(0, 0, 0, 0)',
-    whiteSpace: 'nowrap',
-    border: 0,
+    width: '100%',
   } as const;
 
   const renderRow = (
@@ -116,24 +106,21 @@ export default function EditBottlePage() {
     opts?: { alignTop?: boolean }
   ) => (
     <>
-      <span
+      <label
+        htmlFor={controlId}
         style={{
           ...labelCellStyle,
           alignSelf: opts?.alignTop ? 'flex-start' : 'center',
         }}
       >
         {label}
-      </span>
+      </label>
       <div
         style={{
           ...controlCellStyle,
           alignItems: opts?.alignTop ? 'flex-start' : 'center',
-          position: 'relative',
         }}
       >
-        <label style={srOnly} htmlFor={controlId}>
-          {label}
-        </label>
         {control}
       </div>
     </>
