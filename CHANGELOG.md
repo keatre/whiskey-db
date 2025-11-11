@@ -1,3 +1,10 @@
+## [v1.5.3] - 2025-11-11
+
+### Changed
+- Disabled Dependabot version updates (keeping alerts only) and upgraded all GitHub Actions workflows to the latest `checkout`, `setup-node`, and `setup-python` majors to keep CI consistent (`.github/dependabot.yml`, `.github/workflows/*.yml`).
+
+---
+
 ## [v1.5.2] - 2025-11-11
 
 ### Added
