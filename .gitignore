@@ -37,8 +37,6 @@ __pycache__/
 /web/.turbo/
 /web/.env.local__pycache__/
 /web/.eslintcache
-.eslintrc.*
-eslint.config.*
 
 # Internal documentation
 dev-docs/

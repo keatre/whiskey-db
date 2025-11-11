@@ -1,10 +1,8 @@
 'use client';
 
-import Image from 'next/image';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import AdminOnly from '../../../../components/AdminOnly';
-import { useFormFieldIds } from '../../../../lib/useFormFieldIds';
 
 /**
  * We keep using NEXT_PUBLIC_API_BASE (expected to be "/api")
@@ -58,73 +56,6 @@ export default function EditBottlePage() {
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const field = useFormFieldIds('bottle-edit');
-  const fields = {
-    brand: field('brand'),
-    expression: field('expression'),
-    distillery: field('distillery'),
-    stylePicker: field('style'),
-    styleCustom: field('styleCustom'),
-    region: field('region'),
-    age: field('age'),
-    proof: field('proof'),
-    abv: field('abv'),
-    size_ml: field('size_ml'),
-    release_year: field('release_year'),
-    barcode_upc: field('barcode_upc'),
-    is_rare: field('is_rare'),
-    image_upload: field('image_upload'),
-    mashbill_markdown: field('mashbill_markdown'),
-    notes_markdown: field('notes_markdown'),
-  };
-
-  const formGridStyle = {
-    display: 'grid',
-    gridTemplateColumns: '220px 480px',
-    gap: 10,
-    alignItems: 'center',
-    maxWidth: '980px',
-  } as const;
-  const labelCellStyle = {
-    fontSize: 12,
-    fontWeight: 600,
-    color: 'var(--muted)',
-    paddingInlineEnd: 8,
-    textAlign: 'right',
-  } as const;
-  const controlCellStyle = {
-    display: 'flex',
-    alignItems: 'center',
-    gap: 8,
-    width: '100%',
-  } as const;
-
-  const renderRow = (
-    label: string,
-    controlId: string,
-    control: ReactNode,
-    opts?: { alignTop?: boolean }
-  ) => (
-    <>
-      <label
-        htmlFor={controlId}
-        style={{
-          ...labelCellStyle,
-          alignSelf: opts?.alignTop ? 'flex-start' : 'center',
-        }}
-      >
-        {label}
-      </label>
-      <div
-        style={{
-          ...controlCellStyle,
-          alignItems: opts?.alignTop ? 'flex-start' : 'center',
-        }}
-      >
-        {control}
-      </div>
-    </>
-  );
 
   // Controlled form state
   const [form, setForm] = useState({
@@ -319,174 +250,149 @@ export default function EditBottlePage() {
       <main>
         <h1>Edit Bottle</h1>
 
-        <form onSubmit={submit} style={formGridStyle}>
-          {renderRow('Brand', fields.brand.id, (
-            <input {...fields.brand} value={form.brand} onChange={(e) => set('brand', e.target.value)} />
-          ))}
+        <form
+          onSubmit={submit}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '220px 480px',
+            gap: 10,
+            alignItems: 'center',
+            maxWidth: '980px',
+          }}
+        >
+          <label>Brand</label>
+          <input value={form.brand} onChange={(e) => set('brand', e.target.value)} />
 
-          {renderRow('Expression (e.g. 12 Year, Cask Strength, Port Finish)', fields.expression.id, (
-            <input {...fields.expression} value={form.expression} onChange={(e) => set('expression', e.target.value)} />
-          ))}
+          <label>Expression (e.g. 12 Year, Cask Strength, Port Finish)</label>
+          <input value={form.expression} onChange={(e) => set('expression', e.target.value)} />
 
-          {renderRow('Distillery (optional)', fields.distillery.id, (
-            <input {...fields.distillery} value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
-          ))}
+          <label>Distillery (optional)</label>
+          <input value={form.distillery} onChange={(e) => set('distillery', e.target.value)} />
 
-          {renderRow('Style', fields.stylePicker.id, (
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: '100%' }}>
-              <select
-                {...fields.stylePicker}
-                value={form.stylePicker}
-                onChange={(e) => set('stylePicker', e.target.value)}
-                style={{ flex: 1, minWidth: 220 }}
-              >
-                <option value="">— Select style —</option>
-                {STYLE_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-              {form.stylePicker === 'Custom…' && (
-                <input
-                  {...fields.styleCustom}
-                  placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
-                  value={form.styleCustom}
-                  onChange={(e) => set('styleCustom', e.target.value)}
-                  style={{ flex: 1, minWidth: 220 }}
-                />
+          <label>Style</label>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <select
+              value={form.stylePicker}
+              onChange={(e) => set('stylePicker', e.target.value)}
+              style={{ flex: 1 }}
+            >
+              <option value="">— Select style —</option>
+              {STYLE_OPTIONS.map((s) => (
+                <option key={s} value={s}>
+                  {s}
+                </option>
+              ))}
+            </select>
+            {form.stylePicker === 'Custom…' && (
+              <input
+                placeholder="Type a custom style (e.g., Taiwanese - Single Malt)"
+                value={form.styleCustom}
+                onChange={(e) => set('styleCustom', e.target.value)}
+                style={{ flex: 1 }}
+              />
+            )}
+          </div>
+
+          <label>Region (optional)</label>
+          <input value={form.region} onChange={(e) => set('region', e.target.value)} />
+
+          <label>Age (years)</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="1"
+            value={form.age}
+            onChange={(e) => set('age', e.target.value)}
+          />
+
+          <label>Proof</label>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="any"
+            value={form.proof}
+            onChange={(e) => set('proof', e.target.value)}
+          />
+
+          <label>ABV (%)</label>
+          <input
+            type="number"
+            inputMode="decimal"
+            min="0"
+            step="0.1"
+            value={form.abv}
+            onChange={(e) => set('abv', e.target.value)}
+          />
+
+          <label>Size (ml)</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="0"
+            step="50"
+            value={form.size_ml}
+            onChange={(e) => set('size_ml', e.target.value)}
+          />
+
+          <label>Release year</label>
+          <input
+            type="number"
+            inputMode="numeric"
+            min="1900"
+            max="2100"
+            step="1"
+            value={form.release_year}
+            onChange={(e) => set('release_year', e.target.value)}
+          />
+
+          <label>Barcode / UPC (optional)</label>
+          <input
+            value={form.barcode_upc}
+            onChange={(e) => set('barcode_upc', e.target.value)}
+          />
+
+          <label>Mark as Rare</label>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={form.is_rare}
+              onChange={(e) => set('is_rare', e.target.checked)}
+              style={{ width: 18, height: 18 }}
+            />
+            <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
+          </div>
+
+          <label>Bottle Image (replace)</label>
+          <div>
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp,image/gif"
+              onChange={handleFile}
+            />
+            <div style={{ marginTop: 8 }}>
+              {uploading && <div>Uploading…</div>}
+              {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
+              {previewUrl && (
+                <img src={previewUrl} alt="preview" style={{ maxWidth: 360, borderRadius: 8 }} />
               )}
             </div>
-          ))}
+          </div>
 
-          {renderRow('Region (optional)', fields.region.id, (
-            <input {...fields.region} value={form.region} onChange={(e) => set('region', e.target.value)} />
-          ))}
+          <label>Mash Bill (Markdown)</label>
+          <textarea
+            rows={8}
+            value={form.mashbill_markdown}
+            onChange={(e) => set('mashbill_markdown', e.target.value)}
+          />
 
-          {renderRow('Age (years)', fields.age.id, (
-            <input
-              {...fields.age}
-              type="number"
-              inputMode="numeric"
-              min="0"
-              step="1"
-              value={form.age}
-              onChange={(e) => set('age', e.target.value)}
-            />
-          ))}
-
-          {renderRow('Proof', fields.proof.id, (
-            <input
-              {...fields.proof}
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              value={form.proof}
-              onChange={(e) => set('proof', e.target.value)}
-            />
-          ))}
-
-          {renderRow('ABV (%)', fields.abv.id, (
-            <input
-              {...fields.abv}
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="0.1"
-              value={form.abv}
-              onChange={(e) => set('abv', e.target.value)}
-            />
-          ))}
-
-          {renderRow('Size (ml)', fields.size_ml.id, (
-            <input
-              {...fields.size_ml}
-              type="number"
-              inputMode="numeric"
-              min="0"
-              step="50"
-              value={form.size_ml}
-              onChange={(e) => set('size_ml', e.target.value)}
-            />
-          ))}
-
-          {renderRow('Release year', fields.release_year.id, (
-            <input
-              {...fields.release_year}
-              type="number"
-              inputMode="numeric"
-              min="1900"
-              max="2100"
-              step="1"
-              value={form.release_year}
-              onChange={(e) => set('release_year', e.target.value)}
-            />
-          ))}
-
-          {renderRow('Barcode / UPC (optional)', fields.barcode_upc.id, (
-            <input
-              {...fields.barcode_upc}
-              value={form.barcode_upc}
-              onChange={(e) => set('barcode_upc', e.target.value)}
-            />
-          ))}
-
-          {renderRow('Mark as Rare', fields.is_rare.id, (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input
-                {...fields.is_rare}
-                type="checkbox"
-                checked={form.is_rare}
-                onChange={(e) => set('is_rare', e.target.checked)}
-                style={{ width: 18, height: 18 }}
-              />
-              <span style={{ fontSize: 14, opacity: 0.85 }}>Highlight this bottle as hard to find.</span>
-            </div>
-          ))}
-
-          {renderRow('Bottle Image (replace)', fields.image_upload.id, (
-            <div style={{ width: '100%' }}>
-              <input
-                {...fields.image_upload}
-                type="file"
-                accept="image/png,image/jpeg,image/webp,image/gif"
-                onChange={handleFile}
-              />
-              <div style={{ marginTop: 8 }}>
-                {uploading && <div>Uploading…</div>}
-                {uploadError && <div style={{ color: 'red' }}>{uploadError}</div>}
-                {previewUrl && (
-                  <Image
-                    src={previewUrl}
-                    alt="Bottle preview"
-                    width={360}
-                    height={360}
-                    style={{ maxWidth: 360, borderRadius: 8, height: 'auto' }}
-                    unoptimized
-                  />
-                )}
-              </div>
-            </div>
-          ), { alignTop: true })}
-
-          {renderRow('Mash Bill (Markdown)', fields.mashbill_markdown.id, (
-            <textarea
-              {...fields.mashbill_markdown}
-              rows={8}
-              value={form.mashbill_markdown}
-              onChange={(e) => set('mashbill_markdown', e.target.value)}
-            />
-          ), { alignTop: true })}
-
-          {renderRow('Notes (Markdown)', fields.notes_markdown.id, (
-            <textarea
-              {...fields.notes_markdown}
-              rows={8}
-              value={form.notes_markdown}
-              onChange={(e) => set('notes_markdown', e.target.value)}
-            />
-          ), { alignTop: true })}
+          <label>Notes (Markdown)</label>
+          <textarea
+            rows={8}
+            value={form.notes_markdown}
+            onChange={(e) => set('notes_markdown', e.target.value)}
+          />
 
           {/* Actions row */}
           <div></div>
