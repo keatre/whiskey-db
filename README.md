@@ -111,6 +111,14 @@ Backups now run inside the primary `whiskey` service and push snapshots to your 
    ```bash
    docker compose up -d
    ```
+   - Need to run that command from another directory (or keep `docker-compose.yml` outside the repo)? Export the helper variables first so Compose can still find your source tree:
+     ```bash
+     export WHISKEY_APP_ROOT=/opt/appdata/whiskey-db        # absolute path to this repo
+     export WHISKEY_ENV_FILE=/opt/appdata/whiskey-db/.env   # app config consumed by the container
+     export WHISKEY_COMPOSE_FILE_PATH=/opt/docker-compose.yml  # optional: bind the host compose file into /config
+     docker compose up -d
+     ```
+     These variables drive the build context and bind mounts (`WHISKEY_APP_ROOT`), the `env_file` reference and `/config/.env` bind (`WHISKEY_ENV_FILE`), and the optional `/config/docker-compose.yml` snapshot (`WHISKEY_COMPOSE_FILE_PATH`). Skip the exports when running from the repo root—the defaults still resolve to `.`.
 
 ## 📜 Logging
 
