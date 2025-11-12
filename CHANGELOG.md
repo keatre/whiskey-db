@@ -1,3 +1,10 @@
+## [v1.5.8] - 2025-11-12
+
+### Fixed
+- Release Drafter workflow no longer cancels overlapping runs, ensuring freshly merged PRs (like #51) always make it into the draft release (`.github/workflows/release-drafter.yml`).
+
+---
+
 ## [v1.5.7] - 2025-11-12
 
 ### Changed
