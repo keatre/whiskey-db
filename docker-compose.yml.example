@@ -1,0 +1,56 @@
+services:
+  whiskey:
+    image: ${WHISKEY_IMAGE:-ghcr.io/keatre/whiskey-db:latest}
+    env_file:
+      - ${WHISKEY_ENV_FILE:-/opt/appdata/whiskey-db/.env}
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/whiskey.db}
+      API_BASE: ${API_BASE:-http://127.0.0.1:8000}
+      NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-/api}
+      NEXT_BACKEND_ORIGIN: ${NEXT_BACKEND_ORIGIN:-http://127.0.0.1:8000}
+      API_HOST: ${API_HOST:-0.0.0.0}
+      API_PORT: ${API_PORT:-8000}
+      API_LOG_LEVEL: ${API_LOG_LEVEL:-info}
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ:-America/Chicago}
+      BACKUP_ENABLED: ${BACKUP_ENABLED:-true}
+      BACKUP_ENCRYPTED: ${BACKUP_ENCRYPTED:-true}
+      BACKUP_CRON: ${BACKUP_CRON:-0 3 * * *}
+      BACKUP_SOURCE: ${BACKUP_SOURCE:-/data}
+      BACKUP_TAG: ${BACKUP_TAG:-whiskey-db}
+      BACKUP_ON_START: ${BACKUP_ON_START:-false}
+      BACKUP_ARCHIVE_DIR: ${BACKUP_ARCHIVE_DIR:-}
+      BACKUP_LOCAL_FILES: ${BACKUP_LOCAL_FILES:-false}
+      PLAINTEXT_RETENTION_DAYS: ${PLAINTEXT_RETENTION_DAYS:-30}
+      BACKUP_TIMEOUT: ${BACKUP_TIMEOUT:-600}
+      BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-/extra/dev-docs}
+      BACKUP_REPOSITORY: ${BACKUP_REPOSITORY:-/remote/restic-whiskey-db}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
+      RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:-7}
+      RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
+      RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
+    volumes:
+      - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/data:/data
+      - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/logs:/logs
+      - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/dev-docs:/extra/dev-docs:ro
+      - ${WHISKEY_COMPOSE_FILE_PATH:-/opt/docker-compose.yml}:/config/docker-compose.yml:ro
+      - ${WHISKEY_ENV_FILE:-/opt/appdata/whiskey-db/.env}:/config/.env:ro
+      - /mnt/restic-whiskey-db:/remote
+    ports:
+      - "8080:3000"
+      - "8000:8000"
+    init: true
+    stop_signal: SIGTERM
+    stop_grace_period: 30s
+    restart: unless-stopped
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel run
+    profiles: ["cloudflare"]
+    env_file:
+      - ${WHISKEY_ENV_FILE:-/opt/appdata/whiskey-db/.env}
+    environment:
+      - TUNNEL_TOKEN=${CF_TUNNEL_TOKEN}

@@ -9,6 +9,7 @@ cookies.txt
 !.env.example
 .venv-*
 .venv/
+docker-compose.yml
 
 # DB & data
 /data/
