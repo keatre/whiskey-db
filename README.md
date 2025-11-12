@@ -121,7 +121,7 @@ Backups now run inside the primary `whiskey` service and push snapshots to your 
      These variables drive the build context and bind mounts (`WHISKEY_APP_ROOT`), the `env_file` reference and `/config/.env` bind (`WHISKEY_ENV_FILE`), and the optional `/config/docker-compose.yml` snapshot (`WHISKEY_COMPOSE_FILE_PATH`). Skip the exports when running from the repo root—the defaults still resolve to `.`.
 
 > The published image `ghcr.io/keatre/whiskey-db` ships multi-arch manifests for both `linux/amd64` and `linux/arm64/v8`, so Raspberry Pi and x86 hosts pull the correct variant automatically.
-> Logging helpers ship with the image; do **not** bind-mount `ops/logging` unless you intentionally maintain your own wrapper scripts, otherwise `/logging/with-logging.sh` will be missing on hosts that only keep `/opt/appdata/whiskey-db`.
+> Logging helpers ship with the image; do **not** bind-mount `ops/logging` unless you intentionally maintain your own wrapper scripts, otherwise `/logging/with-logging.sh` will be missing on hosts that only keep `/opt/appdata/whiskey-db`. Mount points such as `/data`, `/logs`, and `/extra/dev-docs` are created automatically at container start (and chowned to `PUID`/`PGID` when set), so you no longer have to pre-create those folders on the host.
 
 Prefer to keep your deployment compose outside the repo? Copy `docker-compose.yml.example` wherever you run Docker (e.g., `/opt/docker-compose.yml`). That example:
 - Targets the prebuilt GHCR image so no local build runs.
