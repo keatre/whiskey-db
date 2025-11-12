@@ -24,6 +24,8 @@ logs/
 __pycache__/
 *.py[cod]
 /api/app/routers/__pycache__/
+/.pytest_cache/
+/.ruff_cache/
 
 # API build/cache
 /api/.pytest_cache/

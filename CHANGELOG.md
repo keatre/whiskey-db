@@ -1,3 +1,11 @@
+## [v1.5.7] - 2025-11-12
+
+### Changed
+- Small update to background git management in preperation for next release.
+
+---
+
+
 ## [v1.5.6] - 2025-11-12
 
 ### Added
