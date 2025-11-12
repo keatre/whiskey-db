@@ -20,6 +20,12 @@ jobs:
   update_release_draft:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout main
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+
       - uses: release-drafter/release-drafter@v6
         with:
           config-name: release-drafter.yml
