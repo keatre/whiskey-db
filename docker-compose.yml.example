@@ -40,7 +40,6 @@ services:
     ports:
       - "8080:3000"
       - "8000:8000"
-    init: true
     stop_signal: SIGTERM
     stop_grace_period: 30s
     restart: unless-stopped

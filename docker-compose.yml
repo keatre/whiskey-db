@@ -39,7 +39,6 @@ services:
     volumes:
       - ${WHISKEY_APP_ROOT:-.}/data:/data
       - ${WHISKEY_APP_ROOT:-.}/api/static:/srv/api/static
-      - ${WHISKEY_APP_ROOT:-.}/ops/logging:/logging:ro
       - ${WHISKEY_APP_ROOT:-.}/logs:/logs
       - ${WHISKEY_APP_ROOT:-.}/dev-docs:/extra/dev-docs:ro
       - ${WHISKEY_COMPOSE_FILE_PATH:-./docker-compose.yml}:/config/docker-compose.yml:ro
@@ -48,7 +47,6 @@ services:
     ports:
       - "8080:3000"
       - "8000:8000"
-    init: true
     stop_signal: SIGTERM
     stop_grace_period: 30s
     restart: no
