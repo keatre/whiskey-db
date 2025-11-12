@@ -63,7 +63,17 @@ if [ ! -x "$BACKUP_ENTRYPOINT" ]; then
   exit 1
 fi
 
-mkdir -p /logs /data
+ensure_mount_dir() {
+  local path="$1"
+  mkdir -p "$path"
+  if [ -n "${PUID:-}" ] && [ -n "${PGID:-}" ]; then
+    # chown may fail when mounts are read-only; ignore in that case
+    chown "${PUID}:${PGID}" "$path" 2>/dev/null || true
+  fi
+}
+
+ensure_mount_dir /logs
+ensure_mount_dir /data
 
 declare -a CHILD_PIDS=()
 
