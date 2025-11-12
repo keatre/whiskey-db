@@ -1,3 +1,10 @@
+## [v1.5.5] - 2025-11-12
+
+### Changed
+- Release publishing workflow now generates a single set of tags/labels via `docker/metadata-action@v5` before building, eliminating duplicate Docker builds while still tagging each release plus `latest` (`.github/workflows/publish-image.yml`).
+
+---
+
 ## [v1.5.4] - 2025-11-11
 
 ### Changed
