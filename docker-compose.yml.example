@@ -24,7 +24,7 @@ services:
       BACKUP_LOCAL_FILES: ${BACKUP_LOCAL_FILES:-false}
       PLAINTEXT_RETENTION_DAYS: ${PLAINTEXT_RETENTION_DAYS:-30}
       BACKUP_TIMEOUT: ${BACKUP_TIMEOUT:-600}
-      BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-/extra/dev-docs}
+      BACKUP_EXTRA_PATHS: ${BACKUP_EXTRA_PATHS:-}
       BACKUP_REPOSITORY: ${BACKUP_REPOSITORY:-/remote/restic-whiskey-db}
       RESTIC_PASSWORD: ${RESTIC_PASSWORD:-}
       RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:-7}
@@ -33,7 +33,6 @@ services:
     volumes:
       - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/data:/data
       - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/logs:/logs
-      - ${WHISKEY_HOST_ROOT:-/opt/appdata/whiskey-db}/dev-docs:/extra/dev-docs:ro
       - ${WHISKEY_COMPOSE_FILE_PATH:-/opt/docker-compose.yml}:/config/docker-compose.yml:ro
       - ${WHISKEY_ENV_FILE:-/opt/appdata/whiskey-db/.env}:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote

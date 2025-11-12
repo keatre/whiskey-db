@@ -2,7 +2,7 @@
 
 ### Fixed
 - Prebuilt deployments (including Raspberry Pi) now start cleanly because the compose files no longer override the baked-in logging wrapper or request a second init process; remove any `/logging` bind mounts if you previously copied the old definition (`docker-compose.yml`, `docker-compose.yml.example`, `README.md`).
-- Entry point now auto-creates `/logs`, `/data`, and `/extra/dev-docs` (respecting `PUID`/`PGID`) so you can point bind mounts at brand-new host folders without preparing them manually (`ops/runtime/start-services.sh`, `README.md`).
+- Entry point now auto-creates `/logs` and `/data` (respecting `PUID`/`PGID`) so you can point bind mounts at brand-new host folders without preparing them manually (`ops/runtime/start-services.sh`, `README.md`).
 
 ---
 

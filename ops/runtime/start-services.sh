@@ -74,7 +74,6 @@ ensure_mount_dir() {
 
 ensure_mount_dir /logs
 ensure_mount_dir /data
-ensure_mount_dir /extra/dev-docs
 
 declare -a CHILD_PIDS=()
 

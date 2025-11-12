@@ -6,7 +6,7 @@ set -eu
 #   BACKUP_TAG                (e.g. whiskey-db)
 #   BACKUP_ENCRYPTED          (true|false)
 #   BACKUP_LOCAL_FILES        (true|false) include docker-compose.yml/.env when available
-#   BACKUP_EXTRA_PATHS        (space-separated container paths to include, eg "/extra/dev-docs /extra/notes")
+#   BACKUP_EXTRA_PATHS        (space-separated container paths to include, eg "/extra/notes")
 #   BACKUP_REPOSITORY         (canonical path used for both modes)
 #   RESTIC_PASSWORD           (encrypted mode)
 #   RESTIC_KEEP_DAILY/WEEKLY/MONTHLY (encrypted mode retention)
