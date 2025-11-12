@@ -2,6 +2,7 @@
 
 ### Added
 - GHCR releases now build multi-architecture manifests (`linux/amd64` and `linux/arm64/v8`) so Raspberry Pi hosts can pull the same tagged images as x86 machines; README notes the expanded support (`.github/workflows/publish-image.yml`, `README.md`).
+- `docker-compose.yml.example` demonstrates the prebuilt-image deployment layout (defaults to `/opt/appdata/whiskey-db`) and the repo now gitignores `docker-compose.yml` so operators can keep their own compose next to the source without dirtying the tree (`docker-compose.yml.example`, `.gitignore`, `README.md`).
 
 ---
 
