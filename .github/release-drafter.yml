@@ -20,3 +20,6 @@ template: |
   ---
   🏷️ Version: $NEXT_PATCH_VERSION
   📅 Date: $DATE
+
+last-release:
+  tag-name: v1.5.8

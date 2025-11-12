@@ -5,6 +5,7 @@
 - Entry point now auto-creates `/logs` and `/data` (respecting `PUID`/`PGID`) so you can point bind mounts at brand-new host folders without preparing them manually (`ops/runtime/start-services.sh`, `README.md`).
 - Release Drafter workflow schedules runs sequentially (no more duplicate drafts) by reintroducing concurrency with `cancel-in-progress: false` (`.github/workflows/release-drafter.yml`).
 - Release Drafter now explicitly checks out the latest `main` head before drafting so manual runs don’t miss the most recent merged PRs (`.github/workflows/release-drafter.yml`).
+- Added a temporary `last-release` override so the next draft rebuilds from `v1.5.8` onward after removing the stale `v1.5.9` tag (`.github/release-drafter.yml`).
 
 ---
 
