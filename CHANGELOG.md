@@ -1,3 +1,10 @@
+## [v1.5.6] - 2025-11-12
+
+### Added
+- GHCR releases now build multi-architecture manifests (`linux/amd64` and `linux/arm64/v8`) so Raspberry Pi hosts can pull the same tagged images as x86 machines; README notes the expanded support (`.github/workflows/publish-image.yml`, `README.md`).
+
+---
+
 ## [v1.5.5] - 2025-11-12
 
 ### Changed

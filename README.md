@@ -120,6 +120,8 @@ Backups now run inside the primary `whiskey` service and push snapshots to your 
      ```
      These variables drive the build context and bind mounts (`WHISKEY_APP_ROOT`), the `env_file` reference and `/config/.env` bind (`WHISKEY_ENV_FILE`), and the optional `/config/docker-compose.yml` snapshot (`WHISKEY_COMPOSE_FILE_PATH`). Skip the exports when running from the repo root—the defaults still resolve to `.`.
 
+> The published image `ghcr.io/keatre/whiskey-db` ships multi-arch manifests for both `linux/amd64` and `linux/arm64/v8`, so Raspberry Pi and x86 hosts pull the correct variant automatically.
+
 ## 📜 Logging
 
 All core processes stream through a shared log sink that writes to `LOG_FILE_PATH` (defaults to `/logs/whiskey_db.log`, mounted from the host `./logs` directory).
