@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "📖 Read the README"
+    url: https://github.com/keatre/whiskey-db#readme
+    about: Make sure your issue isn’t already explained in the documentation.
+  - name: "💬 Discussions"
+    url: https://github.com/keatre/whiskey-db/discussions
+    about: For questions or general conversation.
