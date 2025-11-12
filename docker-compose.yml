@@ -1,13 +1,14 @@
 services:
   whiskey:
     build:
-      context: .
-      dockerfile: Dockerfile
+      context: ${WHISKEY_APP_ROOT:-.}
+      dockerfile: ${WHISKEY_DOCKERFILE:-Dockerfile}
       args:
         NEXT_PUBLIC_API_BASE: ${NEXT_PUBLIC_API_BASE:-/api}
         NEXT_BACKEND_ORIGIN: ${NEXT_BACKEND_ORIGIN:-http://127.0.0.1:8000}
     image: whiskey-db:dev
-    env_file: .env
+    env_file:
+      - ${WHISKEY_ENV_FILE:-.env}
     environment:
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/whiskey.db}
       API_BASE: ${API_BASE:-http://127.0.0.1:8000}
@@ -36,13 +37,13 @@ services:
       RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
       RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
     volumes:
-      - ./data:/data
-      - ./api/static:/srv/api/static
-      - ./ops/logging:/logging:ro
-      - ./logs:/logs
-      - ./dev-docs:/extra/dev-docs:ro
-      - ./docker-compose.yml:/config/docker-compose.yml:ro
-      - ./.env:/config/.env:ro
+      - ${WHISKEY_APP_ROOT:-.}/data:/data
+      - ${WHISKEY_APP_ROOT:-.}/api/static:/srv/api/static
+      - ${WHISKEY_APP_ROOT:-.}/ops/logging:/logging:ro
+      - ${WHISKEY_APP_ROOT:-.}/logs:/logs
+      - ${WHISKEY_APP_ROOT:-.}/dev-docs:/extra/dev-docs:ro
+      - ${WHISKEY_COMPOSE_FILE_PATH:-./docker-compose.yml}:/config/docker-compose.yml:ro
+      - ${WHISKEY_ENV_FILE:-.env}:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote
     ports:
       - "8080:3000"
@@ -50,6 +51,7 @@ services:
     init: true
     stop_signal: SIGTERM
     stop_grace_period: 30s
+    restart: no
 
   cloudflared:
     image: cloudflare/cloudflared:latest
