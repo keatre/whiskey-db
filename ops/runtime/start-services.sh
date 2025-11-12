@@ -131,6 +131,7 @@ start_backup
 wait_status=0
 if ! wait -n; then
   wait_status=$?
+  echo "[entrypoint] a child process exited early (status $wait_status). Check \${LOG_FILE_PATH:-/logs/whiskey_db.log} for details." >&2
 fi
 
 stop_children

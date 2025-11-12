@@ -37,9 +37,17 @@ services:
       RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:-4}
       RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:-12}
     volumes:
-      - ${WHISKEY_APP_ROOT:-.}/data:/data
+      - type: bind
+        source: ${WHISKEY_APP_ROOT:-.}/data
+        target: /data
+        bind:
+          create_host_path: true
       - ${WHISKEY_APP_ROOT:-.}/api/static:/srv/api/static
-      - ${WHISKEY_APP_ROOT:-.}/logs:/logs
+      - type: bind
+        source: ${WHISKEY_APP_ROOT:-.}/logs
+        target: /logs
+        bind:
+          create_host_path: true
       - ${WHISKEY_COMPOSE_FILE_PATH:-./docker-compose.yml}:/config/docker-compose.yml:ro
       - ${WHISKEY_ENV_FILE:-.env}:/config/.env:ro
       - /mnt/restic-whiskey-db:/remote
