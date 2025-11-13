@@ -1,9 +1,3 @@
-## [Unreleased]
-
-### Fixed
-- Release Drafter now relies on the repository’s real latest tag again because the temporary `last-release` override (added while debugging drafts) has been removed (`.github/release-drafter.yml`).
-
----
 
 ## [v1.5.14] - 2025-11-12
 
@@ -11,6 +5,9 @@
 - Compose definitions now set `create_host_path: true` for the `/data` and `/logs` binds so fresh deployments don't have to pre-create directories—Docker will create them and the container entrypoint re-owns them based on `PUID`/`PGID` (`docker-compose.yml`, `docker-compose.yml.example`).
 - Entry point logs whenever one of the managed processes dies early, pointing users to `/logs/whiskey_db.log` for details, so failed startups are easier to diagnose (`ops/runtime/start-services.sh`).
 - API startup now exports `/srv/api` on `PYTHONPATH`, ensuring `uvicorn app.main:app` keeps running even when launched through the logging wrapper on ARM hosts (`ops/runtime/start-services.sh`).
+
+### Fixed
+- Release Drafter now relies on the repository’s real latest tag again because the temporary `last-release` override (added while debugging drafts) has been removed (`.github/release-drafter.yml`).
 
 ---
 
