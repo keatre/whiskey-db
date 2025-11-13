@@ -30,6 +30,8 @@ API_BASE=$(normalize_loopback "${API_BASE:-}" "API_BASE")
 NEXT_BACKEND_ORIGIN=$(normalize_loopback "${NEXT_BACKEND_ORIGIN:-}" "NEXT_BACKEND_ORIGIN")
 export API_BASE
 export NEXT_BACKEND_ORIGIN
+# Ensure the API package is importable even when uvicorn runs via the logging wrapper
+export PYTHONPATH="${API_DIR}:${PYTHONPATH:-}"
 
 ensure_host_alias() {
   local ip="$1"
