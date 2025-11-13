@@ -1,3 +1,10 @@
+## [Unreleased]
+
+### Fixed
+- Release Drafter now relies on the repository’s real latest tag again because the temporary `last-release` override (added while debugging drafts) has been removed (`.github/release-drafter.yml`).
+
+---
+
 ## [v1.5.14] - 2025-11-12
 
 ### Fixed
