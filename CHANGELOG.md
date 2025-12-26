@@ -7,6 +7,9 @@
 - WebAuthn dependency for server-side assertion verification (`api/requirements.txt`).
 - Passkey registration flow for authenticated users, including enrollment endpoints and a new Security page to create passkeys (`api/app/routers/auth.py`, `api/app/auth_schemas.py`, `web/src/app/security/page.tsx`, `web/src/components/NavLinks.tsx`, `web/src/api/auth.ts`).
 
+### Changed
+- Security navigation now appears only under the Admin section and is labeled "Account" (`web/src/components/NavLinks.tsx`).
+
 ---
 
 ## [v1.5.14] - 2025-11-12

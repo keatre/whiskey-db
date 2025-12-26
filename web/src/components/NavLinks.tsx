@@ -10,11 +10,11 @@ export default function NavLinks() {
     <>
       <Link href="/">Home</Link>
       <Link href="/bottles">Bottles</Link>
-      {me.authenticated && <Link href="/security">Security</Link>}
       {isAdmin && (
         <>
           <Link href="/retailers">Retailers</Link>
           <Link href="/admin">Admin</Link>
+          <Link href="/security">Account</Link>
         </>
       )}
     </>
