@@ -12,7 +12,6 @@ export default function NavLinks() {
       <Link href="/bottles">Bottles</Link>
       {isAdmin && (
         <>
-          <Link href="/retailers">Retailers</Link>
           <Link href="/admin">Admin</Link>
           <Link href="/security">Account</Link>
         </>

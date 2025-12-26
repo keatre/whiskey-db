@@ -10,6 +10,7 @@
 ### Changed
 - Security navigation now appears only under the Admin section and is labeled "Account" (`web/src/components/NavLinks.tsx`).
 - Display the current git branch + commit date beside the theme toggle, sourced from a new `/version` API helper (`api/app/version.py`, `api/app/main.py`, `web/src/components/VersionDisplay.tsx`, `web/src/app/layout.tsx`, `web/src/app/global.css`).
+- Retailers link now lives under the Admin landing page instead of the global navigation (`web/src/app/admin/page.tsx`, `web/src/components/NavLinks.tsx`).
 
 ---
 
