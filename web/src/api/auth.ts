@@ -20,6 +20,21 @@ export type PasskeyOptionsResponse = {
   }>;
 };
 
+export type PasskeyRegisterOptionsResponse = {
+  challenge: string;
+  rp: { id: string; name: string };
+  user: { id: string; name: string; displayName: string };
+  pubKeyCredParams?: Array<{ type: string; alg: number }>;
+  timeout?: number;
+  excludeCredentials?: Array<{ id: string; type: string; transports?: string[] }>;
+  authenticatorSelection?: {
+    userVerification?: string;
+    residentKey?: string;
+    authenticatorAttachment?: string;
+  };
+  attestation?: string;
+};
+
 const BROWSER_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) || "/api";
 
@@ -124,4 +139,33 @@ export async function passkeyVerify(
   return res.json() as Promise<MeResponse>;
 }
 
-export const AuthApi = { me, login, logout, passkeyOptions, passkeyVerify };
+export async function passkeyRegisterOptions(): Promise<PasskeyRegisterOptionsResponse> {
+  const res = await fetch(`${BROWSER_BASE}/auth/passkey/register/options`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({}),
+  });
+  if (!res.ok) {
+    const text = (await res.text().catch(() => "")) || `Passkey register options failed (${res.status})`;
+    throw new Error(text);
+  }
+  return res.json() as Promise<PasskeyRegisterOptionsResponse>;
+}
+
+export async function passkeyRegisterVerify(credential: Record<string, unknown>): Promise<void> {
+  const res = await fetch(`${BROWSER_BASE}/auth/passkey/register/verify`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ credential }),
+  });
+  if (!res.ok) {
+    const text = (await res.text().catch(() => "")) || `Passkey register failed (${res.status})`;
+    throw new Error(text);
+  }
+}
+
+export const AuthApi = { me, login, logout, passkeyOptions, passkeyVerify, passkeyRegisterOptions, passkeyRegisterVerify };

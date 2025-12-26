@@ -24,3 +24,7 @@ class PasskeyOptionsRequest(BaseModel):
 class PasskeyVerifyRequest(BaseModel):
     username: str
     credential: dict[str, Any]
+
+
+class PasskeyRegisterVerifyRequest(BaseModel):
+    credential: dict[str, Any]
