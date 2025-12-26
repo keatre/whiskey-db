@@ -1,19 +1,47 @@
 # api/app/routers/auth.py
 import time
 import ipaddress
+import json
 from collections import defaultdict, deque
-from typing import Deque, Dict
+from typing import Deque, Dict, Any
 
 from fastapi import APIRouter, Depends, Response, Request, HTTPException, status
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from sqlmodel import select
-from datetime import timedelta
+from datetime import timedelta, datetime, timezone
+
+from webauthn import (
+    generate_authentication_options,
+    generate_registration_options,
+    options_to_json,
+    verify_authentication_response,
+    verify_registration_response,
+)
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url
+from webauthn.helpers.structs import (
+    AuthenticationCredential,
+    AuthenticatorAssertionResponse,
+    AuthenticatorAttestationResponse,
+    AuthenticatorSelectionCriteria,
+    PublicKeyCredentialDescriptor,
+    PublicKeyCredentialType,
+    RegistrationCredential,
+    ResidentKeyRequirement,
+    UserVerificationRequirement,
+)
 
 from ..db import get_session
-from ..models import User
+from ..models import User, PasskeyCredential
 from ..settings import settings
 from ..security import verify_password, create_token, decode_token
-from ..auth_schemas import LoginRequest, MeResponse
+from ..auth_schemas import (
+    LoginRequest,
+    MeResponse,
+    PasskeyOptionsRequest,
+    PasskeyVerifyRequest,
+    PasskeyRegisterVerifyRequest,
+)
 from ..deps import get_current_user_role
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -27,6 +55,13 @@ _LOCKOUT_UNTIL: Dict[str, float] = {}                    # ip -> monotonic() unl
 _WINDOW = getattr(settings, "LOGIN_WINDOW_SECONDS", 60)
 _MAX_ATTEMPTS = getattr(settings, "LOGIN_MAX_ATTEMPTS", 10)
 _LOCKOUT = getattr(settings, "LOGIN_LOCKOUT_SECONDS", 180)
+
+# -------------------------
+# Passkey (WebAuthn) challenges
+# -------------------------
+_PASSKEY_AUTH_CHALLENGES: Dict[str, tuple[Any, float]] = {}
+_PASSKEY_REG_CHALLENGES: Dict[str, tuple[Any, float]] = {}
+_PASSKEY_CHALLENGE_TTL = getattr(settings, "PASSKEY_CHALLENGE_TTL_SECONDS", 120)
 
 # Parse trusted proxies (CIDR or single IPs) to safely honor X-Forwarded-For / CF-Connecting-IP
 _TRUSTED_NETS = []
@@ -95,6 +130,56 @@ def _throttle_record(ip: str, success: bool) -> None:
         _LOCKOUT_UNTIL.pop(ip, None)
     else:
         _ATTEMPTS[ip].append(time.monotonic())
+
+
+# -------------------------
+# Passkey helpers
+# -------------------------
+def _store_passkey_challenge(store: Dict[str, tuple[Any, float]], username: str, challenge: Any) -> None:
+    store[username] = (challenge, time.monotonic() + _PASSKEY_CHALLENGE_TTL)
+
+
+def _pop_passkey_challenge(store: Dict[str, tuple[Any, float]], username: str) -> Any | None:
+    entry = store.pop(username, None)
+    if not entry:
+        return None
+    challenge, expires_at = entry
+    if time.monotonic() > expires_at:
+        return None
+    return challenge
+
+
+def _authentication_credential_from_payload(payload: dict[str, Any]) -> AuthenticationCredential:
+    resp = payload.get("response", {})
+    id_str = payload.get("id")
+    raw_id = base64url_to_bytes(payload.get("rawId", id_str))
+    return AuthenticationCredential(
+        id=id_str,
+        raw_id=raw_id,
+        response=AuthenticatorAssertionResponse(
+            client_data_json=base64url_to_bytes(resp["clientDataJSON"]),
+            authenticator_data=base64url_to_bytes(resp["authenticatorData"]),
+            signature=base64url_to_bytes(resp["signature"]),
+            user_handle=base64url_to_bytes(resp["userHandle"]) if resp.get("userHandle") else None,
+        ),
+        type=payload.get("type", "public-key"),
+    )
+
+
+def _registration_credential_from_payload(payload: dict[str, Any]) -> RegistrationCredential:
+    resp = payload.get("response", {})
+    id_str = payload.get("id")
+    raw_id = base64url_to_bytes(payload.get("rawId", id_str))
+    return RegistrationCredential(
+        id=id_str,
+        raw_id=raw_id,
+        response=AuthenticatorAttestationResponse(
+            client_data_json=base64url_to_bytes(resp["clientDataJSON"]),
+            attestation_object=base64url_to_bytes(resp["attestationObject"]),
+            transports=resp.get("transports"),
+        ),
+        type=payload.get("type", "public-key"),
+    )
 
 
 # -------------------------
@@ -228,6 +313,205 @@ def login(
         lan_guest=False,
         lan_guest_reason=None,
     )
+
+
+@router.post("/passkey/options")
+def passkey_options(
+    data: PasskeyOptionsRequest,
+    db: Session = Depends(get_session),
+):
+    username = data.username.strip()
+    if not username:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username is required.")
+
+    user = db.exec(select(User).where(User.username == username, User.is_active.is_(True))).first()
+    allow = []
+    if user:
+        creds = db.exec(select(PasskeyCredential).where(PasskeyCredential.user_id == user.id)).all()
+        allow = [
+            PublicKeyCredentialDescriptor(
+                id=base64url_to_bytes(c.credential_id),
+                type=PublicKeyCredentialType.PUBLIC_KEY,
+            )
+            for c in creds
+        ]
+
+    options = generate_authentication_options(
+        rp_id=settings.PASSKEY_RP_ID,
+        allow_credentials=allow or None,
+        user_verification=UserVerificationRequirement.REQUIRED,
+    )
+    _store_passkey_challenge(_PASSKEY_AUTH_CHALLENGES, username, options.challenge)
+    return JSONResponse(content=json.loads(options_to_json(options)))
+
+
+@router.post("/passkey/verify", response_model=MeResponse)
+def passkey_verify(
+    data: PasskeyVerifyRequest,
+    request: Request,
+    response: Response,
+    db: Session = Depends(get_session),
+):
+    ip = _ip_from_request(request)
+    _throttle_check(ip)
+
+    username = data.username.strip()
+    if not username:
+        _throttle_record(ip, success=False)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username is required.")
+
+    expected_challenge = _pop_passkey_challenge(_PASSKEY_AUTH_CHALLENGES, username)
+    if not expected_challenge:
+        _throttle_record(ip, success=False)
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No pending passkey challenge.")
+
+    user = db.exec(select(User).where(User.username == username, User.is_active.is_(True))).first()
+    if not user:
+        _throttle_record(ip, success=False)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
+
+    credential = _authentication_credential_from_payload(data.credential)
+    passkeys = db.exec(select(PasskeyCredential).where(PasskeyCredential.user_id == user.id)).all()
+    cred_map = {c.credential_id: c for c in passkeys}
+    record = cred_map.get(credential.id)
+    if not record:
+        _throttle_record(ip, success=False)
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid credentials.")
+
+    verification = verify_authentication_response(
+        credential=credential,
+        expected_challenge=expected_challenge,
+        expected_rp_id=settings.PASSKEY_RP_ID,
+        expected_origin=settings.PASSKEY_RP_ORIGIN,
+        credential_public_key=base64url_to_bytes(record.public_key),
+        credential_current_sign_count=record.sign_count,
+        require_user_verification=True,
+    )
+    record.sign_count = verification.new_sign_count
+    record.last_used_at = datetime.now(timezone.utc)
+    db.add(record)
+    db.commit()
+
+    access = create_token(user.username, user.role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    refresh = create_token(user.username, user.role, timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS))
+
+    cookie_opts = _cookie_flags(request)
+    response.set_cookie(
+        settings.JWT_COOKIE_NAME,
+        access,
+        max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
+        **cookie_opts,
+    )
+    response.set_cookie(
+        settings.JWT_REFRESH_COOKIE_NAME,
+        refresh,
+        max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+        **cookie_opts,
+    )
+
+    _throttle_record(ip, success=True)
+
+    return MeResponse(
+        username=user.username,
+        email=user.email or None,
+        role=user.role,
+        authenticated=True,
+        lan_guest=False,
+        lan_guest_reason=None,
+    )
+
+
+@router.post("/passkey/register/options")
+def passkey_register_options(
+    user_payload=Depends(get_current_user_role),
+    db: Session = Depends(get_session),
+):
+    if user_payload.get("role") not in ("admin", "user"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    username = user_payload.get("username")
+    if not username:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    user = db.exec(select(User).where(User.username == username, User.is_active.is_(True))).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    creds = db.exec(select(PasskeyCredential).where(PasskeyCredential.user_id == user.id)).all()
+    exclude = [
+        PublicKeyCredentialDescriptor(
+            id=base64url_to_bytes(c.credential_id),
+            type=PublicKeyCredentialType.PUBLIC_KEY,
+        )
+        for c in creds
+    ]
+
+    options = generate_registration_options(
+        rp_name=settings.PASSKEY_RP_NAME,
+        rp_id=settings.PASSKEY_RP_ID,
+        user_id=str(user.id).encode("utf-8"),
+        user_name=user.username,
+        user_display_name=user.username,
+        exclude_credentials=exclude or None,
+        authenticator_selection=AuthenticatorSelectionCriteria(
+            user_verification=UserVerificationRequirement.REQUIRED,
+            resident_key=ResidentKeyRequirement.PREFERRED,
+        ),
+    )
+    _store_passkey_challenge(_PASSKEY_REG_CHALLENGES, user.username, options.challenge)
+    return JSONResponse(content=json.loads(options_to_json(options)))
+
+
+@router.post("/passkey/register/verify")
+def passkey_register_verify(
+    data: PasskeyRegisterVerifyRequest,
+    user_payload=Depends(get_current_user_role),
+    db: Session = Depends(get_session),
+):
+    if user_payload.get("role") not in ("admin", "user"):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    username = user_payload.get("username")
+    if not username:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    user = db.exec(select(User).where(User.username == username, User.is_active.is_(True))).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required.")
+
+    expected_challenge = _pop_passkey_challenge(_PASSKEY_REG_CHALLENGES, user.username)
+    if not expected_challenge:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No pending passkey challenge.")
+
+    credential = _registration_credential_from_payload(data.credential)
+    existing = db.exec(select(PasskeyCredential).where(PasskeyCredential.credential_id == credential.id)).first()
+    if existing:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Passkey already registered.")
+
+    verification = verify_registration_response(
+        credential=credential,
+        expected_challenge=expected_challenge,
+        expected_rp_id=settings.PASSKEY_RP_ID,
+        expected_origin=settings.PASSKEY_RP_ORIGIN,
+        require_user_verification=True,
+    )
+
+    transports = data.credential.get("response", {}).get("transports")
+    if transports is not None:
+        transports = json.dumps(transports)
+
+    record = PasskeyCredential(
+        user_id=user.id,
+        credential_id=bytes_to_base64url(verification.credential_id),
+        public_key=bytes_to_base64url(verification.credential_public_key),
+        sign_count=verification.sign_count,
+        transports=transports,
+        created_at=datetime.now(timezone.utc),
+        last_used_at=None,
+    )
+    db.add(record)
+    db.commit()
+    return {"status": "registered"}
 
 
 @router.post("/logout")

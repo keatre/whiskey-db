@@ -41,6 +41,12 @@ a:hover { text-decoration: underline; }
   display: flex; align-items: center; gap: 8px; 
 }
 
+.version-display {
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
 .card {
   background: var(--card);
   border: 1px solid var(--border);

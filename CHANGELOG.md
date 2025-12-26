@@ -1,4 +1,23 @@
 
+## [v1.5.16] - 2025-11-12
+
+### Added
+- Passkey (WebAuthn) authentication scaffolding with credential storage tied to user IDs, new login endpoints, and secure-context configuration settings (`api/app/models.py`, `api/app/routers/auth.py`, `api/app/settings.py`, `.env.example`).
+- Passkey sign-in button on the login page plus client-side WebAuthn helpers to request and verify assertions (`web/src/app/signin/_LoginClient.tsx`, `web/src/api/auth.ts`).
+- WebAuthn dependency for server-side assertion verification (`api/requirements.txt`).
+- Passkey registration flow for authenticated users, including enrollment endpoints and a new Security page to create passkeys (`api/app/routers/auth.py`, `api/app/auth_schemas.py`, `web/src/app/security/page.tsx`, `web/src/components/NavLinks.tsx`, `web/src/api/auth.ts`).
+
+### Changed
+- Security navigation now appears only under the Admin section and is labeled "Account" (`web/src/components/NavLinks.tsx`).
+- Display the current git branch + commit date beside the theme toggle, sourced from a new `/version` API helper (`api/app/version.py`, `api/app/main.py`, `web/src/components/VersionDisplay.tsx`, `web/src/app/layout.tsx`, `web/src/app/global.css`).
+- Retailers link now lives under the Admin landing page instead of the global navigation (`web/src/app/admin/page.tsx`, `web/src/components/NavLinks.tsx`).
+- Version display now resolves git info from the repo root by default so branch/date populate in dev checkouts (`api/app/version.py`).
+- Version display no longer reads any .env overrides; it only renders when git info is available (`api/app/version.py`).
+- Version display now bakes git metadata at image build time (no runtime `.git` or env values required) and the runtime falls back to blank if no metadata is available (`api/app/version.py`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`).
+- Version display now appears to the left of the theme toggle in the header (`web/src/app/layout.tsx`).
+
+---
+
 ## [v1.5.14] - 2025-11-12
 
 ### Fixed

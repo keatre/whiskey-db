@@ -119,6 +119,21 @@ class User(SQLModel, table=True):
     created_at: Optional[datetime] = Field(default_factory=_utcnow)
 
 
+class PasskeyCredential(SQLModel, table=True):
+    __tablename__ = "passkey_credential"
+    __table_args__ = (
+        UniqueConstraint("credential_id"),
+    )
+    id: Optional[int] = Field(default=None, primary_key=True)
+    user_id: int = Field(foreign_key="users.id", index=True)
+    credential_id: str = Field(index=True)
+    public_key: str
+    sign_count: int = 0
+    transports: Optional[str] = None
+    created_at: datetime = Field(default_factory=_utcnow)
+    last_used_at: Optional[datetime] = None
+
+
 class MarketPrice(SQLModel, table=True):
     __tablename__ = "market_price"
     __table_args__ = (

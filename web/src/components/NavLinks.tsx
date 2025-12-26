@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useMe } from '../lib/useMe';
 
 export default function NavLinks() {
-  const { isAdmin } = useMe();
+  const { isAdmin, me } = useMe();
 
   return (
     <>
@@ -12,8 +12,8 @@ export default function NavLinks() {
       <Link href="/bottles">Bottles</Link>
       {isAdmin && (
         <>
-          <Link href="/retailers">Retailers</Link>
           <Link href="/admin">Admin</Link>
+          <Link href="/security">Account</Link>
         </>
       )}
     </>

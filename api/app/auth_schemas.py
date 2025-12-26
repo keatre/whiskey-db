@@ -1,6 +1,6 @@
 # api/app/auth_schemas.py
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Any
 
 
 class LoginRequest(BaseModel):
@@ -15,3 +15,16 @@ class MeResponse(BaseModel):
     authenticated: bool
     lan_guest: bool
     lan_guest_reason: Optional[str] = None
+
+
+class PasskeyOptionsRequest(BaseModel):
+    username: str
+
+
+class PasskeyVerifyRequest(BaseModel):
+    username: str
+    credential: dict[str, Any]
+
+
+class PasskeyRegisterVerifyRequest(BaseModel):
+    credential: dict[str, Any]
