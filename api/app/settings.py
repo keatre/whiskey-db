@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="allow")
     # --- Database ---
     DATABASE_URL: str = "sqlite:////data/whiskey.db"
+    WINE_DATABASE_URL: str = "sqlite:////data/wine.db"
 
     # --- Security / JWT ---
     SECRET_KEY: str = "xYe4faTPwms8EKFE8y7AwHFbIyIkM+wmguu3SKtawmY="
