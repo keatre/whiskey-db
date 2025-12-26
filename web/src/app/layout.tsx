@@ -3,6 +3,7 @@ import './global.css';
 import ThemeToggle from '../components/ThemeToggle';
 import HeaderAuthControl from '../components/HeaderAuthControl';
 import NavLinks from '../components/NavLinks';
+import VersionDisplay from '../components/VersionDisplay';
 
 // Client-only watcher (optional now that SWR is in place)
 import dynamic from 'next/dynamic';
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             {/* Right: theme + auth */}
             <div className="nav-right" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
               <ThemeToggle />
+              <VersionDisplay />
               <HeaderAuthControl />
             </div>
           </nav>
