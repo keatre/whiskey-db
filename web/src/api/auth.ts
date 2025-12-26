@@ -8,6 +8,18 @@ export type MeResponse = {
   lan_guest_reason?: string | null;
 };
 
+export type PasskeyOptionsResponse = {
+  challenge: string;
+  rpId?: string;
+  timeout?: number;
+  userVerification?: string;
+  allowCredentials?: Array<{
+    id: string;
+    type: string;
+    transports?: string[];
+  }>;
+};
+
 const BROWSER_BASE =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_API_BASE) || "/api";
 
@@ -79,4 +91,37 @@ export async function logout(): Promise<void> {
   });
 }
 
-export const AuthApi = { me, login, logout };
+export async function passkeyOptions(username: string): Promise<PasskeyOptionsResponse> {
+  const res = await fetch(`${BROWSER_BASE}/auth/passkey/options`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ username }),
+  });
+  if (!res.ok) {
+    const text = (await res.text().catch(() => "")) || `Passkey options failed (${res.status})`;
+    throw new Error(text);
+  }
+  return res.json() as Promise<PasskeyOptionsResponse>;
+}
+
+export async function passkeyVerify(
+  username: string,
+  credential: Record<string, unknown>
+): Promise<MeResponse> {
+  const res = await fetch(`${BROWSER_BASE}/auth/passkey/verify`, {
+    method: "POST",
+    credentials: "include",
+    headers: { "Content-Type": "application/json" },
+    cache: "no-store",
+    body: JSON.stringify({ username, credential }),
+  });
+  if (!res.ok) {
+    const text = (await res.text().catch(() => "")) || `Passkey verify failed (${res.status})`;
+    throw new Error(text);
+  }
+  return res.json() as Promise<MeResponse>;
+}
+
+export const AuthApi = { me, login, logout, passkeyOptions, passkeyVerify };

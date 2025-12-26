@@ -35,6 +35,12 @@ class Settings(BaseSettings):
     LOGIN_MAX_ATTEMPTS: int = 10            # max failed attempts within window
     LOGIN_LOCKOUT_SECONDS: int = 180        # temporary lockout after exceeding
 
+    # --- Passkeys (WebAuthn) ---
+    PASSKEY_RP_ID: str = "localhost"
+    PASSKEY_RP_ORIGIN: str = "http://localhost:8080"
+    PASSKEY_RP_NAME: str = "Whiskey DB"
+    PASSKEY_CHALLENGE_TTL_SECONDS: int = 120
+
     # --- Market price providers ---
     MARKET_PRICE_PROVIDER_URL: str | None = None
     MARKET_PRICE_PROVIDER_API_KEY: str | None = None

@@ -1,4 +1,13 @@
 
+## [v1.5.16] - 2025-11-12
+
+### Added
+- Passkey (WebAuthn) authentication scaffolding with credential storage tied to user IDs, new login endpoints, and secure-context configuration settings (`api/app/models.py`, `api/app/routers/auth.py`, `api/app/settings.py`, `.env.example`).
+- Passkey sign-in button on the login page plus client-side WebAuthn helpers to request and verify assertions (`web/src/app/signin/_LoginClient.tsx`, `web/src/api/auth.ts`).
+- WebAuthn dependency for server-side assertion verification (`api/requirements.txt`).
+
+---
+
 ## [v1.5.14] - 2025-11-12
 
 ### Fixed
