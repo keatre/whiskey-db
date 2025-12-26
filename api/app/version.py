@@ -24,7 +24,9 @@ def resolve_version_display() -> str:
     if override:
         return override
 
-    repo_root = Path(os.getenv("VERSION_REPO_DIR") or Path(__file__).resolve().parent)
+    repo_root = Path(
+        os.getenv("VERSION_REPO_DIR") or Path(__file__).resolve().parents[2]
+    )
 
     branch = (
         os.getenv("VERSION_BRANCH")
