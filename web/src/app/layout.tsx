@@ -54,8 +54,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
             {/* Right: theme + auth */}
             <div className="nav-right" style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <ThemeToggle />
               <VersionDisplay />
+              <ThemeToggle />
               <HeaderAuthControl />
             </div>
           </nav>

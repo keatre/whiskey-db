@@ -14,6 +14,7 @@
 - Version display now resolves git info from the repo root by default so branch/date populate in dev checkouts (`api/app/version.py`).
 - Version display no longer reads any .env overrides; it only renders when git info is available (`api/app/version.py`).
 - Version display now bakes git metadata at image build time (no runtime `.git` or env values required) and the runtime falls back to blank if no metadata is available (`api/app/version.py`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`).
+- Version display now appears to the left of the theme toggle in the header (`web/src/app/layout.tsx`).
 
 ---
 
