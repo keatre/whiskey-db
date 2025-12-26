@@ -160,7 +160,7 @@ export default function WineDetailPage() {
       {wine.notes_markdown && (
         <section style={{ marginTop: 16 }}>
           <h3>Notes</h3>
-          <MarkdownViewer markdown={wine.notes_markdown} />
+          <MarkdownViewer>{wine.notes_markdown}</MarkdownViewer>
         </section>
       )}
     </main>
