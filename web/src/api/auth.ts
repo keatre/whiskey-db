@@ -12,10 +12,10 @@ export type PasskeyOptionsResponse = {
   challenge: string;
   rpId?: string;
   timeout?: number;
-  userVerification?: string;
+  userVerification?: "required" | "preferred" | "discouraged";
   allowCredentials?: Array<{
     id: string;
-    type: string;
+    type: "public-key";
     transports?: string[];
   }>;
 };
@@ -28,11 +28,11 @@ export type PasskeyRegisterOptionsResponse = {
   timeout?: number;
   excludeCredentials?: Array<{ id: string; type: "public-key"; transports?: string[] }>;
   authenticatorSelection?: {
-    userVerification?: string;
-    residentKey?: string;
-    authenticatorAttachment?: string;
+    userVerification?: "required" | "preferred" | "discouraged";
+    residentKey?: "required" | "preferred" | "discouraged";
+    authenticatorAttachment?: "platform" | "cross-platform";
   };
-  attestation?: string;
+  attestation?: "none" | "indirect" | "direct" | "enterprise";
 };
 
 const BROWSER_BASE =

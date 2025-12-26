@@ -42,7 +42,9 @@ export default function LoginClient() {
       challenge: base64urlToUint8Array(options.challenge),
       allowCredentials: options.allowCredentials?.map((cred) => ({
         ...cred,
+        type: 'public-key',
         id: base64urlToUint8Array(cred.id),
+        transports: cred.transports as AuthenticatorTransport[] | undefined,
       })),
     };
   }

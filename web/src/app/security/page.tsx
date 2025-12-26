@@ -34,12 +34,14 @@ function toCreationOptions(options: PasskeyRegisterOptionsResponse): PublicKeyCr
       ...options.user,
       id: base64urlToUint8Array(options.user.id),
     },
+    pubKeyCredParams: options.pubKeyCredParams ?? [{ type: 'public-key', alg: -7 }],
     excludeCredentials: options.excludeCredentials?.map((cred) => ({
       ...cred,
       type: 'public-key',
       id: base64urlToUint8Array(cred.id),
       transports: cred.transports as AuthenticatorTransport[] | undefined,
     })),
+    attestation: options.attestation ?? 'none',
   };
 }
 
