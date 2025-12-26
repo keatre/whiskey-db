@@ -61,6 +61,11 @@ def _read_head_commit_date(git_dir: Path) -> str | None:
 
 def resolve_version_display() -> str:
     """Resolve a human-friendly version string."""
+    baked = Path(__file__).with_name("version.txt")
+    baked_value = _read_text(baked)
+    if baked_value:
+        return baked_value
+
     repo_root = Path(__file__).resolve().parents[2]
     git_dir = _resolve_git_dir(repo_root)
     if not git_dir:

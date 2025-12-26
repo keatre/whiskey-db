@@ -19,7 +19,23 @@ ENV NODE_ENV=production
 RUN npm run build
 
 ########################################
-# Stage 2: Final runtime image         #
+# Stage 2: Bake version metadata       #
+########################################
+FROM python:3.12-slim AS version-builder
+
+WORKDIR /src
+COPY .git ./.git
+COPY api ./api
+RUN python - <<'PY'
+from pathlib import Path
+from api.app.version import resolve_version_display
+
+version = resolve_version_display()
+Path("api/app/version.txt").write_text(version, "utf-8")
+PY
+
+########################################
+# Stage 3: Final runtime image         #
 ########################################
 FROM python:3.12-slim AS runtime
 
@@ -65,8 +81,8 @@ COPY api/requirements.txt ./api/requirements.txt
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r ./api/requirements.txt
 
-# Copy application code
-COPY api ./api
+# Copy application code (with baked version.txt)
+COPY --from=version-builder /src/api ./api
 
 # Copy built frontend artifacts
 COPY --from=web-builder /src/web/.next ./web/.next

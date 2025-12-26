@@ -43,7 +43,6 @@ services:
         bind:
           create_host_path: true
       - ${WHISKEY_APP_ROOT:-.}/api/static:/srv/api/static
-      - ${WHISKEY_APP_ROOT:-.}/.git:/srv/.git:ro
       - type: bind
         source: ${WHISKEY_APP_ROOT:-.}/logs
         target: /logs

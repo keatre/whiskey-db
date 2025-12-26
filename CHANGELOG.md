@@ -13,7 +13,7 @@
 - Retailers link now lives under the Admin landing page instead of the global navigation (`web/src/app/admin/page.tsx`, `web/src/components/NavLinks.tsx`).
 - Version display now resolves git info from the repo root by default so branch/date populate in dev checkouts (`api/app/version.py`).
 - Version display no longer reads any .env overrides; it only renders when git info is available (`api/app/version.py`).
-- Version display now reads `.git` directly (no git binary required) and compose mounts the repo metadata in dev so branch/date render in containers (`api/app/version.py`, `docker-compose.yml`).
+- Version display now bakes git metadata at image build time (no runtime `.git` or env values required) and the runtime falls back to blank if no metadata is available (`api/app/version.py`, `Dockerfile`, `.dockerignore`, `docker-compose.yml`).
 
 ---
 
