@@ -20,25 +20,13 @@ def _git_safe_run(args: list[str], repo: Path) -> str | None:
 
 def resolve_version_display() -> str:
     """Resolve a human-friendly version string."""
-    override = os.getenv("VERSION_DISPLAY")
-    if override:
-        return override
+    repo_root = Path(__file__).resolve().parents[2]
 
-    repo_root = Path(
-        os.getenv("VERSION_REPO_DIR") or Path(__file__).resolve().parents[2]
-    )
+    branch = _git_safe_run(["rev-parse", "--abbrev-ref", "HEAD"], repo_root)
+    date = _git_safe_run(["show", "-s", "--format=%cd", "--date=format:%Y-%m-%d", "HEAD"], repo_root)
 
-    branch = (
-        os.getenv("VERSION_BRANCH")
-        or _git_safe_run(["rev-parse", "--abbrev-ref", "HEAD"], repo_root)
-        or "unknown-branch"
-    )
-
-    date = (
-        os.getenv("VERSION_DATE")
-        or _git_safe_run(["show", "-s", "--format=%cd", "--date=format:%Y-%m-%d", "HEAD"], repo_root)
-        or "unknown-date"
-    )
+    if not branch or not date:
+        return ""
 
     return f"{branch} ({date})"
 

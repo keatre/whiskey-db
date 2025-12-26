@@ -12,6 +12,7 @@
 - Display the current git branch + commit date beside the theme toggle, sourced from a new `/version` API helper (`api/app/version.py`, `api/app/main.py`, `web/src/components/VersionDisplay.tsx`, `web/src/app/layout.tsx`, `web/src/app/global.css`).
 - Retailers link now lives under the Admin landing page instead of the global navigation (`web/src/app/admin/page.tsx`, `web/src/components/NavLinks.tsx`).
 - Version display now resolves git info from the repo root by default so branch/date populate in dev checkouts (`api/app/version.py`).
+- Version display no longer reads any .env overrides; it only renders when git info is available (`api/app/version.py`).
 
 ---
 
