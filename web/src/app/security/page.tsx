@@ -37,6 +37,7 @@ function toCreationOptions(options: PasskeyRegisterOptionsResponse): PublicKeyCr
     excludeCredentials: options.excludeCredentials?.map((cred) => ({
       ...cred,
       id: base64urlToUint8Array(cred.id),
+      transports: cred.transports as AuthenticatorTransport[] | undefined,
     })),
   };
 }
