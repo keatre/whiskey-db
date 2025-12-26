@@ -24,9 +24,9 @@ export type PasskeyRegisterOptionsResponse = {
   challenge: string;
   rp: { id: string; name: string };
   user: { id: string; name: string; displayName: string };
-  pubKeyCredParams?: Array<{ type: string; alg: number }>;
+  pubKeyCredParams?: Array<{ type: "public-key"; alg: number }>;
   timeout?: number;
-  excludeCredentials?: Array<{ id: string; type: string; transports?: string[] }>;
+  excludeCredentials?: Array<{ id: string; type: "public-key"; transports?: string[] }>;
   authenticatorSelection?: {
     userVerification?: string;
     residentKey?: string;
