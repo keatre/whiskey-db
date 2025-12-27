@@ -8,6 +8,7 @@
 
 ### Changed
 - Top navigation now shows module links dynamically based on enabled modules (`web/src/components/NavLinks.tsx`).
+- When the Wine module is enabled, the main collection link is labeled "Whiskey" instead of "Bottles" (`web/src/components/NavLinks.tsx`).
 - Documented the optional wine database configuration in the example env file (`.env.example`).
 
 ---

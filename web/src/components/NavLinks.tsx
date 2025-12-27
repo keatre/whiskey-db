@@ -11,7 +11,7 @@ export default function NavLinks() {
   return (
     <>
       <Link href="/">Home</Link>
-      <Link href="/bottles">Bottles</Link>
+      <Link href="/bottles">{modules.wine ? 'Whiskey' : 'Bottles'}</Link>
       {modules.wine && <Link href="/wine">Wine</Link>}
       {isAdmin && (
         <>
