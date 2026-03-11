@@ -1,4 +1,11 @@
 
+## [v1.6.1] - 2026-03-11
+
+### Fixed
+- `scripts/new_release_branch.py` now snapshots and restores private local files (starting with `docker-compose.yml`) around branch/tag creation so switching to `main` no longer removes ignored local compose files during release-branch automation.
+
+---
+
 ## [v1.6.0] - 2025-11-12
 
 ### Added
