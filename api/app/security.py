@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
 from fastapi import HTTPException, status
-from jose import jwt, JWTError
+import jwt
 
 # passlib hashers (argon2 preferred, bcrypt fallback)
 from passlib.hash import argon2, bcrypt  # requires argon2-cffi if using argon2
@@ -62,7 +62,7 @@ def decode_token(token: str) -> Dict[str, Any]:
     """
     try:
         return jwt.decode(token, settings.SECRET_KEY, algorithms=[ALGORITHM])
-    except JWTError:
+    except jwt.InvalidTokenError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid or expired token",

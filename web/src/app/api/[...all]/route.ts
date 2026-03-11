@@ -30,9 +30,12 @@ function copyResHeaders(src: Headers) {
   return h;
 }
 
-async function handler(req: NextRequest, ctx: { params: { all?: string[] } }) {
+type RouteContext = { params: Promise<{ all: string[] }> };
+
+async function handler(req: NextRequest, ctx: RouteContext) {
   console.log(`[Proxy] ENTER method=${req.method} url=${req.url}`);
-  const parts = ctx.params?.all ?? [];
+  const { all } = await ctx.params;
+  const parts = all ?? [];
   const upstreamUrl = `${API_BASE}/${parts.map(encodeURIComponent).join("/")}`;
 
   console.log(
