@@ -1,4 +1,11 @@
 
+## [v1.6.2] - 2026-03-11
+
+### Fixed
+- `scripts/new_release_branch.py` now defaults to creating only `dev/vX.Y.Z` branches (with optional `--tag-now` legacy behavior), and a new GitHub Action tags merged `dev/vX.Y.Z` PRs on `main` at the merge commit so release tags reflect shipped code (`scripts/new_release_branch.py`, `.github/workflows/tag-release-merge.yml`).
+
+---
+
 ## [v1.6.1] - 2026-03-11
 
 ### Fixed
@@ -12,7 +19,6 @@
 - Upgraded frontend security-sensitive dependencies (`next` to `15.5.12`, `eslint-config-next` to `15.5.12`, `react-markdown` to `10.1.0`) and pinned `mdast-util-to-hast@13.2.1` via `overrides` to clear audit findings (`web/package.json`, `web/package-lock.json`).
 - Updated the Next.js catch-all API route context typing for Next 15 route type generation compatibility (`web/src/app/api/[...all]/route.ts`, `web/next-env.d.ts`).
 - Replaced the homepage bottles navigation anchor with `next/link` so Next.js lint/type checks pass during production image builds (`web/src/app/page.tsx`).
-- `scripts/new_release_branch.py` now defaults to creating only `dev/vX.Y.Z` branches (with optional `--tag-now` legacy behavior), and a new GitHub Action tags merged `dev/vX.Y.Z` PRs on `main` at the merge commit so release tags reflect shipped code (`scripts/new_release_branch.py`, `.github/workflows/tag-release-merge.yml`).
 
 ---
 
