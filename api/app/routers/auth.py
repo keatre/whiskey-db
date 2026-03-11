@@ -544,7 +544,8 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
 
     payload = decode_token(refresh_token)
     username = payload.get("sub")
-    role = payload.get("role")
+    if not username:
+        raise HTTPException(status_code=401, detail="Invalid refresh token")
 
     stmt = select(User).where(User.username == username, User.is_active.is_(True))
     user = db.exec(stmt).first()
@@ -552,7 +553,7 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
         raise HTTPException(status_code=401, detail="User not found")
 
     # Rotate access token
-    access = create_token(username, role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
+    access = create_token(user.username, user.role, timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     cookie_opts = _cookie_flags(request)
     response.set_cookie(
         settings.JWT_COOKIE_NAME,
@@ -562,9 +563,9 @@ def refresh(request: Request, response: Response, db: Session = Depends(get_sess
     )
 
     return MeResponse(
-        username=username,
+        username=user.username,
         email=user.email or None,
-        role=role,
+        role=user.role,
         authenticated=True,            # still authenticated
         lan_guest=False,
         lan_guest_reason=None,
