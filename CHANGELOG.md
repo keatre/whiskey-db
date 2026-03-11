@@ -1,4 +1,11 @@
 
+## [v1.6.2] - 2026-03-11
+
+### Fixed
+- `scripts/new_release_branch.py` now defaults to creating only `dev/vX.Y.Z` branches (with optional `--tag-now` legacy behavior), and a new GitHub Action tags merged `dev/vX.Y.Z` PRs on `main` at the merge commit so release tags reflect shipped code (`scripts/new_release_branch.py`, `.github/workflows/tag-release-merge.yml`).
+
+---
+
 ## [v1.6.1] - 2026-03-11
 
 ### Fixed
