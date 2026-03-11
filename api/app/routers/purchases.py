@@ -3,14 +3,20 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 from ..db import get_session
+from ..deps import get_current_user_role, require_admin, require_authenticated_user
 from ..models import Purchase, Bottle, PurchaseUpdate
 
-router = APIRouter(prefix="/purchases", tags=["purchases"])
+router = APIRouter(
+    prefix="/purchases",
+    tags=["purchases"],
+    dependencies=[Depends(get_current_user_role)],
+)
 
 @router.get("", response_model=List[Purchase])
 def list_purchases(
     bottle_id: Optional[int] = Query(default=None, description="filter by bottle_id"),
     session: Session = Depends(get_session),
+    _user=Depends(require_authenticated_user),
 ):
     stmt = select(Purchase)
     if bottle_id is not None:
@@ -18,14 +24,22 @@ def list_purchases(
     return session.exec(stmt.order_by(Purchase.purchase_date.desc().nullslast())).all()
 
 @router.get("/{purchase_id}", response_model=Purchase)
-def get_purchase(purchase_id: int, session: Session = Depends(get_session)):
+def get_purchase(
+    purchase_id: int,
+    session: Session = Depends(get_session),
+    _user=Depends(require_authenticated_user),
+):
     item = session.get(Purchase, purchase_id)
     if not item:
         raise HTTPException(404, "Purchase not found")
     return item
 
 @router.post("", response_model=Purchase, status_code=status.HTTP_201_CREATED)
-def create_purchase(p: Purchase, session: Session = Depends(get_session)):
+def create_purchase(
+    p: Purchase,
+    session: Session = Depends(get_session),
+    _user=Depends(require_admin),
+):
     b = session.get(Bottle, p.bottle_id)
     if not b:
         raise HTTPException(422, "Unknown bottle_id")
@@ -55,7 +69,12 @@ def create_purchase(p: Purchase, session: Session = Depends(get_session)):
     return p
 
 @router.patch("/{purchase_id}", response_model=Purchase)
-def update_purchase(purchase_id: int, patch: PurchaseUpdate, session: Session = Depends(get_session)):
+def update_purchase(
+    purchase_id: int,
+    patch: PurchaseUpdate,
+    session: Session = Depends(get_session),
+    _user=Depends(require_admin),
+):
     p = session.get(Purchase, purchase_id)
     if not p:
         raise HTTPException(404, "Purchase not found")

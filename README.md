@@ -175,7 +175,7 @@ All core processes stream through a shared log sink that writes to `LOG_FILE_PAT
 | `TZ` | IANA timezone applied to API timestamps and the backup scheduler. | `America/Chicago` |
 | `DATABASE_URL` | SQLModel database connection string. | `sqlite:////data/whiskey.db` |
 | `WINE_DATABASE_URL` | Separate Wine module database connection string. | `sqlite:////data/wine.db` |
-| `SECRET_KEY` | JWT signing key for auth tokens (replace in production). | `change-me-please` |
+| `SECRET_KEY` | JWT signing key for auth tokens; set explicitly in `.env` for stable sessions across restarts. | *(auto-generated per process if unset)* |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime in minutes. | `20` |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh-token lifetime in days. | `30` |
 | `JWT_COOKIE_NAME` | Name of the access-token cookie. | `access_token` |

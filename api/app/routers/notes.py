@@ -3,14 +3,20 @@ from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 from ..db import get_session
+from ..deps import get_current_user_role, require_admin, require_authenticated_user
 from ..models import TastingNote, Purchase
 
-router = APIRouter(prefix="/notes", tags=["notes"])
+router = APIRouter(
+    prefix="/notes",
+    tags=["notes"],
+    dependencies=[Depends(get_current_user_role)],
+)
 
 @router.get("", response_model=List[TastingNote])
 def list_notes(
     purchase_id: Optional[int] = Query(default=None, description="filter by purchase_id"),
     session: Session = Depends(get_session),
+    _user=Depends(require_authenticated_user),
 ):
     stmt = select(TastingNote)
     if purchase_id is not None:
@@ -18,7 +24,11 @@ def list_notes(
     return session.exec(stmt.order_by(TastingNote.tasted_dt.desc().nullslast(), TastingNote.created_utc.desc())).all()
 
 @router.post("", response_model=TastingNote, status_code=status.HTTP_201_CREATED)
-def create_note(n: TastingNote, session: Session = Depends(get_session)):
+def create_note(
+    n: TastingNote,
+    session: Session = Depends(get_session),
+    _user=Depends(require_admin),
+):
     p = session.get(Purchase, n.purchase_id)
     if not p:
         raise HTTPException(422, "Unknown purchase_id")
