@@ -284,3 +284,17 @@ async def require_view_access(user=Depends(get_current_user_role)):
     if decision:
         headers = {LAN_DECISION_HEADER: decision}
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required", headers=headers)
+
+
+async def require_authenticated_user(user=Depends(get_current_user_role)):
+    """
+    Allow only authenticated users (admin/user).
+    Block guest and anonymous sessions.
+    """
+    if user["role"] in ("admin", "user"):
+        return user
+    headers = None
+    decision = user.get("decision_reason")
+    if decision:
+        headers = {LAN_DECISION_HEADER: decision}
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Login required", headers=headers)

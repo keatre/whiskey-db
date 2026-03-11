@@ -6,6 +6,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import bcrypt
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
@@ -32,6 +33,7 @@ init_db = db_module.init_db
 app = importlib.import_module("app.main").app
 User = importlib.import_module("app.models").User
 hash_password = importlib.import_module("app.security").hash_password
+verify_password = importlib.import_module("app.security").verify_password
 
 
 def bootstrap_admin(username: str = "root", password: str = "AdminPass123!") -> None:
@@ -163,3 +165,15 @@ def test_admin_user_crud_flow():
     patch_email = client.patch(f"/admin/users/{user_id}", json={"email": None})
     assert patch_email.status_code == 200
     assert patch_email.json()["email"] is None
+
+
+def test_verify_password_supports_legacy_bcrypt_hashes():
+    plain = "LegacyPass123!"
+    hashed = bcrypt.hashpw(plain.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
+
+    assert verify_password(plain, hashed)
+    assert not verify_password("wrong-password", hashed)
+
+    # Historical bcrypt variants can be stored as $2y$ in older datasets.
+    legacy_2y = "$2y$" + hashed[4:]
+    assert verify_password(plain, legacy_2y)

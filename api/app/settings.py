@@ -1,4 +1,7 @@
 # api/app/settings.py
+import secrets
+
+from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -8,7 +11,8 @@ class Settings(BaseSettings):
     WINE_DATABASE_URL: str = "sqlite:////data/wine.db"
 
     # --- Security / JWT ---
-    SECRET_KEY: str = "xYe4faTPwms8EKFE8y7AwHFbIyIkM+wmguu3SKtawmY="
+    # Use env override for stable sessions; fallback is ephemeral per process.
+    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 20
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     JWT_COOKIE_NAME: str = "access_token"

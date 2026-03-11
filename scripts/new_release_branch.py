@@ -17,10 +17,21 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import shutil
 import subprocess
 import sys
+import tempfile
+from dataclasses import dataclass
+from pathlib import Path
 
 GIT = "git"
+PRIVATE_LOCAL_FILES = ("docker-compose.yml",)
+
+
+@dataclass(frozen=True)
+class FileSnapshot:
+    relative_path: str
+    backup_path: str
 
 
 def run(cmd: list[str], *, check: bool = True, capture_output: bool = False, text: bool = True) -> subprocess.CompletedProcess:
@@ -55,6 +66,46 @@ def ensure_clean_worktree() -> None:
     res = run([GIT, "status", "--porcelain"], capture_output=True)
     if res.stdout.strip():
         sys.exit("Working tree is dirty. Commit, stash, or discard changes first.")
+
+
+def get_repo_root() -> Path:
+    res = run([GIT, "rev-parse", "--show-toplevel"], capture_output=True)
+    return Path(res.stdout.strip())
+
+
+def is_tracked(path: str) -> bool:
+    return run([GIT, "ls-files", "--error-unmatch", "--", path], check=False).returncode == 0
+
+
+def snapshot_private_files(repo_root: Path, paths: tuple[str, ...]) -> list[FileSnapshot]:
+    snapshots: list[FileSnapshot] = []
+    for rel_path in paths:
+        target = repo_root / rel_path
+        if not target.exists() or not target.is_file():
+            continue
+        fd, tmp_path = tempfile.mkstemp(prefix="whiskey-preserve-", suffix=f"-{target.name}")
+        os.close(fd)
+        shutil.copy2(target, tmp_path)
+        snapshots.append(FileSnapshot(relative_path=rel_path, backup_path=tmp_path))
+        print(f"🛟 Snapshotted private local file: {rel_path}")
+    return snapshots
+
+
+def restore_private_files(repo_root: Path, snapshots: list[FileSnapshot]) -> None:
+    for snapshot in snapshots:
+        target = repo_root / snapshot.relative_path
+        if target.exists():
+            print(f"ℹ️ Preserved file already present: {snapshot.relative_path}")
+        elif is_tracked(snapshot.relative_path):
+            print(f"⚠️ Skipping restore for tracked path: {snapshot.relative_path}")
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(snapshot.backup_path, target)
+            print(f"🔁 Restored private local file: {snapshot.relative_path}")
+        try:
+            os.remove(snapshot.backup_path)
+        except FileNotFoundError:
+            pass
 
 
 def checkout_main() -> None:
@@ -135,21 +186,26 @@ def create_tag(tag: str) -> None:
 def main() -> None:
     start_ssh_agent()
     ensure_clean_worktree()
-    checkout_main()
-    fast_forward_main()
-    remove_stale_dev_branches(keep={"main"})
-    version = prompt_version()
-    branch = f"dev/v{version}"
-    tag = f"v{version}"
-    ensure_ref_absent(branch, ref_type="Branch")
-    ensure_ref_absent(tag, ref_type="Tag")
-    create_branch(branch)
-    create_tag(tag)
-    run([GIT, "checkout", branch])
-    print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
-    run([GIT, "fetch", "origin", "--prune"])
-    branches = run([GIT, "branch", "-a"], capture_output=True)
-    print(branches.stdout.rstrip())
+    repo_root = get_repo_root()
+    snapshots = snapshot_private_files(repo_root, PRIVATE_LOCAL_FILES)
+    try:
+        checkout_main()
+        fast_forward_main()
+        remove_stale_dev_branches(keep={"main"})
+        version = prompt_version()
+        branch = f"dev/v{version}"
+        tag = f"v{version}"
+        ensure_ref_absent(branch, ref_type="Branch")
+        ensure_ref_absent(tag, ref_type="Tag")
+        create_branch(branch)
+        create_tag(tag)
+        run([GIT, "checkout", branch])
+        print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
+        run([GIT, "fetch", "origin", "--prune"])
+        branches = run([GIT, "branch", "-a"], capture_output=True)
+        print(branches.stdout.rstrip())
+    finally:
+        restore_private_files(repo_root, snapshots)
 
 if __name__ == "__main__":
     main()

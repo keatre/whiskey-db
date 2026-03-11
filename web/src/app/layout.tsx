@@ -4,11 +4,8 @@ import ThemeToggle from '../components/ThemeToggle';
 import HeaderAuthControl from '../components/HeaderAuthControl';
 import NavLinks from '../components/NavLinks';
 import VersionDisplay from '../components/VersionDisplay';
-
-// Client-only watcher (optional now that SWR is in place)
-import dynamic from 'next/dynamic';
-const AuthWatcher = dynamic(() => import('../components/AuthWatcher'), { ssr: false });
-const SessionKeepAlive = dynamic(() => import('../components/SessionKeepAlive'), { ssr: false });
+import AuthWatcher from '../components/AuthWatcher';
+import SessionKeepAlive from '../components/SessionKeepAlive';
 
 // ⬇️ add SWR provider
 import { SWRConfig } from 'swr';

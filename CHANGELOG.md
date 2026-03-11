@@ -1,4 +1,20 @@
 
+## [v1.6.1] - 2026-03-11
+
+### Fixed
+- `scripts/new_release_branch.py` now snapshots and restores private local files (starting with `docker-compose.yml`) around branch/tag creation so switching to `main` no longer removes ignored local compose files during release-branch automation.
+- Added auth guards to purchases, notes, and retailers routes so reads require authenticated users and writes require admin role (`api/app/routers/purchases.py`, `api/app/routers/notes.py`, `api/app/routers/retailers.py`, `api/app/deps.py`).
+- Replaced the hardcoded JWT signing key default with an env-overridable per-process value so source no longer ships a static secret (`api/app/settings.py`).
+- Refresh token flow now reloads user role from the database before issuing a new access token, preventing stale role claims in refresh cookies from preserving outdated privileges (`api/app/routers/auth.py`).
+- Protected `GET /admin/prices` with admin auth to match the existing admin-only write endpoints, removing the read-path access inconsistency (`api/app/routers/admin_prices.py`, `api/tests/test_market_prices.py`).
+- Upgraded backend dependencies to patched releases (`fastapi==0.135.1`, `python-multipart==0.0.22`, `Pillow==12.1.1`) and replaced `python-jose` with `PyJWT[crypto]==2.11.0` to remove vulnerable `ecdsa` transitive exposure (`api/requirements.txt`, `api/app/security.py`).
+- Replaced `passlib` password hashing usage with direct `argon2-cffi` + `bcrypt` verification (including legacy `$2y$` normalization) to remove Python deprecation warnings while preserving existing hash compatibility (`api/app/security.py`, `api/requirements.txt`, `api/tests/test_admin_users.py`).
+- Upgraded frontend security-sensitive dependencies (`next` to `15.5.12`, `eslint-config-next` to `15.5.12`, `react-markdown` to `10.1.0`) and pinned `mdast-util-to-hast@13.2.1` via `overrides` to clear audit findings (`web/package.json`, `web/package-lock.json`).
+- Updated the Next.js catch-all API route context typing for Next 15 route type generation compatibility (`web/src/app/api/[...all]/route.ts`, `web/next-env.d.ts`).
+- Replaced the homepage bottles navigation anchor with `next/link` so Next.js lint/type checks pass during production image builds (`web/src/app/page.tsx`).
+
+---
+
 ## [v1.6.0] - 2025-11-12
 
 ### Added

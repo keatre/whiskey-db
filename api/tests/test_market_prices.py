@@ -135,6 +135,20 @@ def test_admin_can_create_price_record():
     assert data2["price"] == payload["price"]
 
 
+def test_admin_prices_list_requires_admin():
+    init_db()
+    bootstrap_admin()
+    client = TestClient(app)
+
+    unauthenticated = client.get("/admin/prices")
+    assert unauthenticated.status_code == 403
+
+    login(client)
+    authenticated = client.get("/admin/prices")
+    assert authenticated.status_code == 200
+    assert isinstance(authenticated.json(), list)
+
+
 def test_sync_price_persists_external_quote(monkeypatch):
     from app.services import market_prices as market_services
     admin_prices_module = importlib.import_module("app.routers.admin_prices")
