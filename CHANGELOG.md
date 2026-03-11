@@ -11,6 +11,7 @@
 - Replaced `passlib` password hashing usage with direct `argon2-cffi` + `bcrypt` verification (including legacy `$2y$` normalization) to remove Python deprecation warnings while preserving existing hash compatibility (`api/app/security.py`, `api/requirements.txt`, `api/tests/test_admin_users.py`).
 - Upgraded frontend security-sensitive dependencies (`next` to `15.5.12`, `eslint-config-next` to `15.5.12`, `react-markdown` to `10.1.0`) and pinned `mdast-util-to-hast@13.2.1` via `overrides` to clear audit findings (`web/package.json`, `web/package-lock.json`).
 - Updated the Next.js catch-all API route context typing for Next 15 route type generation compatibility (`web/src/app/api/[...all]/route.ts`, `web/next-env.d.ts`).
+- Replaced the homepage bottles navigation anchor with `next/link` so Next.js lint/type checks pass during production image builds (`web/src/app/page.tsx`).
 
 ---
 
