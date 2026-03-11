@@ -114,6 +114,7 @@ def list_prices(
     latest: bool = Query(default=False, description="Only return the latest record per UPC"),
     limit: int = Query(default=100, ge=1, le=500),
     session: Session = Depends(get_session),
+    _admin=Depends(require_admin),
 ):
     stmt = _base_query(upc).limit(limit if not latest else limit * 5)
     rows = session.exec(stmt).all()

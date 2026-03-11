@@ -6,6 +6,7 @@
 - Added auth guards to purchases, notes, and retailers routes so reads require authenticated users and writes require admin role (`api/app/routers/purchases.py`, `api/app/routers/notes.py`, `api/app/routers/retailers.py`, `api/app/deps.py`).
 - Replaced the hardcoded JWT signing key default with an env-overridable per-process value so source no longer ships a static secret (`api/app/settings.py`).
 - Refresh token flow now reloads user role from the database before issuing a new access token, preventing stale role claims in refresh cookies from preserving outdated privileges (`api/app/routers/auth.py`).
+- Protected `GET /admin/prices` with admin auth to match the existing admin-only write endpoints, removing the read-path access inconsistency (`api/app/routers/admin_prices.py`, `api/tests/test_market_prices.py`).
 
 ---
 
