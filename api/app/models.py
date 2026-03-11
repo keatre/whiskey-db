@@ -134,6 +134,16 @@ class PasskeyCredential(SQLModel, table=True):
     last_used_at: Optional[datetime] = None
 
 
+class ModuleSetting(SQLModel, table=True):
+    __tablename__ = "module_setting"
+    __table_args__ = (UniqueConstraint("key"),)
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    key: str = Field(index=True)
+    enabled: bool = Field(default=False)
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
 class MarketPrice(SQLModel, table=True):
     __tablename__ = "market_price"
     __table_args__ = (

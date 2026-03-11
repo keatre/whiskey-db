@@ -50,6 +50,20 @@ docker compose up -d --build
 > The single `whiskey` service now bundles the FastAPI API, Next.js frontend, and scheduled backups. Rebuild it with `docker compose build whiskey` whenever you change backend requirements (`api/requirements.txt`), frontend dependencies (`web/package*.json`), or the backup scripts under `ops/backup/`.
 > Legacy `.env` files that still set `API_BASE=http://api:8000` or `NEXT_BACKEND_ORIGIN=http://api:8000` are automatically rewritten to `http://127.0.0.1:8000`, and the container injects `/etc/hosts` with `api → 127.0.0.1` so existing deployments keep working. Update your `.env` (and rebuild) when convenient to drop the compatibility shim.
 
+If Docker fails during build startup with:
+```text
+failed to discover GPU vendor from CDI: no known GPU vendor found
+```
+switch Buildx back to the default builder and retry:
+```bash
+docker buildx use default
+docker compose up -d --build
+```
+As a temporary fallback, you can also disable BuildKit for that run:
+```bash
+DOCKER_BUILDKIT=0 docker compose up -d --build
+```
+
 
 Access:
 - Frontend: http://localhost:8080
@@ -86,8 +100,13 @@ Access:
 - Visit `/admin` (link in the top navigation when signed in) to reach operational tools.
 - The **User management** section lets administrators invite new users, toggle roles, activate/deactivate accounts, and issue password resets. All passwords are hashed with Argon2 before storage.
 - The **Market prices** page records manual price uploads, triggers one-off provider syncs, lets you adjust the latest stored valuation, and lists the freshest price per UPC. Configure external lookups with `MARKET_PRICE_PROVIDER_URL` (supports `{upc}` templating), optional `MARKET_PRICE_PROVIDER_API_KEY`, `MARKET_PRICE_PROVIDER_NAME`, and `MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS`. See `.env.example` for sample values.
+- The **Modules** panel lets admins enable optional areas like Wine; enabled modules appear in the top navigation.
 - Use the in-page `Logout` button to end your session quickly, especially on shared devices.
 - The UI now opens in dark mode by default; the theme toggle in the header lets you switch to light mode as needed and remembers your preference.
+
+#### Modules
+- Modules are optional features controlled from the Admin page.
+- **Wine** adds a separate collection and uses its own database (`WINE_DATABASE_URL`) so it stays isolated when disabled.
 
 ## 🛡️ Disaster Recovery to NAS (v1.1.2)
 
@@ -155,6 +174,7 @@ All core processes stream through a shared log sink that writes to `LOG_FILE_PAT
 | `NEXT_BACKEND_ORIGIN` | Origin baked into the unified image for server rewrites (set before `docker compose build whiskey`). | `http://127.0.0.1:8000` |
 | `TZ` | IANA timezone applied to API timestamps and the backup scheduler. | `America/Chicago` |
 | `DATABASE_URL` | SQLModel database connection string. | `sqlite:////data/whiskey.db` |
+| `WINE_DATABASE_URL` | Separate Wine module database connection string. | `sqlite:////data/wine.db` |
 | `SECRET_KEY` | JWT signing key for auth tokens (replace in production). | `change-me-please` |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Access-token lifetime in minutes. | `20` |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | Refresh-token lifetime in days. | `30` |

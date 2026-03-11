@@ -3,6 +3,7 @@ from sqlmodel import SQLModel, create_engine, Session
 
 # Align default with docker-compose's volume path; still overridden by .env if set
 DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:////data/whiskey.db")
+WINE_DATABASE_URL = os.getenv("WINE_DATABASE_URL", "sqlite:////data/wine.db")
 
 engine = create_engine(
     DATABASE_URL,
@@ -10,6 +11,15 @@ engine = create_engine(
     echo=False,
     pool_pre_ping=True,
 )
+
+wine_engine = create_engine(
+    WINE_DATABASE_URL,
+    connect_args={"check_same_thread": False} if WINE_DATABASE_URL.startswith("sqlite") else {},
+    echo=False,
+    pool_pre_ping=True,
+)
+
+_wine_initialized = False
 
 def init_db():
     # Import models module so SQLModel metadata includes every table
@@ -31,8 +41,22 @@ def init_db():
 
             _migrate_users_table(conn)
 
+def init_wine_db():
+    global _wine_initialized
+    if _wine_initialized:
+        return
+    from .wine_models import WineSQLModel  # noqa: F401
+    WineSQLModel.metadata.create_all(wine_engine)
+    _wine_initialized = True
+
 def get_session():
     with Session(engine) as session:
+        yield session
+
+
+def get_wine_session():
+    init_wine_db()
+    with Session(wine_engine) as session:
         yield session
 
 

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from .db import init_db
-from .routers import auth, bottles, purchases, notes, retailers, valuation
+from .routers import auth, bottles, purchases, notes, retailers, valuation, modules, wine
 from .routers.admin_prices import router as admin_prices_router
 from .routers.admin_users import router as admin_users_router
 from .routers.uploads import router as uploads_router, UPLOAD_DIR
@@ -55,6 +55,8 @@ app.include_router(notes.router)
 app.include_router(retailers.router)
 app.include_router(uploads_router)   # <-- must come before the /uploads static mount
 app.include_router(valuation.router)
+app.include_router(modules.router)
+app.include_router(wine.router)
 
 # --- Static mounts (mount AFTER the routers so POST /uploads/image is not shadowed) ---
 _API_ROOT = Path(__file__).resolve().parents[1]

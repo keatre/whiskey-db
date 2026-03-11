@@ -1,4 +1,20 @@
 
+## [v1.6.0] - 2025-11-12
+
+### Added
+- Admin-managed module toggles with a public module list endpoint to drive navigation (`api/app/routers/modules.py`, `api/app/models.py`, `web/src/api/modules.ts`, `web/src/lib/useModules.ts`, `web/src/app/admin/page.tsx`).
+- Wine module backed by an independent database and new API routes for managing wine bottles (`api/app/wine_models.py`, `api/app/db.py`, `api/app/routers/wine.py`, `api/app/settings.py`).
+- Wine pages for listing, viewing, creating, and editing bottles once the module is enabled (`web/src/app/wine/page.tsx`, `web/src/app/wine/new/page.tsx`, `web/src/app/wine/[id]/page.tsx`, `web/src/app/wine/[id]/edit/page.tsx`).
+- Starter Grafana dashboard exports for logbox (stored under `dashboard/`, ignored by git).
+
+### Changed
+- Top navigation now shows module links dynamically based on enabled modules (`web/src/components/NavLinks.tsx`).
+- When the Wine module is enabled, the main collection link is labeled "Whiskey" instead of "Bottles" (`web/src/components/NavLinks.tsx`).
+- Documented the optional wine database configuration in the example env file (`.env.example`).
+- README now documents modules and the Wine database setting (`README.md`).
+
+---
+
 ## [v1.5.16] - 2025-11-12
 
 ### Added

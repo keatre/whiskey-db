@@ -43,5 +43,7 @@ __pycache__/
 
 # Internal documentation
 dev-docs/
+# Local Grafana dashboard exports
+dashboard/
 # Git worktrees
 .worktrees/
