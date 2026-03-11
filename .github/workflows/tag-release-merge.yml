@@ -1,0 +1,77 @@
+name: Tag Release Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: read
+
+jobs:
+  tag_release_merge:
+    if: >
+      github.event.pull_request.merged == true &&
+      github.event.pull_request.base.ref == 'main' &&
+      startsWith(github.event.pull_request.head.ref, 'dev/v') &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract release version from branch
+        id: release
+        env:
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ ! "${HEAD_REF}" =~ ^dev/v([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            echo "::notice::Skip tagging: '${HEAD_REF}' is not in dev/vX.Y.Z format."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ -z "${MERGE_SHA}" ]]; then
+            echo "::error::Missing merge_commit_sha for merged PR."
+            exit 1
+          fi
+
+          version="${BASH_REMATCH[1]}"
+          tag="v${version}"
+
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+          echo "merge_sha=${MERGE_SHA}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout main
+        if: steps.release.outputs.skip != 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Create and push release tag
+        if: steps.release.outputs.skip != 'true'
+        env:
+          TAG_NAME: ${{ steps.release.outputs.tag }}
+          MERGE_SHA: ${{ steps.release.outputs.merge_sha }}
+        run: |
+          set -euo pipefail
+
+          # If tag exists locally (fetched from origin), ensure it points to this merge commit.
+          if git rev-parse -q --verify "refs/tags/${TAG_NAME}" >/dev/null; then
+            existing_sha="$(git rev-list -n 1 "${TAG_NAME}")"
+            if [[ "${existing_sha}" == "${MERGE_SHA}" ]]; then
+              echo "::notice::Tag ${TAG_NAME} already exists at ${MERGE_SHA}; nothing to do."
+              exit 0
+            fi
+            echo "::error::Tag ${TAG_NAME} already exists at ${existing_sha}, expected ${MERGE_SHA}."
+            exit 1
+          fi
+
+          git tag "${TAG_NAME}" "${MERGE_SHA}"
+          git push origin "refs/tags/${TAG_NAME}"
+          echo "Tagged ${TAG_NAME} at ${MERGE_SHA}"

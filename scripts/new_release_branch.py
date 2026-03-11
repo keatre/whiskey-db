@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Automate branch + tag creation for new versions.
+"""Automate release branch creation for new versions.
 
 Workflow:
 1. Verify clean working tree.
 2. Switch to main, fetch, and fast-forward from origin.
 3. Prompt for a semantic version (e.g., 1.2.7).
 4. Create `dev/v<version>` from main and push to origin.
-5. Tag the same commit as `v<version>` and push the tag.
+5. Optionally tag the same commit as `v<version>` and push the tag (`--tag-now`).
 6. Checkout the new branch so you can continue working there.
 
 No changes are made if any step fails.
@@ -146,11 +146,18 @@ def remove_stale_dev_branches(*, keep: set[str]) -> None:
         print(f"🧹 Removed stale local branch {branch}")
 
 
-def prompt_version() -> str:
-    parser = argparse.ArgumentParser(description="Create dev/vX.Y.Z branch and vX.Y.Z tag")
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Create dev/vX.Y.Z release branch (optionally tag now)")
     parser.add_argument("version", nargs="?", help="Semantic version like 1.2.7")
-    args = parser.parse_args()
-    version = args.version
+    parser.add_argument(
+        "--tag-now",
+        action="store_true",
+        help="Create and push vX.Y.Z immediately from main (legacy behavior).",
+    )
+    return parser.parse_args()
+
+
+def prompt_version(version: str | None) -> str:
     if not version:
         try:
             version = input("Enter release version (e.g. 1.2.7): ").strip()
@@ -177,13 +184,17 @@ def create_branch(branch: str) -> None:
     run([GIT, "push", "-u", "origin", branch])
 
 
-def create_tag(tag: str) -> None:
-    run([GIT, "checkout", "main"])
-    run([GIT, "tag", tag])
+def create_tag(tag: str, *, target_ref: str = "main") -> None:
+    run([GIT, "tag", tag, target_ref])
     run([GIT, "push", "origin", tag])
 
 
 def main() -> None:
+    args = parse_args()
+    version = prompt_version(args.version)
+    branch = f"dev/v{version}"
+    tag = f"v{version}"
+
     start_ssh_agent()
     ensure_clean_worktree()
     repo_root = get_repo_root()
@@ -192,15 +203,20 @@ def main() -> None:
         checkout_main()
         fast_forward_main()
         remove_stale_dev_branches(keep={"main"})
-        version = prompt_version()
-        branch = f"dev/v{version}"
-        tag = f"v{version}"
         ensure_ref_absent(branch, ref_type="Branch")
         ensure_ref_absent(tag, ref_type="Tag")
         create_branch(branch)
-        create_tag(tag)
+        if args.tag_now:
+            create_tag(tag, target_ref="main")
         run([GIT, "checkout", branch])
-        print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
+        if args.tag_now:
+            print(f"✅ Created branch {branch} and tag {tag}. You're now on {branch}.")
+        else:
+            print(f"✅ Created branch {branch}. You're now on {branch}.")
+            print(
+                "ℹ️ Tag creation is deferred. Merge this branch into main to let CI tag the merge commit as "
+                f"{tag}."
+            )
         run([GIT, "fetch", "origin", "--prune"])
         branches = run([GIT, "branch", "-a"], capture_output=True)
         print(branches.stdout.rstrip())
