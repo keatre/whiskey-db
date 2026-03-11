@@ -2,15 +2,16 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict
 
+from argon2 import PasswordHasher
+from argon2.exceptions import InvalidHashError, VerificationError
+import bcrypt
 from fastapi import HTTPException, status
 import jwt
-
-# passlib hashers (argon2 preferred, bcrypt fallback)
-from passlib.hash import argon2, bcrypt  # requires argon2-cffi if using argon2
 
 from .settings import settings
 
 ALGORITHM = "HS256"
+PASSWORD_HASHER = PasswordHasher()
 
 
 # -----------------------------
@@ -20,9 +21,14 @@ def hash_password(plain: str) -> str:
     """
     Hash with Argon2id by default.
     """
-    # Argon2id is the recommended default today.
-    # This returns strings like: $argon2id$v=19$m=...
-    return argon2.hash(plain)
+    return PASSWORD_HASHER.hash(plain)
+
+
+def _normalize_bcrypt_hash(hashed: str) -> bytes:
+    # bcrypt can emit/accept $2a$ and $2b$; normalize legacy $2y$ for compatibility.
+    if hashed.startswith("$2y$"):
+        hashed = "$2b$" + hashed[4:]
+    return hashed.encode("utf-8")
 
 
 def verify_password(plain: str, hashed: str) -> bool:
@@ -30,16 +36,24 @@ def verify_password(plain: str, hashed: str) -> bool:
     Verify against either Argon2 or bcrypt, based on hash prefix.
     We auto-detect the scheme from the stored hash to ensure backward compatibility.
     """
-    try:
-        if hashed.startswith("$argon2"):
-            return argon2.verify(plain, hashed)
-        # bcrypt is typically $2b$, $2a$, etc.
-        if hashed.startswith("$2a$") or hashed.startswith("$2b$") or hashed.startswith("$2y$"):
-            return bcrypt.verify(plain, hashed)
-        # Unknown format → hard fail
-        return False
-    except Exception:
-        return False
+    if hashed.startswith("$argon2"):
+        try:
+            return PASSWORD_HASHER.verify(hashed, plain)
+        except (InvalidHashError, VerificationError):
+            return False
+        except Exception:
+            return False
+
+    if hashed.startswith("$2a$") or hashed.startswith("$2b$") or hashed.startswith("$2y$"):
+        try:
+            return bcrypt.checkpw(plain.encode("utf-8"), _normalize_bcrypt_hash(hashed))
+        except ValueError:
+            return False
+        except Exception:
+            return False
+
+    # Unknown format -> hard fail
+    return False
 
 
 # -----------------------------
