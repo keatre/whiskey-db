@@ -1,4 +1,11 @@
 
+## [v1.6.3] - 2026-03-13
+
+### Added
+- App startup now auto-creates the configured admin user from `ADMIN_USERNAME` / `ADMIN_PASSWORD` on first startup when that username is missing from the database, removing the need to run `python -m app.bootstrap_admin` manually on fresh deployments while preserving existing accounts (`api/app/bootstrap_admin.py`, `api/app/main.py`, `api/tests/test_admin_users.py`, `.env.example`, `README.md`).
+
+---
+
 ## [v1.6.2] - 2026-03-11
 
 ### Fixed

@@ -5,6 +5,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from .bootstrap_admin import bootstrap_admin_from_settings
 from .db import init_db
 from .routers import auth, bottles, purchases, notes, retailers, valuation, modules, wine
 from .routers.admin_prices import router as admin_prices_router
@@ -17,6 +18,7 @@ from .version import resolve_version_display
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    bootstrap_admin_from_settings(initialize_db=False, startup=True)
     yield
 
 
