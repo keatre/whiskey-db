@@ -5,9 +5,8 @@ import { useMe } from '../lib/useMe';
 import { useModules } from '../lib/useModules';
 
 export default function NavLinks() {
-  const { isAdmin, me } = useMe();
+  const { isAdmin } = useMe();
   const { modules } = useModules();
-  const adminGlow = isAdmin && me.authenticated ? 'nav-admin-link nav-admin-link-live' : 'nav-admin-link';
 
   return (
     <>
@@ -16,7 +15,7 @@ export default function NavLinks() {
       {modules.wine && <Link href="/wine">Wine</Link>}
       {isAdmin && (
         <>
-          <Link href="/admin" className={adminGlow}>Admin</Link>
+          <Link href="/admin">Admin</Link>
           <Link href="/security">Account</Link>
         </>
       )}
