@@ -71,19 +71,19 @@ def main():
     cur.execute("UPDATE bottle SET image_url=REPLACE(image_url, '/static/uploads/', '/uploads/') WHERE image_url LIKE '/static/uploads/%'")
 
     # 3) Ensure API base prefix for /uploads
-    cur.execute(f"""
+    cur.execute("""
         UPDATE bottle
-           SET image_url='{API}'||image_url
+           SET image_url=?||image_url
          WHERE image_url LIKE '/uploads/%'
-           AND image_url NOT LIKE '{API}/%'
-    """)
+           AND image_url NOT LIKE ?
+    """, (API, f"{API}/%"))
 
     # 4) Collapse accidental double /api/api
-    cur.execute(f"""
+    cur.execute("""
         UPDATE bottle
-           SET image_url=REPLACE(image_url, '{API}{API}/', '{API}/')
-         WHERE image_url LIKE '{API}{API}/%'
-    """)
+           SET image_url=REPLACE(image_url, ?, ?)
+         WHERE image_url LIKE ?
+    """, (f"{API}{API}/", f"{API}/", f"{API}{API}/%"))
 
     # 5) (NEW) Convert '/api/static/uploads/...' -> '/api/uploads/...'
     cur.execute("""
