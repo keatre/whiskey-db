@@ -71,7 +71,7 @@ export default function RetailersPage() {
                   {r.website ? (
                     <>
                       {' '}
-                      · <a href={r.website} target="_blank">site</a>
+                      · <a href={r.website} target="_blank" rel="noopener noreferrer">site</a>
                     </>
                   ) : null}
                   {' '}· <Link href={`/retailers/${r.retailer_id}/edit`}>Edit</Link>

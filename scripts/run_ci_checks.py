@@ -80,11 +80,17 @@ def run_checks(logger: logging.Logger) -> None:
         pythonpath_parts.append(env["PYTHONPATH"])
     env["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
     env["UPLOAD_DIR"] = temp_upload_dir
-    env.setdefault("DATABASE_URL", f"sqlite:///{tempfile.mktemp(prefix='compile-test-db-', suffix='.db')}")
+    temp_db_path = None
+    if "DATABASE_URL" not in env:
+        temp_db_fd, temp_db_path = tempfile.mkstemp(prefix="compile-test-db-", suffix=".db")
+        os.close(temp_db_fd)
+        env["DATABASE_URL"] = f"sqlite:///{temp_db_path}"
     try:
         run([str(PYTHON_BIN), "-m", "pytest", "api/tests", "-q"], logger=logger, description="pytest")
     finally:
         shutil.rmtree(temp_upload_dir, ignore_errors=True)
+        if temp_db_path:
+            Path(temp_db_path).unlink(missing_ok=True)
 
 
 def main() -> None:
