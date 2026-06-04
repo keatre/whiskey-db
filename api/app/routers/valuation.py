@@ -12,6 +12,7 @@ from sqlmodel import Session, select
 from ..db import get_session
 from ..models import MarketPrice
 from ..services.market_prices import fetch_external_quote, persist_quote
+from ..deps import require_view_access
 
 router = APIRouter(prefix="/valuation", tags=["valuation"])
 
@@ -84,7 +85,7 @@ def _latest_price(session: Session, upc: str) -> Optional[MarketPrice]:
     return session.exec(stmt).first()
 
 
-@router.get("", response_model=ValuationResponse)
+@router.get("", response_model=ValuationResponse, dependencies=[Depends(require_view_access)])
 def get_valuation(
     upc: str = Query(..., alias="upc"),
     session: Session = Depends(get_session),

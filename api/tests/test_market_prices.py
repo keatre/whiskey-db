@@ -87,7 +87,9 @@ def test_get_valuation_uses_database_record():
         )
         session.commit()
 
+    bootstrap_admin()
     client = TestClient(app)
+    login(client)
     resp = client.get("/valuation", params={"upc": upc})
     assert resp.status_code == 200
     data = resp.json()
@@ -96,6 +98,15 @@ def test_get_valuation_uses_database_record():
     assert data["currency"] == "USD"
     assert data["source"] == "Manual upload"
     assert data["as_of"].startswith("2024-01-01")
+
+
+def test_valuation_requires_view_access():
+    init_db()
+    client = TestClient(app)
+
+    resp = client.get("/valuation", params={"upc": "000000000000"})
+
+    assert resp.status_code == 401
 
 
 def test_admin_can_create_price_record():

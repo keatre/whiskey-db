@@ -87,8 +87,7 @@ async function handler(req: NextRequest, ctx: RouteContext) {
     return NextResponse.json(
       {
         error: "upstream_error",
-        upstream: upstreamUrl,
-        message: String(err?.message || err),
+        message: "Upstream API request failed.",
       },
       { status: 502 }
     );
