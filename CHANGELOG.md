@@ -1,4 +1,14 @@
 
+## [v1.6.3] - 2026-03-13
+
+### Added
+- App startup now auto-creates the configured admin user from `ADMIN_USERNAME` / `ADMIN_PASSWORD` on first startup when that username is missing from the database, removing the need to run `python -m app.bootstrap_admin` manually on fresh deployments while preserving existing accounts (`api/app/bootstrap_admin.py`, `api/app/main.py`, `api/tests/test_admin_users.py`, `.env.example`, `README.md`).
+
+### Changed
+- The right-side `Admin` header button now gets a subtle glow when the current session is actively authenticated as an admin, making it clearer that you are already signed in with admin access (`web/src/components/HeaderAuthControl.tsx`, `web/src/app/global.css`).
+
+---
+
 ## [v1.6.2] - 2026-03-11
 
 ### Fixed

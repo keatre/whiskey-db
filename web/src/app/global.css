@@ -37,6 +37,24 @@ a:hover { text-decoration: underline; }
   position: sticky; top: 0; background: var(--bg); z-index: 1;
 }
 
+.header-admin-button {
+  transition: box-shadow 180ms ease, background-color 180ms ease, color 180ms ease;
+}
+
+.header-admin-button-live {
+  background: color-mix(in srgb, var(--link) 12%, var(--bg));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--link) 35%, transparent),
+    0 0 14px color-mix(in srgb, var(--link) 28%, transparent);
+  text-shadow: 0 0 10px color-mix(in srgb, var(--link) 20%, transparent);
+}
+
+.header-admin-button-live:hover {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--link) 50%, transparent),
+    0 0 18px color-mix(in srgb, var(--link) 40%, transparent);
+}
+
 .nav-right { 
   display: flex; align-items: center; gap: 8px; 
 }

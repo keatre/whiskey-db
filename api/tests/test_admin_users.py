@@ -32,6 +32,7 @@ init_db = db_module.init_db
 
 app = importlib.import_module("app.main").app
 User = importlib.import_module("app.models").User
+ensure_admin_user = importlib.import_module("app.bootstrap_admin").ensure_admin_user
 hash_password = importlib.import_module("app.security").hash_password
 verify_password = importlib.import_module("app.security").verify_password
 
@@ -177,3 +178,52 @@ def test_verify_password_supports_legacy_bcrypt_hashes():
     # Historical bcrypt variants can be stored as $2y$ in older datasets.
     legacy_2y = "$2y$" + hashed[4:]
     assert verify_password(plain, legacy_2y)
+
+
+def test_ensure_admin_user_creates_missing_admin():
+    init_db()
+    with Session(engine) as session:
+        created, message = ensure_admin_user(
+            session,
+            username="bootstrap-admin",
+            password="BootstrapPass123!",
+            email="bootstrap@example.com",
+        )
+
+    assert created is True
+    assert message == "OK: Admin user created: bootstrap-admin"
+
+    with Session(engine) as session:
+        user = session.exec(select(User).where(User.username == "bootstrap-admin")).first()
+        assert user is not None
+        assert user.role == "admin"
+        assert user.is_active is True
+        assert user.email == "bootstrap@example.com"
+        assert verify_password("BootstrapPass123!", user.password_hash)
+
+
+def test_ensure_admin_user_preserves_existing_admin():
+    init_db()
+    bootstrap_admin(username="existing-admin", password="ExistingPass123!")
+
+    with Session(engine) as session:
+        existing = session.exec(select(User).where(User.username == "existing-admin")).first()
+        assert existing is not None
+        original_hash = existing.password_hash
+
+    with Session(engine) as session:
+        created, message = ensure_admin_user(
+            session,
+            username="existing-admin",
+            password="ReplacementPass123!",
+            email="replacement@example.com",
+        )
+
+    assert created is False
+    assert message == "INFO: Admin user already exists: existing-admin"
+
+    with Session(engine) as session:
+        existing = session.exec(select(User).where(User.username == "existing-admin")).first()
+        assert existing is not None
+        assert existing.password_hash == original_hash
+        assert verify_password("ExistingPass123!", existing.password_hash)

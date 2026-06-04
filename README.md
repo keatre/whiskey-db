@@ -98,6 +98,7 @@ Access:
 
 #### Admin Console
 - Visit `/admin` (link in the top navigation when signed in) to reach operational tools.
+- On a fresh deployment, setting `ADMIN_USERNAME` and `ADMIN_PASSWORD` in `.env` will auto-create that admin user on first startup if it is not already present. Existing users are left unchanged.
 - The **User management** section lets administrators invite new users, toggle roles, activate/deactivate accounts, and issue password resets. All passwords are hashed with Argon2 before storage.
 - The **Market prices** page records manual price uploads, triggers one-off provider syncs, lets you adjust the latest stored valuation, and lists the freshest price per UPC. Configure external lookups with `MARKET_PRICE_PROVIDER_URL` (supports `{upc}` templating), optional `MARKET_PRICE_PROVIDER_API_KEY`, `MARKET_PRICE_PROVIDER_NAME`, and `MARKET_PRICE_PROVIDER_TIMEOUT_SECONDS`. See `.env.example` for sample values.
 - The **Modules** panel lets admins enable optional areas like Wine; enabled modules appear in the top navigation.

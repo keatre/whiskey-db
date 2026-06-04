@@ -20,34 +20,63 @@ from .settings import settings
 from .security import hash_password
 
 
-def main() -> int:
-    # Ensure tables exist
-    init_db()
+def ensure_admin_user(
+    session: Session,
+    *,
+    username: str,
+    password: str,
+    email: str | None = None,
+) -> tuple[bool, str]:
+    existing = session.exec(select(User).where(User.username == username)).first()
+    if existing:
+        return False, f"INFO: Admin user already exists: {username}"
 
-    # Validate env
-    if not settings.ADMIN_USERNAME or not settings.ADMIN_PASSWORD:
+    user = User(
+        username=username,
+        email=email,
+        password_hash=hash_password(password),
+        role="admin",
+        is_active=True,
+    )
+    session.add(user)
+    session.commit()
+    return True, f"OK: Admin user created: {username}"
+
+
+def bootstrap_admin_from_settings(*, initialize_db: bool = True, startup: bool = False) -> int:
+    if initialize_db:
+        init_db()
+
+    username = (settings.ADMIN_USERNAME or "").strip()
+    password = settings.ADMIN_PASSWORD or ""
+    email = getattr(settings, "ADMIN_EMAIL", None) or None
+
+    if not username:
+        if startup:
+            return 0
+        print("ERROR: Set ADMIN_USERNAME and ADMIN_PASSWORD in your top-level .env")
+        return 1
+
+    if not password:
+        if startup:
+            print("WARN: ADMIN_USERNAME is set but ADMIN_PASSWORD is empty; skipping admin bootstrap.")
+            return 0
         print("ERROR: Set ADMIN_USERNAME and ADMIN_PASSWORD in your top-level .env")
         return 1
 
     with Session(engine) as session:
-        # Does a user with this username already exist?
-        existing = session.exec(select(User).where(User.username == settings.ADMIN_USERNAME)).first()
-        if existing:
-            print(f"INFO: Admin user already exists: {settings.ADMIN_USERNAME}")
-            return 0
-
-        user = User(
-            username=settings.ADMIN_USERNAME,
-            email=getattr(settings, "ADMIN_EMAIL", None),  # optional
-            password_hash=hash_password(settings.ADMIN_PASSWORD),
-            role="admin",
-            is_active=True,
+        _, message = ensure_admin_user(
+            session,
+            username=username,
+            password=password,
+            email=email,
         )
-        session.add(user)
-        session.commit()
-        print(f"OK: Admin user created: {settings.ADMIN_USERNAME}")
-
+    print(message)
     return 0
+
+
+def main() -> int:
+    return bootstrap_admin_from_settings()
 
 
 if __name__ == "__main__":

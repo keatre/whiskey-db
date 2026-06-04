@@ -36,6 +36,10 @@ export default function HeaderAuthControl() {
   if (!user) return null;
 
   const isAuthenticated = user.authenticated;
+  const adminGlow =
+    isAuthenticated && user.role === 'admin'
+      ? 'header-admin-button header-admin-button-live'
+      : 'header-admin-button';
 
   // Tell the entire app that auth changed
   const notifyAuthChanged = () => {
@@ -82,7 +86,7 @@ export default function HeaderAuthControl() {
 
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-      <button onClick={() => setOpen((v) => !v)}>Admin</button>
+      <button className={adminGlow} onClick={() => setOpen((v) => !v)}>Admin</button>
       {isAuthenticated && (
         <button onClick={doLogout} style={{ marginLeft: 4 }}>
           Logout

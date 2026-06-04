@@ -5,7 +5,7 @@ import { useMe } from '../lib/useMe';
 import { useModules } from '../lib/useModules';
 
 export default function NavLinks() {
-  const { isAdmin, me } = useMe();
+  const { isAdmin } = useMe();
   const { modules } = useModules();
 
   return (
