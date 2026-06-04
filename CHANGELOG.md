@@ -1,3 +1,9 @@
+## [v1.6.5] - 2026-06-04
+
+### Fixed
+- Cleared frontend and backend dependency vulnerability audit findings by updating security-sensitive packages (`next`, `eslint-config-next`, `swr`, `@eslint/js`, `@types/estree`, `typescript-eslint`, `python-multipart`, `python-dotenv`, `PyJWT[crypto]`, `Pillow`) and pinning `postcss@8.5.10` through npm overrides so transitive Next.js CSS tooling resolves to the patched release (`web/package.json`, `web/package-lock.json`, `api/requirements.txt`).
+
+---
 
 ## [v1.6.3] - 2026-03-13
 
