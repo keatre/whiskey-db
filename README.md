@@ -276,5 +276,4 @@ Prefer `docker compose build whiskey` (or `docker compose up --build whiskey`) a
 ### 📦 Versioning
 This repo uses [Semantic Versioning](https://semver.org/)
 
-- Current stable: v1.3.6
 - Future dev: feature branches → PR → ```main```

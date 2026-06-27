@@ -1,5 +1,8 @@
 ## [v1.6.6] - 2026-06-04
 
+### Changed
+- Removed the stale current-stable version note from the README versioning section so it no longer references an older release (`README.md`).
+
 ### Fixed
 - Cleared frontend and backend dependency vulnerability audit findings by updating security-sensitive packages (`next`, `eslint-config-next`, `swr`, `@eslint/js`, `@types/estree`, `typescript-eslint`, `python-multipart`, `python-dotenv`, `PyJWT[crypto]`, `Pillow`) and pinning `postcss@8.5.10` through npm overrides so transitive Next.js CSS tooling resolves to the patched release (`web/package.json`, `web/package-lock.json`, `api/requirements.txt`).
 - Hardened maintenance and frontend security findings from the final deep scan by parameterizing env-derived SQLite updates in the image URL normalization script, replacing insecure temporary database path creation in the local CI helper, and adding `rel="noopener noreferrer"` to external retailer links (`api/scripts/normalize_image_urls.py`, `scripts/run_ci_checks.py`, `web/src/app/retailers/page.tsx`).
