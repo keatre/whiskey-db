@@ -15,7 +15,7 @@ export default function LoginClient() {
   const [passkeySubmitting, setPasskeySubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function base64urlToUint8Array(input: string): Uint8Array {
+  function base64urlToArrayBuffer(input: string): ArrayBuffer {
     const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
     const padded = base64 + '==='.slice((base64.length + 3) % 4);
     const binary = atob(padded);
@@ -23,7 +23,7 @@ export default function LoginClient() {
     for (let i = 0; i < binary.length; i += 1) {
       bytes[i] = binary.charCodeAt(i);
     }
-    return bytes;
+    return bytes.buffer;
   }
 
   function bufferToBase64url(buffer: ArrayBuffer): string {
@@ -39,11 +39,11 @@ export default function LoginClient() {
   function toCredentialRequestOptions(options: PasskeyOptionsResponse): PublicKeyCredentialRequestOptions {
     return {
       ...options,
-      challenge: base64urlToUint8Array(options.challenge),
+      challenge: base64urlToArrayBuffer(options.challenge),
       allowCredentials: options.allowCredentials?.map((cred) => ({
         ...cred,
         type: 'public-key',
-        id: base64urlToUint8Array(cred.id),
+        id: base64urlToArrayBuffer(cred.id),
         transports: cred.transports as AuthenticatorTransport[] | undefined,
       })),
     };
