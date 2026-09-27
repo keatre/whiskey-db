@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { currency } from '../../../lib/format';
+import RetailPricePanel from '../../../components/RetailPricePanel';
 import AdminOnly from '../../../components/AdminOnly';
 
 const API = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
@@ -121,6 +122,7 @@ export default function PurchaseDetailPage() {
       <div style={{ marginTop: 16 }}>
         <Link href={`/bottles/${purchase.bottle_id}`}>← Back to Bottle</Link>
       </div>
+      <RetailPricePanel key={purchase.bottle_id} bottleId={purchase.bottle_id} purchases={[purchase]} />
     </main>
   );
 }

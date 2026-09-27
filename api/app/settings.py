@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     PASSKEY_RP_NAME: str = "Whiskey DB"
     PASSKEY_CHALLENGE_TTL_SECONDS: int = 120
 
+    # Opt in after arranging recurring access with LoveScotch.
+    RETAIL_PRICE_AUTO_REFRESH: bool = False
+
     # --- Market price providers ---
     MARKET_PRICE_PROVIDER_URL: str | None = None
     MARKET_PRICE_PROVIDER_API_KEY: str | None = None

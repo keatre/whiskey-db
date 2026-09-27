@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status, Response
 from sqlmodel import Session, select, SQLModel
 
 from ..db import get_session
-from ..models import Bottle, BottleAudit, Purchase, TastingNote, BottleTag
+from ..models import Bottle, BottleAudit, Purchase, TastingNote, BottleTag, RetailMatchState, RetailPriceLink, RetailPriceObservation
 from ..deps import get_current_user_role, require_admin, require_view_access  # <-- NEW
 
 router = APIRouter(prefix="/bottles", tags=["bottles"], dependencies=[Depends(get_current_user_role)])
@@ -186,6 +186,10 @@ def delete_bottle(bottle_id: int, session: Session = Depends(get_session)):
     ).all()
     for a in audits:
         session.delete(a)
+
+    for model in (RetailPriceObservation, RetailPriceLink, RetailMatchState):
+        for row in session.exec(select(model).where(model.bottle_id == bottle_id)).all():
+            session.delete(row)
 
     # 5) The bottle
     session.delete(b)

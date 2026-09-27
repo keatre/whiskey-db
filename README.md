@@ -277,3 +277,74 @@ Prefer `docker compose build whiskey` (or `docker compose up --build whiskey`) a
 This repo uses [Semantic Versioning](https://semver.org/)
 
 - Future dev: feature branches → PR → ```main```
+
+### LoveScotch retail price tracking
+
+Adding a purchase queues a background UPC lookup using the bottle's barcode. The purchase
+saves immediately; the bottle page displays lookup progress and updates its existing
+**Market Price** and **Delta** automatically after a match. **Current retail price** controls
+and history are at the bottom of bottle and purchase pages, visible only to authenticated
+admins. Other viewers still see the market price in the existing pricing table. **Try UPC match** retries discovery
+for existing bottles or failed matches.
+
+The LoveScotch discovery agent checks the bottle brand’s public product collection first,
+including common retailer handle variations such as `oban-distillery`, then falls back to
+the full public catalog if needed. It caches complete SKU/UPC indexes
+for each catalog scope in the database for seven days. The first full-catalog lookup can take a few
+minutes; subsequent purchases reuse the index. An exact catalog candidate is only linked after
+its selected product variant's actual barcode is verified. Zero-padded UPC/EAN/GTIN forms are
+normalized. Multiple candidates within the searched catalog, conflicting sizes, and bundles
+require manual review. Release years are compared only when the retailer product or variant
+title explicitly includes a year. Matching titled releases are preferred; otherwise an undated
+UPC match is allowed. If only other titled years exist, the UI reports which years were found.
+The requested year comes from the bottle release-year field, or a single year in its expression
+when that field is empty. Years in tags/descriptions do not block a match. Catalog SKUs are discovery hints, not proof of a barcode match. The
+agent does not use the site's search endpoint. Failed catalog downloads retain the previous
+cache and back off for 15 minutes; incomplete catalogs never produce automatic matches.
+
+If no confident match is found, an admin can paste a LoveScotch product URL, preview its
+variants and barcode, confirm the expression, size, and release/batch, and save the link.
+Manual links also work without a UPC. Existing links are reused when adding purchases, with
+a fresh price check if the previous attempt is at least an hour old. **Refresh price** checks
+linked products manually, at most once an hour. Unlinking preserves quote history; deleting
+a bottle removes its retail link, match status, and observations.
+
+Quotes use the selected variant's selling price, not its compare-at price. USD is verified
+against the storefront before recording integer cents. Successful checks also append a
+LoveScotch quote to the existing UPC market-price records. The bottle's pricing table prefers
+the active linked quote (including bottles without a UPC), showing its date and stock status.
+Availability and UTC check time are preserved with each observation. Failed checks keep the
+previous price and show the error; quotes over seven days old are marked stale. Purchase
+comparisons assume purchase prices are USD per bottle and exclude tax/shipping. These are
+retail comparisons, not resale valuations. The latest 100 observations are displayed; older
+observations remain stored. Historical prices accumulate from the start of tracking.
+
+Scheduled weekly refresh is separate from purchase-triggered matching and manual checks.
+After arranging recurring access with LoveScotch, set `RETAIL_PRICE_AUTO_REFRESH=true` and
+restart the app. The API checks hourly for linked products with quotes at least seven days
+old and retries failed checks no more than once a day. Scheduled refresh defaults to off.
+Transient catalog network/500/502/503/504 failures receive up to three attempts; other failures
+(including rate limits) stop the download and trigger the catalog backoff. Provider requests are serialized with a two-second gap, have a 10-second timeout, and never
+follow redirects. Catalog discovery is bounded to 100 pages of 250 products and a five-minute budget. Use one API
+worker (the bundled runtime default) to avoid duplicate schedulers/index downloads. Matching
+jobs run in-process; if the API restarts during a lookup, use **Try UPC match** after ten minutes
+to retry. New tables are created at startup without changing existing purchases.
+
+
+### Admin price lookup setup
+
+Open **Admin → Price lookup setup** to select a source (currently LoveScotch) and run
+**Look up prices missing or older than 7 days**. The batch includes whiskey bottles with a
+valid UPC or an existing product link, including bottles with no price yet. For linked
+bottles, freshness uses the latest successful quote for that link; for unlinked bottles it
+uses their existing UPC market-price date. Failed attempts do not make prices fresh.
+Bottles lacking both a usable barcode and a product link are counted separately.
+
+Lookups run sequentially in the background and reuse the existing provider throttle,
+catalog cache, UPC/year matching, and hourly cooldown for linked products. The admin panel
+shows progress, counts, and per-bottle results; individual failures do not stop the batch.
+Only one admin batch can run at a time. Progress is persisted so leaving the page is safe.
+An API restart marks unfinished batches as interrupted; starting another batch rechecks
+eligibility and skips prices already updated. This button runs a one-time batch even when
+scheduled refresh is disabled. Both setup/status and batch-start endpoints require admin
+access; this feature does not include the Wine database.
