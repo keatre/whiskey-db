@@ -56,7 +56,6 @@ export default function AuthWatcher() {
       if (!mounted) return;
     })();
     return () => { mounted = false; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Listen for your custom event. After fetching, if the auth state actually changed, refresh immediately.
