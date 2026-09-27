@@ -1,5 +1,9 @@
 ## [v1.6.6] - 2026-06-04
 
+### Added
+- Added LoveScotch retail price tracking with automatic UPC matching on purchase creation, title-based release-year verification, manual product linking, dated price history, and purchase-price comparisons in the existing pricing table.
+- Added admin-only retail controls and price lookup setup, including background batches for missing or seven-day-old prices, persisted progress and per-bottle results, restart recovery, and optional weekly refresh (disabled by default).
+
 ### Changed
 - Removed the stale current-stable version note from the README versioning section so it no longer references an older release (`README.md`).
 
