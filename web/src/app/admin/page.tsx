@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { mutate } from 'swr';
 import AdminOnly from '../../components/AdminOnly';
+import PriceLookupSetup from '../../components/PriceLookupSetup';
 import { fetchAdminModules, updateModule } from '../../api/modules';
 import { MODULES_KEY } from '../../lib/useModules';
 
@@ -25,6 +26,7 @@ export default function AdminHome() {
           </li>
         </ul>
 
+        <PriceLookupSetup />
         <ModulesPanel />
       </main>
     </AdminOnly>

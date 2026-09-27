@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import RetailPricePanel, { type RetailPrices } from '../../../components/RetailPricePanel';
 import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
@@ -86,6 +87,7 @@ export default function BottleDetailPage() {
 
   const [bottle, setBottle] = useState<Bottle | null>(null);
   const [purchases, setPurchases] = useState<Purchase[]>([]);
+  const [retail, setRetail] = useState<RetailPrices | null>(null);
   const [valuation, setValuation] = useState<Valuation | null>(null);
   const [loading, setLoading] = useState(true);
   const [imageErrored, setImageErrored] = useState(false);
@@ -159,9 +161,13 @@ export default function BottleDetailPage() {
     return Math.round((priced.reduce((s, n) => s + n, 0) / priced.length) * 100) / 100;
   }, [purchases]);
 
-  const marketPrice = valuation?.price ?? null;
-  const valuationAsOf = formatDateTime(valuation?.as_of);
-  const delta = yourPrice != null && marketPrice != null ? marketPrice - yourPrice : null;
+  const effectiveValuation = retail?.latest ? {
+    price: retail.latest.price_cents / 100, currency: retail.latest.currency,
+    source: 'LoveScotch', as_of: retail.latest.checked_at,
+  } : valuation;
+  const marketPrice = effectiveValuation?.price ?? null;
+  const valuationAsOf = formatDateTime(effectiveValuation?.as_of);
+  const delta = yourPrice != null && marketPrice != null && (effectiveValuation?.currency || 'USD') === 'USD' ? marketPrice - yourPrice : null;
   const deltaStr = delta == null ? undefined : `${delta >= 0 ? '+' : ''}${currency(delta)}`;
 
   if (loading) return <main><p>Loading…</p></main>;
@@ -259,18 +265,28 @@ export default function BottleDetailPage() {
           <div>
             {marketPrice != null ? (
               <>
-                {currency(marketPrice)}
-                {valuation?.source && (
+                {currency(marketPrice, effectiveValuation?.currency || 'USD')}
+                {effectiveValuation?.source && (
                   <>
                     {' '}
-                    <span style={{ opacity: 0.7 }}>( {valuation.source}
-                    {valuation.as_of ? <span style={{ opacity: 0.7 }}>, {valuationAsOf}</span> : null}
+                    <span style={{ opacity: 0.7 }}>( {effectiveValuation.source}
+                    {effectiveValuation.as_of ? <span style={{ opacity: 0.7 }}>, {valuationAsOf}</span> : null}
                     )</span>
+                    {retail?.latest && <span> · {retail.latest.available ? 'In stock when checked' : 'Out of stock when checked'}
+                      {retail.stale ? ' · Stale quote' : ''}{retail.link?.last_error ? ' · Last refresh failed' : ''}</span>}
                   </>
                 )}
               </>
             ) : (
               '—'
+            )}
+            {['queued', 'matching'].includes(retail?.match?.status || '') && <span role="status"> · Checking UPC…</span>}
+            {isAdmin && retail?.match && ['needs_review', 'no_match', 'missing_upc', 'error', 'unlinked'].includes(retail.match.status) && (
+              <div role="status" style={{ marginTop: 6 }}>
+                <strong>{retail.match.status === 'needs_review' ? 'Match needs confirmation: ' : 'UPC check result: '}</strong>
+                {retail.match.message}{' '}
+                <a href="#retail-price-details">Review lookup details</a>
+              </div>
             )}
           </div>
 
@@ -357,6 +373,7 @@ export default function BottleDetailPage() {
         {/* Admin-only: Add Purchase */}
         {isAdmin && <Link href={`/bottles/${id}/purchases/new`}>+ Add Purchase</Link>}
       </section>
+      <RetailPricePanel key={id} bottleId={id} purchases={purchases} barcode={bottle.barcode_upc} onChange={setRetail} />
     </main>
   );
 }

@@ -161,3 +161,50 @@ class MarketPrice(SQLModel, table=True):
     notes: Optional[str] = None
     ingest_type: str = Field(default="manual")
     created_by: Optional[str] = None
+
+
+class RetailPriceLink(SQLModel, table=True):
+    bottle_id: int = Field(foreign_key="bottle.bottle_id", primary_key=True)
+    product_url: str
+    variant_id: str
+    product_title: str
+    barcode: Optional[str] = None
+    last_attempt_at: Optional[datetime] = None
+    last_error: Optional[str] = None
+
+
+class RetailPriceObservation(SQLModel, table=True):
+    observation_id: Optional[int] = Field(default=None, primary_key=True)
+    bottle_id: int = Field(foreign_key="bottle.bottle_id", index=True)
+    product_url: str
+    variant_id: str
+    product_title: str
+    price_cents: int
+    currency: str = "USD"
+    available: bool
+    checked_at: datetime = Field(default_factory=_utcnow)
+
+
+class RetailCatalogCache(SQLModel, table=True):
+    provider: str = Field(primary_key=True)
+    candidates_json: str
+    fetched_at: datetime = Field(default_factory=_utcnow)
+
+
+class RetailMatchState(SQLModel, table=True):
+    bottle_id: int = Field(foreign_key="bottle.bottle_id", primary_key=True)
+    status: str
+    message: str
+    updated_at: datetime = Field(default_factory=_utcnow)
+
+
+class RetailPriceBatch(SQLModel, table=True):
+    batch_id: Optional[int] = Field(default=None, primary_key=True)
+    source: str = "lovescotch"
+    status: str = "queued"
+    total: int = 0
+    bottle_ids_json: str = "[]"
+    results_json: str = "[]"
+    current_bottle: Optional[str] = None
+    created_at: datetime = Field(default_factory=_utcnow)
+    finished_at: Optional[datetime] = None

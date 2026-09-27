@@ -1,10 +1,11 @@
 from datetime import datetime, date
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import BackgroundTasks, APIRouter, Depends, HTTPException, Query, status
 from sqlmodel import Session, select
 from ..db import get_session
 from ..deps import get_current_user_role, require_admin, require_authenticated_user
 from ..models import Purchase, Bottle, PurchaseUpdate
+from ..services.retail_matching import queue_match
 
 router = APIRouter(
     prefix="/purchases",
@@ -37,6 +38,7 @@ def get_purchase(
 @router.post("", response_model=Purchase, status_code=status.HTTP_201_CREATED)
 def create_purchase(
     p: Purchase,
+    background_tasks: BackgroundTasks,
     session: Session = Depends(get_session),
     _user=Depends(require_admin),
 ):
@@ -65,6 +67,8 @@ def create_purchase(
     p.updated_utc = datetime.utcnow()
     session.add(p)
     session.commit()
+    session.refresh(p)
+    queue_match(session, background_tasks, p.bottle_id)
     session.refresh(p)
     return p
 

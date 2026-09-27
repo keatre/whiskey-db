@@ -67,7 +67,7 @@ def ensure_venv(logger: logging.Logger) -> None:
 
     run([str(PYTHON_BIN), "-m", "pip", "install", "--upgrade", "pip"], logger=logger, description="pip-upgrade")
     run([str(PYTHON_BIN), "-m", "pip", "install", "-r", "api/requirements.txt"], logger=logger, description="install-api-reqs")
-    run([str(PYTHON_BIN), "-m", "pip", "install", "ruff", "pytest"], logger=logger, description="install-toxics")
+    run([str(PYTHON_BIN), "-m", "pip", "install", "ruff==0.16.9", "pytest"], logger=logger, description="install-toxics")
 
 
 def run_checks(logger: logging.Logger) -> None:

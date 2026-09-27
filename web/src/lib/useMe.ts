@@ -83,7 +83,6 @@ export function useMe() {
       window.removeEventListener('storage', onStorage);
       window.removeEventListener('focus', onFocus);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { me, setMe, loading: isLoading, isAdmin, error, refresh };

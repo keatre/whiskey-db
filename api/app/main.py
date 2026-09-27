@@ -12,14 +12,29 @@ from .routers.admin_prices import router as admin_prices_router
 from .routers.admin_users import router as admin_users_router
 from .routers.uploads import router as uploads_router, UPLOAD_DIR
 from .settings import settings
+from .routers.retail_prices import router as retail_prices_router
+from .services.retail_prices import refresh_due_prices
+from .routers.price_setup import router as price_setup_router
+from .services.retail_batch import interrupt_unfinished_batches
+from apscheduler.schedulers.background import BackgroundScheduler
 from .version import resolve_version_display
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    interrupt_unfinished_batches()
     bootstrap_admin_from_settings(initialize_db=False, startup=True)
-    yield
+    scheduler = None
+    if settings.RETAIL_PRICE_AUTO_REFRESH:
+        scheduler = BackgroundScheduler(timezone="UTC")
+        scheduler.add_job(refresh_due_prices, "interval", hours=1, max_instances=1, coalesce=True)
+        scheduler.start()
+    try:
+        yield
+    finally:
+        if scheduler:
+            scheduler.shutdown(wait=True)
 
 
 app = FastAPI(title="Whiskey DB API", lifespan=lifespan)
@@ -57,6 +72,8 @@ app.include_router(notes.router)
 app.include_router(retailers.router)
 app.include_router(uploads_router)   # <-- must come before the /uploads static mount
 app.include_router(valuation.router)
+app.include_router(retail_prices_router)
+app.include_router(price_setup_router)
 app.include_router(modules.router)
 app.include_router(wine.router)
 

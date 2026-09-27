@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { AuthApi, type PasskeyRegisterOptionsResponse } from '../../api/auth';
 import { useMe } from '../../lib/useMe';
 
-function base64urlToUint8Array(input: string): Uint8Array {
+function base64urlToArrayBuffer(input: string): ArrayBuffer {
   const base64 = input.replace(/-/g, '+').replace(/_/g, '/');
   const padded = base64 + '==='.slice((base64.length + 3) % 4);
   const binary = atob(padded);
@@ -13,7 +13,7 @@ function base64urlToUint8Array(input: string): Uint8Array {
   for (let i = 0; i < binary.length; i += 1) {
     bytes[i] = binary.charCodeAt(i);
   }
-  return bytes;
+  return bytes.buffer;
 }
 
 function bufferToBase64url(buffer: ArrayBuffer): string {
@@ -29,16 +29,16 @@ function bufferToBase64url(buffer: ArrayBuffer): string {
 function toCreationOptions(options: PasskeyRegisterOptionsResponse): PublicKeyCredentialCreationOptions {
   return {
     ...options,
-    challenge: base64urlToUint8Array(options.challenge),
+    challenge: base64urlToArrayBuffer(options.challenge),
     user: {
       ...options.user,
-      id: base64urlToUint8Array(options.user.id),
+      id: base64urlToArrayBuffer(options.user.id),
     },
     pubKeyCredParams: options.pubKeyCredParams ?? [{ type: 'public-key', alg: -7 }],
     excludeCredentials: options.excludeCredentials?.map((cred) => ({
       ...cred,
       type: 'public-key',
-      id: base64urlToUint8Array(cred.id),
+      id: base64urlToArrayBuffer(cred.id),
       transports: cred.transports as AuthenticatorTransport[] | undefined,
     })),
     attestation: options.attestation ?? 'none',
