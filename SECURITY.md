@@ -58,13 +58,22 @@ This project is designed for **self-hosting**. To reduce your attack surface:
 
 - Backend: [FastAPI](https://fastapi.tiangolo.com/), [SQLModel](https://sqlmodel.tiangolo.com/), [Uvicorn](https://www.uvicorn.org/)
 - Frontend: [Next.js](https://nextjs.org/), [React](https://react.dev/)
-- We recommend running:
+- CI audits the backend requirements and the full frontend dependency tree, including development dependencies, without severity exclusions or advisory suppressions. Run the same checks locally:
   ```bash
-  pip install --upgrade pip
-  pip-audit
-  npm audit
+  python -m pip install pip-audit==2.10.0
+  python -m pip_audit -r api/requirements.txt
+  (cd web && npm ci && npm audit --audit-level=low)
   ```
-  monthly to catch upstream vulnerabilities.
+
+### Dependency remediation (2026-11-15)
+
+Auditing this checkout before remediation found 63 Python advisory findings across four packages and 12 npm package findings (one critical, four high, seven moderate). These are scanner findings, not a count of unique CVEs. Both audits reported zero known vulnerabilities after the updates.
+
+- Backend: HTTPX2/HTTPCore2 2.16.0, PyJWT 2.15.1, and Pillow 13.0.0.
+- Frontend: Next.js and its ESLint config 15.5.29; PostCSS 8.5.33, Sharp 0.35.5, brace-expansion 5.0.13, and refreshed transitive dependencies in the lockfile.
+- The scoped `@typescript-eslint/typescript-estree` override selects minimatch 11.0.8 because its upstream dependency range still selects vulnerable releases. Keep this override until upstream permits a patched version; re-run lint, type checking, and the audit when removing it.
+
+The audit covers package dependencies, not container operating-system packages or static code analysis. GitHub alert reconciliation requires security-alert access; the token available during remediation returned HTTP 403. Rebuild and redeploy the application image to apply the dependency changes to a running installation.
 
 ## Responsible Disclosure
 
