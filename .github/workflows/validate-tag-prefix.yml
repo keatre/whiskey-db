@@ -5,6 +5,8 @@ on:
     tags:
       - '*'
 
+permissions: {}
+
 jobs:
   ensure_v_prefix:
     runs-on: ubuntu-latest

@@ -1,6 +1,7 @@
 ## [v1.6.7] - Unreleased
 
 ### Fixed
+- Limited CI and documentation-guard tokens to repository read access and disabled token permissions for tag-prefix validation, addressing five CodeQL workflow-permissions findings.
 - Updated vulnerable Python and frontend dependencies, clearing 63 Python advisory findings and 12 npm audit findings (including critical Next.js issues); added CI dependency audits covering all severities.
 
 ---
